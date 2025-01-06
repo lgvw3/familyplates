@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/collapsible"
 
 const books = {
-    "First Nephi": ["1 Nephi 1", "1 Nephi 2", "1 Nephi 3", "1 Nephi 4"],
+    "The First Book Of Nephi": ["Chapter 1", "1 Nephi 2", "1 Nephi 3", "1 Nephi 4"],
     "Second Nephi": ["2 Nephi 1", "2 Nephi 2", "2 Nephi 3", "2 Nephi 4"],
     "Book of Jacob": ["Jacob 1", "Jacob 2", "Jacob 3", "Jacob 4"],
     "Book of Alma": ["Alma 1", "Alma 2", "Alma 3", "Alma 4"],
@@ -64,7 +64,7 @@ function NavigationItems() {
                         {chapters.map((chapter) => (
                             <Link
                                 key={chapter}
-                                href={`/scriptures/${chapter.toLowerCase().replace(" ", "-")}`}
+                                href={`/book/${encodeURIComponent(book.toLowerCase().replaceAll(" ", "-"))}/chapter/${encodeURIComponent(chapter.toLowerCase().replaceAll(" ", "_"))}`}
                                 className="block rounded-md px-2 py-1 text-sm hover:bg-accent hover:text-accent-foreground"
                             >
                                 {chapter}

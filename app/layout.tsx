@@ -3,6 +3,10 @@ import { ThemeProvider } from "@/components/providers"
 
 import "@/app/globals.css"
 import { Metadata } from 'next';
+import { cn } from '@/lib/utils';
+import { Footer } from '@/components/footer';
+import { Header } from '@/components/header';
+import { Navigation } from '@/components/navigation';
 
 const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
@@ -17,14 +21,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={cn(inter.className, 'min-h-screen bg-background w-full')}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <Header />
+          <Navigation />
+          <main>
+            {children}
+          </main>
+          <Footer />
         </ThemeProvider>
       </body>
     </html>
