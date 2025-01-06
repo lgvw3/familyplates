@@ -31,4 +31,3 @@ export function listChapters(bookName: string) {
   const files = fs.readdirSync(dirPath);
   return files.map((file) => path.basename(file, '.json').replace('chapter_', ''));
 }
-

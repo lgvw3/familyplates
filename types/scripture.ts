@@ -1,3 +1,5 @@
+import { FuseResultMatch } from "fuse.js";
+
 export interface Verse {
   number: number;
   text: string;
@@ -32,5 +34,19 @@ export interface Annotation {
   createdAt: string;
   url?: string;
   photoUrl?: string;
+}
+
+export interface ScriptureItem {
+  id: string;
+  type: "book" | "chapter" | "verse" | "intro";
+  text: string;
+  summary?: string;
+  chapter_id: string;
+  book_id: string;
+  content: string;
+}
+
+export interface SearchResult extends ScriptureItem {
+  matches: FuseResultMatch[]; // Matches metadata from Fuse.js
 }
 
