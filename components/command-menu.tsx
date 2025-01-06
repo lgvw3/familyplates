@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
     CommandDialog,
@@ -12,17 +11,27 @@ import {
     CommandList,
 } from "@/components/ui/command"
 import { Search } from 'lucide-react'
+import Link from "next/link"
 
 const books = {
-    "First Nephi": ["1 Nephi 1", "1 Nephi 2", "1 Nephi 3", "1 Nephi 4"],
-    "Second Nephi": ["2 Nephi 1", "2 Nephi 2", "2 Nephi 3", "2 Nephi 4"],
-    "Book of Jacob": ["Jacob 1", "Jacob 2", "Jacob 3", "Jacob 4"],
-    "Book of Alma": ["Alma 1", "Alma 2", "Alma 3", "Alma 4"],
+    "The First Book Of Nephi": ["Chapter 1", "1 Nephi 2", "1 Nephi 3", "1 Nephi 4"],
+    "The Second Book Of Nephi": ["2 Nephi 1", "2 Nephi 2", "2 Nephi 3", "2 Nephi 4"],
+    "The Book Of Jacob": ["Jacob 1", "Jacob 2", "Jacob 3", "Jacob 4"],
+    "The Book Of Jarom": [],
+    "The Book Of Omni": [],
+    "The Words Of Mormon": [],
+    "The Book Of Mosiah": [],
+    "The Book Of Alma": ["Alma 1", "Alma 2", "Alma 3", "Alma 4"],
+    "The Book Of Helamen": [],
+    "Third Nephi The Book Of Nephi": [],
+    "Fourth Nephi The Book Of Nephi": [],
+    "The Book Of Mormon": [],
+    "The Book Of Ether": [],
+    "The Book Of Moroni": []
 }
 
 export function CommandMenu() {
     const [open, setOpen] = React.useState(false)
-    const router = useRouter()
 
     React.useEffect(() => {
         const down = (e: KeyboardEvent) => {
@@ -52,15 +61,19 @@ export function CommandMenu() {
                 {Object.entries(books).map(([book, chapters]) => (
                     <CommandGroup key={book} heading={book}>
                     {chapters.map((chapter) => (
-                        <CommandItem
-                        key={chapter}
-                        onSelect={() => {
-                            router.push(`/scriptures/${chapter.toLowerCase().replace(" ", "-")}`)
-                            setOpen(false)
-                        }}
+                        <Link
+                            key={chapter}
+                            href={`/book/${encodeURIComponent(book.toLowerCase().replaceAll(" ", "-"))}/chapter/${encodeURIComponent(chapter.toLowerCase().replaceAll(" ", "_"))}`}
+                            className="block rounded-md px-2 py-1 text-sm hover:bg-accent hover:text-accent-foreground"
                         >
-                        {chapter}
-                        </CommandItem>
+                            <CommandItem
+                                onSelect={() => {
+                                    setOpen(false)
+                                }}
+                            >
+                                {chapter}
+                            </CommandItem>
+                        </Link>
                     ))}
                     </CommandGroup>
                 ))}

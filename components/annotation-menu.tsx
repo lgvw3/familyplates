@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
-  CardTitle,
 } from "@/components/ui/card"
 import {
   Select,
@@ -18,13 +17,14 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { AnnotationType, HighlightColor, TextStyle } from '../types/scripture'
-import { Link, Bold, Italic, Underline, ImageIcon, StickyNote, X } from 'lucide-react'
+import { Link, Bold, Italic, Underline, StickyNote, X, ImageIcon } from 'lucide-react'
 
 interface AnnotationMenuProps {
-  position: { x: number; y: number } | null;
+  position: { x: number; y: number; width?: number } | null;
   selectedText: string;
   onClose: () => void;
   onSave: (annotation: {
+    selectedText: string,
     type: AnnotationType;
     color: HighlightColor;
     style: TextStyle;
@@ -46,6 +46,7 @@ export function AnnotationMenu({ position, selectedText, onClose, onSave }: Anno
 
   const handleSave = () => {
     onSave({
+      selectedText,
       type,
       color,
       style,
@@ -58,13 +59,14 @@ export function AnnotationMenu({ position, selectedText, onClose, onSave }: Anno
 
   return (
     <Card
-      className="fixed z-50 w-80"
+      className="fixed z-50 w-[calc(100vw-2rem)] md:w-80"
       style={{
         top: `${position.y}px`,
-        left: `${position.x}px`,
+        left: position.width ? 
+          `${Math.min(position.x, window.innerWidth - (position.width + 32))}px` : 
+          `${Math.min(position.x, window.innerWidth - 320)}px`,
       }}
     >
-      <CardTitle>{selectedText}</CardTitle>
       <CardContent className="p-3 space-y-4">
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
