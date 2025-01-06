@@ -146,7 +146,7 @@ export function CommandMenu() {
                                 : result.type == 'verse' ?
                                 <Link
                                     key={result.id}
-                                    href={`/book/${encodeURIComponent(result.book_id)}/chapter/${result.chapter_id.toLowerCase().replace(' ', '_')}`}
+                                    href={`/book/${encodeURIComponent(result.book_id)}/chapter/${result.chapter_id.toLowerCase().replace(' ', '_')}/#verse-${result.verse_number}`}
                                     className="block rounded-md px-2 py-1 text-sm hover:bg-accent hover:text-accent-foreground"
                                 >
                                     <CommandItem

@@ -44,6 +44,7 @@ export interface ScriptureItem {
   chapter_id: string;
   book_id: string;
   content: string;
+  verse_number?: number;
 }
 
 export interface SearchResult extends ScriptureItem {

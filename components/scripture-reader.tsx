@@ -147,6 +147,40 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
     return <p className="text-lg leading-relaxed" dangerouslySetInnerHTML={{ __html: text }} />
   }
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+        const hash = window.location.hash;
+        if (hash) {
+            const verseElement = document.querySelector(hash);
+            if (verseElement) {
+              verseElement.classList.add(
+                "bg-yellow-200",
+                "transition-colors",
+                "duration-1000",
+                "ease-in-out",
+                "opacity-100"
+              );
+
+              // Remove the highlight effect after 2 seconds
+              setTimeout(() => {
+                  verseElement.classList.add("opacity-0");
+                  setTimeout(() => {
+                      verseElement.classList.remove("bg-yellow-200", "opacity-0");
+                  }, 1000); // Wait for fade-out to finish
+              }, 2000);
+              const offset = 80
+              const elementPosition = verseElement.getBoundingClientRect().top + window.scrollY;
+              const offsetPosition = elementPosition - offset;
+
+              window.scrollTo({
+                  top: offsetPosition,
+                  behavior: "smooth"
+              });
+            }
+        }
+    }
+}, []);
+
   return (
     <div>
       <div className="relative flex items-center mx-4 mt-4">
@@ -195,6 +229,7 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
                 const verseAnnotations = annotations.filter(a => a.verseNumber === verse.number)
                 return (
                   <div
+                    id={`verse-${verse.number}`}
                     key={verse.number}
                     className="group relative"
                     onMouseUp={() => handleTextSelection(verse.number)}
@@ -322,4 +357,3 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
     </div>
   )
 }
-
