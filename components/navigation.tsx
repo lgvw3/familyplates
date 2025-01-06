@@ -17,20 +17,20 @@ import {
 } from "@/components/ui/collapsible"
 
 const books = {
-    "The First Book Of Nephi": ["Chapter 1", "1 Nephi 2", "1 Nephi 3", "1 Nephi 4"],
-    "The Second Book Of Nephi": ["2 Nephi 1", "2 Nephi 2", "2 Nephi 3", "2 Nephi 4"],
-    "The Book Of Jacob": ["Jacob 1", "Jacob 2", "Jacob 3", "Jacob 4"],
-    "The Book Of Jarom": [],
-    "The Book Of Omni": [],
-    "The Words Of Mormon": [],
-    "The Book Of Mosiah": [],
-    "The Book Of Alma": ["Alma 1", "Alma 2", "Alma 3", "Alma 4"],
-    "The Book Of Helamen": [],
-    "Third Nephi The Book Of Nephi": [],
-    "Fourth Nephi The Book Of Nephi": [],
-    "The Book Of Mormon": [],
-    "The Book Of Ether": [],
-    "The Book Of Moroni": []
+    "The First Book Of Nephi": Array.from({ length: 22 }, (_, i) => `Chapter ${i + 1}`),
+    "The Second Book Of Nephi": Array.from({ length: 33 }, (_, i) => `Chapter ${i + 1}`),
+    "The Book Of Jacob": Array.from({ length: 7 }, (_, i) => `Chapter ${i + 1}`),
+    "The Book Of Jarom": Array.from({ length: 1 }, (_, i) => `Chapter ${i + 1}`),
+    "The Book Of Omni": Array.from({ length: 1 }, (_, i) => `Chapter ${i + 1}`),
+    "The Words Of Mormon": Array.from({ length: 1 }, (_, i) => `Chapter ${i + 1}`),
+    "The Book Of Mosiah": Array.from({ length: 29 }, (_, i) => `Chapter ${i + 1}`),
+    "The Book Of Alma": Array.from({ length: 63 }, (_, i) => `Chapter ${i + 1}`),
+    "The Book Of Helaman": Array.from({ length: 16 }, (_, i) => `Chapter ${i + 1}`),
+    "Third Nephi The Book Of Nephi": Array.from({ length: 30 }, (_, i) => `Chapter ${i + 1}`),
+    "Fourth Nephi The Book Of Nephi": Array.from({ length: 1 }, (_, i) => `Chapter ${i + 1}`),
+    "The Book Of Mormon": Array.from({ length: 9 }, (_, i) => `Chapter ${i + 1}`),
+    "The Book Of Ether": Array.from({ length: 15 }, (_, i) => `Chapter ${i + 1}`),
+    "The Book Of Moroni": Array.from({ length: 10 }, (_, i) => `Chapter ${i + 1}`),
 }
 
 export function Navigation() {
@@ -43,7 +43,7 @@ export function Navigation() {
                         <span className="sr-only">Toggle navigation menu</span>
                     </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+                <SheetContent side="left" className="w-[300px] sm:w-[400px] overflow-auto">
                     <SheetHeader>
                         <SheetTitle>Navigation</SheetTitle>
                     </SheetHeader>
