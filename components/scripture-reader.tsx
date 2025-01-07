@@ -92,7 +92,16 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
         
         // Calculate position considering mobile viewport
         const x = Math.max(16, rect.left + window.scrollX)
-        const y = rect.bottom + 8
+        let y = rect.bottom + 8;
+        const windowHeight = window.innerHeight;
+        
+        // Calculate the distance from the bottom of the element to the viewport bottom
+        const distanceToBottom = windowHeight - rect.bottom;
+        console.log(windowHeight, rect.bottom, distanceToBottom)
+        // If the space available is less than the height of your annotation window plus the offset
+        if (distanceToBottom < 300) {
+          y -= Math.max(450, distanceToBottom + 100)
+        }
         const width = Math.min(320, window.innerWidth - 32)
 
         setCurrentSelection({
