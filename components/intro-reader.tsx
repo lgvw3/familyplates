@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { ChevronLeftIcon, ChevronRightIcon, SearchIcon, ImageIcon, LinkIcon, StickyNoteIcon, MessageSquareIcon } from 'lucide-react'
+import { ChevronLeftIcon, ChevronRightIcon, ImageIcon, LinkIcon, StickyNoteIcon, MessageSquareIcon } from 'lucide-react'
 import { Annotation, AnnotationType, Intro } from '@/types/scripture'
 import { useAnnotations } from '@/hooks/use-annotations'
 import Image from 'next/image'
@@ -57,7 +56,6 @@ export default function IntroReader({intro}: {intro: Intro}) {
     const [currentSelection, setCurrentSelection] = useState<SelectionInfo | null>(null)
     const [currentVerseNumber, setCurrentVerseNumber] = useState<number | null>(null)
     const { annotations, addAnnotation, removeAnnotation } = useAnnotations()
-    const [searchQuery, setSearchQuery] = useState('')
     const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const isTitlePage = intro.title == 'Title Page'
     const introIndex = introMaterialOrder.indexOf(intro.title)
@@ -211,13 +209,6 @@ export default function IntroReader({intro}: {intro: Intro}) {
                     </BreadcrumbItem>
                 </BreadcrumbList>
             </Breadcrumb>
-            <SearchIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <Input
-                placeholder="Search in material..."
-                className='max-w-96'
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-            />
         </div>
 
 

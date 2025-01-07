@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { ChevronLeftIcon, ChevronRightIcon, SearchIcon, ImageIcon, BookOpen, LinkIcon, StickyNoteIcon, MessageSquareIcon } from 'lucide-react'
+import { ChevronLeftIcon, ChevronRightIcon, ImageIcon, BookOpen, LinkIcon, StickyNoteIcon, MessageSquareIcon } from 'lucide-react'
 import { Annotation, AnnotationType, Book, Chapter } from '@/types/scripture'
 import { useAnnotations } from '@/hooks/use-annotations'
 import Image from 'next/image'
@@ -57,7 +56,6 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
   const [currentSelection, setCurrentSelection] = useState<SelectionInfo | null>(null)
   const [currentVerseNumber, setCurrentVerseNumber] = useState<number | null>(null)
   const { annotations, addAnnotation, removeAnnotation } = useAnnotations()
-  const [searchQuery, setSearchQuery] = useState('')
   const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const chapterNumber = Number(chapter.chapter_title.slice(8))
@@ -203,13 +201,6 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <SearchIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-        <Input
-          placeholder="Search in chapter..."
-          className='max-w-96'
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
         <Button
             variant="ghost"
             size="icon"
