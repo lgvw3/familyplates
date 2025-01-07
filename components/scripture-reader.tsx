@@ -1,15 +1,16 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { ChevronLeft, ChevronRight, Search, MessageSquare, Link, StickyNote, ImageIcon, BookOpen } from 'lucide-react'
+import { ChevronLeftIcon, ChevronRightIcon, SearchIcon, ImageIcon, BookOpen, LinkIcon, StickyNoteIcon, MessageSquareIcon } from 'lucide-react'
 import { Annotation, AnnotationType, Book, Chapter } from '@/types/scripture'
 import { useAnnotations } from '@/hooks/use-annotations'
 import Image from 'next/image'
 import { AnnotationMenu } from './annotation-menu'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from './ui/breadcrumb'
+import Link from 'next/link'
 
 interface SelectionInfo {
   text: string;
@@ -19,13 +20,13 @@ interface SelectionInfo {
 const getAnnotationIcon = (type: AnnotationType) => {
   switch (type) {
     case 'note':
-      return <StickyNote className="h-4 w-4" />
+      return <StickyNoteIcon className="h-4 w-4" />
     case 'link':
-      return <Link className="h-4 w-4" />
+      return <LinkIcon className="h-4 w-4" />
     case 'photo':
       return <ImageIcon className="h-4 w-4" />
     case 'combo':
-      return <MessageSquare className="h-4 w-4" />
+      return <MessageSquareIcon className="h-4 w-4" />
     default:
       return null
   }
@@ -58,6 +59,9 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
   const { annotations, addAnnotation, removeAnnotation } = useAnnotations()
   const [searchQuery, setSearchQuery] = useState('')
   const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const chapterNumber = Number(chapter.chapter_title.slice(8))
+  const isFirstChapter = chapterNumber == 1;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -187,19 +191,19 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
         <Breadcrumb className='flex-grow'>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="#">Book of Mormon</BreadcrumbLink>
+              <BreadcrumbLink href="/book/the-first-book-of-nephi/chapter/chapter_1">Book of Mormon</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink href="#">{book.title}</BreadcrumbLink>
+              <BreadcrumbLink href={`/book/${encodeURIComponent(book.title.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_1`}>{book.title}</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink href="#">{chapter.chapter_title}</BreadcrumbLink>
+              <BreadcrumbLink href="#top">{chapter.chapter_title}</BreadcrumbLink>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        <SearchIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         <Input
           placeholder="Search in chapter..."
           className='max-w-96'
@@ -220,7 +224,20 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
         <div className="grid md:grid-cols-[1fr,300px] gap-6">
           <div className="space-y-6">
             <div className="space-y-4">
-              <h1 className="text-3xl font-bold">{book.title} {chapter.heading}</h1>
+              {
+                isFirstChapter && (
+                  <>
+                    <h1 className="text-3xl font-bold">{book.title}</h1>
+                    <h2 className="text-xl font-bold">{book.subtitle}</h2>
+                    <h3 className="text-lg">{book.intro}</h3>
+                  </>
+              )}
+              {
+                chapter.chapter_heading ?
+                <p>{chapter.chapter_heading}</p>
+                : null
+              }
+              <h4 className='text-muted-foreground text-center'>{chapter.chapter_title}</h4>
               <p className="text-muted-foreground">{chapter.summary}</p>
             </div>
 
@@ -267,14 +284,25 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
 
             {/* Chapter Navigation */}
             <div className="flex justify-between pt-4">
-              <Button variant="outline">
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                Previous Chapter
-              </Button>
-              <Button variant="outline">
+              {
+                !isFirstChapter ?
+                <Link 
+                  className={buttonVariants({'variant': 'outline'})}
+                  href={`/book/${encodeURIComponent(book.title.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_${chapterNumber - 1}`}
+                >
+                  <ChevronLeftIcon className="h-4 w-4 mr-2" />
+                  Previous Chapter
+                </Link>
+                :
+                null
+              }
+              <Link 
+                className={buttonVariants({'variant': 'outline'})}
+                href={`/book/${encodeURIComponent(book.title.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_${chapterNumber + 1}`}
+              >
                 Next Chapter
-                <ChevronRight className="h-4 w-4 ml-2" />
-              </Button>
+                <ChevronRightIcon className="h-4 w-4 ml-2" />
+              </Link>
             </div>
           </div>
 

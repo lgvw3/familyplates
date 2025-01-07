@@ -8,7 +8,7 @@ export interface Verse {
 export interface Chapter {
   title: string;
   chapter_title: string;
-  heading: string;
+  chapter_heading: string;
   summary: string;
   verses: Verse[];
 }
