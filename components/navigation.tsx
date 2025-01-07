@@ -16,6 +16,16 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 
+export const introMaterialOrder = [
+    "Title Page",
+    "Title Page of the Book of Mormon",
+    "Introduction",
+    "Testimony of Three Witnesses",
+    "Testimony of Eight Witnesses",
+    "Testimony of the Prophet Joseph Smith",
+    "Brief Explanation about the Book of Mormon"
+]
+
 const books = {
     "The First Book Of Nephi": Array.from({ length: 22 }, (_, i) => `Chapter ${i + 1}`),
     "The Second Book Of Nephi": Array.from({ length: 33 }, (_, i) => `Chapter ${i + 1}`),
@@ -47,11 +57,44 @@ export function Navigation() {
                     <SheetHeader>
                         <SheetTitle>Navigation</SheetTitle>
                     </SheetHeader>
+                    Intro
+                    <nav className="mt-4 mb-4">
+                        <IntroItems />
+                    </nav>
+                    Books
                     <nav className="mt-4">
                         <NavigationItems />
                     </nav>
                 </SheetContent>
             </Sheet>
+        </div>
+    )
+}
+
+function IntroItems() {
+    return (
+        <div className="space-y-4">
+            <Collapsible>
+                <CollapsibleTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        className="flex w-full items-center justify-between p-2"
+                    >
+                        <span className="text-sm font-medium">Introductory Material</span>
+                        <ChevronRight className="h-4 w-4" />
+                    </Button>
+                </CollapsibleTrigger>
+                {introMaterialOrder.map((title) => (
+                    <CollapsibleContent key={title} className="space-y-1">
+                        <Link
+                            href={`/intro/${encodeURIComponent(title.toLowerCase().replaceAll(" ", "-"))}`}
+                            className="block rounded-md px-2 py-1 text-sm hover:bg-accent hover:text-accent-foreground"
+                        >
+                            {title}
+                        </Link>
+                    </CollapsibleContent>
+                ))}
+            </Collapsible>
         </div>
     )
 }

@@ -19,6 +19,11 @@ export type Book = {
   intro: string[]
 }
 
+export type Intro = {
+  title: string,
+  paragraphs: string[]
+}
+
 export type AnnotationType = 'note' | 'link' | 'photo' | 'combo';
 export type HighlightColor = 'yellow' | 'green' | 'blue' | 'purple' | 'pink';
 export type TextStyle = 'underline' | 'bold' | 'italic' | 'none';
