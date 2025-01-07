@@ -233,7 +233,7 @@ export default function IntroReader({intro}: {intro: Intro}) {
                             const verseAnnotations = annotations.filter(a => a.verseNumber === index)
                             return (
                                 <div
-                                    id={`text-${index}`}
+                                    id={`index-${index}`}
                                     key={index}
                                     className="group relative"
                                     onMouseUp={() => handleTextSelection(index)}

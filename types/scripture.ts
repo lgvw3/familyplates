@@ -50,6 +50,8 @@ export interface ScriptureItem {
   book_id: string;
   content: string;
   verse_number?: number;
+  index?: number
+  title?: string
 }
 
 export interface SearchResult extends ScriptureItem {

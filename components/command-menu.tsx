@@ -48,7 +48,7 @@ function searchScriptures(query: string, fuse: Fuse<ScriptureItem> | null): Sear
 
 // Fuse.js options with types
 const fuseOptions = {
-    keys: ["text", "summary"], // Specify searchable fields
+    keys: ["text", "summary", "content"], // Specify searchable fields
     threshold: 0.4, // Adjust sensitivity for fuzzy matching
     includeMatches: true, // Include match metadata in results
 };
@@ -157,8 +157,21 @@ export function CommandMenu() {
                                         {result.text} <Badge>Verse</Badge>
                                     </CommandItem>
                                 </Link>
+                                : result.type == 'intro' && result.title ?
+                                <Link
+                                    key={result.id}
+                                    href={`/intro/${encodeURIComponent(result.title?.toLowerCase().replaceAll(' ', '-'))}/#index-${result.index}`}
+                                    className="block rounded-md px-2 py-1 text-sm hover:bg-accent hover:text-accent-foreground"
+                                >
+                                    <CommandItem
+                                        onSelect={() => {
+                                            setOpen(false)
+                                        }}
+                                    >
+                                        {result.text} <Badge variant={'book'}>Intro</Badge>
+                                    </CommandItem>
+                                </Link>
                                 : null
-                            
                             ))}
                         </CommandGroup>
                     :

@@ -54595,45 +54595,451 @@
     "book_id": "the-book-of-mormon"
   },
   {
-    "id": "intro_introduction",
+    "id": "intro_introduction_0",
     "type": "intro",
-    "text": "Introduction",
-    "content": ""
+    "index": 0,
+    "title": "Introduction",
+    "text": "The Book of Mormon is a volume of holy scripture comparable to the Bible. It is a record of God’s dealings with ancient inhabitants of the Americas and contains the fulness of the everlasting gospel."
   },
   {
-    "id": "intro_title-page-of-the-book-of-mormon",
+    "id": "intro_introduction_1",
     "type": "intro",
-    "text": "Title Page of the Book of Mormon",
-    "content": ""
+    "index": 1,
+    "title": "Introduction",
+    "text": "The book was written by many ancient prophets by the spirit of prophecy and revelation. Their words, written on gold plates, were quoted and abridged by a prophet-historian named Mormon. The record gives an account of two great civilizations. One came from Jerusalem in 600 B.C. and afterward separated into two nations, known as the Nephites and the Lamanites. The other came much earlier when the Lord confounded the tongues at the Tower of Babel. This group is known as the Jaredites. After thousands of years, all were destroyed except the Lamanites, and they are among the ancestors of the American Indians."
   },
   {
-    "id": "intro_title-page",
+    "id": "intro_introduction_2",
     "type": "intro",
-    "text": "Title Page",
-    "content": ""
+    "index": 2,
+    "title": "Introduction",
+    "text": "The crowning event recorded in the Book of Mormon is the personal ministry of the Lord Jesus Christ among the Nephites soon after His resurrection. It puts forth the doctrines of the gospel, outlines the plan of salvation, and tells men what they must do to gain peace in this life and eternal salvation in the life to come."
   },
   {
-    "id": "intro_testimony-of-three-witnesses",
+    "id": "intro_introduction_3",
     "type": "intro",
-    "text": "Testimony of Three Witnesses",
-    "content": ""
+    "index": 3,
+    "title": "Introduction",
+    "text": "After Mormon completed his writings, he delivered the account to his son Moroni, who added a few words of his own and hid up the plates in the Hill Cumorah. On September 21, 1823, the same Moroni, then a glorified, resurrected being, appeared to the Prophet Joseph Smith and instructed him relative to the ancient record and its destined translation into the English language."
   },
   {
-    "id": "intro_testimony-of-the-prophet-joseph-smith",
+    "id": "intro_introduction_4",
     "type": "intro",
-    "text": "Testimony of the Prophet Joseph Smith",
-    "content": ""
+    "index": 4,
+    "title": "Introduction",
+    "text": "In due course the plates were delivered to Joseph Smith, who translated them by the gift and power of God. The record is now published in many languages as a new and additional witness that Jesus Christ is the Son of the living God and that all who will come unto Him and obey the laws and ordinances of His gospel may be saved."
   },
   {
-    "id": "intro_brief-explanation-about-the-book-of-mormon",
+    "id": "intro_introduction_5",
     "type": "intro",
-    "text": "Brief Explanation about the Book of Mormon",
-    "content": ""
+    "index": 5,
+    "title": "Introduction",
+    "text": "Concerning this record the Prophet Joseph Smith said: “I told the brethren that the Book of Mormon was the most correct of any book on earth, and the keystone of our religion, and a man would get nearer to God by abiding by its precepts, than by any other book.”"
   },
   {
-    "id": "intro_testimony-of-eight-witnesses",
+    "id": "intro_introduction_6",
     "type": "intro",
-    "text": "Testimony of Eight Witnesses",
-    "content": ""
+    "index": 6,
+    "title": "Introduction",
+    "text": "In addition to Joseph Smith, the Lord provided for eleven others to see the gold plates for themselves and to be special witnesses of the truth and divinity of the Book of Mormon. Their written testimonies are included herewith as “The Testimony of Three Witnesses” and “The Testimony of Eight Witnesses.”"
+  },
+  {
+    "id": "intro_introduction_7",
+    "type": "intro",
+    "index": 7,
+    "title": "Introduction",
+    "text": "We invite all men everywhere to read the Book of Mormon, to ponder in their hearts the message it contains, and then to ask God, the Eternal Father, in the name of Christ if the book is true. Those who pursue this course and ask in faith will gain a testimony of its truth and divinity by the power of the Holy Ghost. (See Moroni 10:3–5.)"
+  },
+  {
+    "id": "intro_introduction_8",
+    "type": "intro",
+    "index": 8,
+    "title": "Introduction",
+    "text": "Those who gain this divine witness from the Holy Spirit will also come to know by the same power that Jesus Christ is the Savior of the world, that Joseph Smith is His revelator and prophet in these last days, and that The Church of Jesus Christ of Latter-day Saints is the Lord’s kingdom once again established on the earth, preparatory to the Second Coming of the Messiah."
+  },
+  {
+    "id": "intro_title-page-of-the-book-of-mormon_0",
+    "type": "intro",
+    "index": 0,
+    "title": "Title Page of the Book of Mormon",
+    "text": "Wherefore, it is an abridgment of the record of the people of Nephi, and also of the Lamanites—Written to the Lamanites, who are a remnant of the house of Israel; and also to Jew and Gentile—Written by way of commandment, and also by the spirit of prophecy and of revelation—Written and sealed up, and hid up unto the Lord, that they might not be destroyed—To come forth by the gift and power of God unto the interpretation thereof—Sealed by the hand of Moroni, and hid up unto the Lord, to come forth in due time by way of the Gentile—The interpretation thereof by the gift of God."
+  },
+  {
+    "id": "intro_title-page-of-the-book-of-mormon_1",
+    "type": "intro",
+    "index": 1,
+    "title": "Title Page of the Book of Mormon",
+    "text": "An abridgment taken from the Book of Ether also, which is a record of the people of Jared, who were scattered at the time the Lord confounded the language of the people, when they were building a tower to get to heaven—Which is to show unto the remnant of the house of Israel what great things the Lord hath done for their fathers; and that they may know the covenants of the Lord, that they are not cast off forever—And also to the convincing of the Jew and Gentile that Jesus is the Christ, the Eternal God, manifesting himself unto all nations—And now, if there are faults they are the mistakes of men; wherefore, condemn not the things of God, that ye may be found spotless at the judgment-seat of Christ."
+  },
+  {
+    "id": "intro_title-page-of-the-book-of-mormon_2",
+    "type": "intro",
+    "index": 2,
+    "title": "Title Page of the Book of Mormon",
+    "text": "Translated by Joseph Smith, Jun."
+  },
+  {
+    "id": "intro_title-page_0",
+    "type": "intro",
+    "index": 0,
+    "title": "Title Page",
+    "text": "Published by The Church of Jesus Christ of Latter-day Saints"
+  },
+  {
+    "id": "intro_title-page_1",
+    "type": "intro",
+    "index": 1,
+    "title": "Title Page",
+    "text": "Salt Lake City, Utah, USA"
+  },
+  {
+    "id": "intro_title-page_2",
+    "type": "intro",
+    "index": 2,
+    "title": "Title Page",
+    "text": "First English edition published in Palmyra, New York, USA, in 1830"
+  },
+  {
+    "id": "intro_title-page_3",
+    "type": "intro",
+    "index": 3,
+    "title": "Title Page",
+    "text": "© 2013 by Intellectual Reserve, Inc. All rights reserved. Source: 2015/03/24"
+  },
+  {
+    "id": "intro_testimony-of-three-witnesses_0",
+    "type": "intro",
+    "index": 0,
+    "title": "Testimony of Three Witnesses",
+    "text": "Be it known unto all nations, kindreds, tongues, and people, unto whom this work shall come: That we, through the grace of God the Father, and our Lord Jesus Christ, have seen the plates which contain this record, which is a record of the people of Nephi, and also of the Lamanites, their brethren, and also of the people of Jared, who came from the tower of which hath been spoken. And we also know that they have been translated by the gift and power of God, for his voice hath declared it unto us; wherefore we know of a surety that the work is true. And we also testify that we have seen the engravings which are upon the plates; and they have been shown unto us by the power of God, and not of man. And we declare with words of soberness, that an angel of God came down from heaven, and he brought and laid before our eyes, that we beheld and saw the plates, and the engravings thereon; and we know that it is by the grace of God the Father, and our Lord Jesus Christ, that we beheld and bear record that these things are true. And it is marvelous in our eyes. Nevertheless, the voice of the Lord commanded us that we should bear record of it; wherefore, to be obedient unto the commandments of God, we bear testimony of these things. And we know that if we are faithful in Christ, we shall rid our garments of the blood of all men, and be found spotless before the judgment-seat of Christ, and shall dwell with him eternally in the heavens. And the honor be to the Father, and to the Son, and to the Holy Ghost, which is one God. Amen."
+  },
+  {
+    "id": "intro_testimony-of-three-witnesses_1",
+    "type": "intro",
+    "index": 1,
+    "title": "Testimony of Three Witnesses",
+    "text": "Oliver Cowdery"
+  },
+  {
+    "id": "intro_testimony-of-three-witnesses_2",
+    "type": "intro",
+    "index": 2,
+    "title": "Testimony of Three Witnesses",
+    "text": "David Whitmer"
+  },
+  {
+    "id": "intro_testimony-of-three-witnesses_3",
+    "type": "intro",
+    "index": 3,
+    "title": "Testimony of Three Witnesses",
+    "text": "Martin Harris"
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_0",
+    "type": "intro",
+    "index": 0,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "The Prophet Joseph Smith’s own words about the coming forth of the Book of Mormon are:"
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_1",
+    "type": "intro",
+    "index": 1,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“On the evening of the … twenty-first of September [1823] … I betook myself to prayer and supplication to Almighty God. …"
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_2",
+    "type": "intro",
+    "index": 2,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“While I was thus in the act of calling upon God, I discovered a light appearing in my room, which continued to increase until the room was lighter than at noonday, when immediately a personage appeared at my bedside, standing in the air, for his feet did not touch the floor."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_3",
+    "type": "intro",
+    "index": 3,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“He had on a loose robe of most exquisite whiteness. It was a whiteness beyond anything earthly I had ever seen; nor do I believe that any earthly thing could be made to appear so exceedingly white and brilliant. His hands were naked, and his arms also, a little above the wrist; so, also, were his feet naked, as were his legs, a little above the ankles. His head and neck were also bare. I could discover that he had no other clothing on but this robe, as it was open, so that I could see into his bosom."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_4",
+    "type": "intro",
+    "index": 4,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“Not only was his robe exceedingly white, but his whole person was glorious beyond description, and his countenance truly like lightning. The room was exceedingly light, but not so very bright as immediately around his person. When I first looked upon him, I was afraid; but the fear soon left me."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_5",
+    "type": "intro",
+    "index": 5,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“He called me by name, and said unto me that he was a messenger sent from the presence of God to me, and that his name was Moroni; that God had a work for me to do; and that my name should be had for good and evil among all nations, kindreds, and tongues, or that it should be both good and evil spoken of among all people."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_6",
+    "type": "intro",
+    "index": 6,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“He said there was a book deposited, written upon gold plates, giving an account of the former inhabitants of this continent, and the source from whence they sprang. He also said that the fulness of the everlasting Gospel was contained in it, as delivered by the Savior to the ancient inhabitants;"
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_7",
+    "type": "intro",
+    "index": 7,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“Also, that there were two stones in silver bows—and these stones, fastened to a breastplate, constituted what is called the Urim and Thummim—deposited with the plates; and the possession and use of these stones were what constituted ‘seers’ in ancient or former times; and that God had prepared them for the purpose of translating the book. …"
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_8",
+    "type": "intro",
+    "index": 8,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“Again, he told me, that when I got those plates of which he had spoken—for the time that they should be obtained was not yet fulfilled—I should not show them to any person; neither the breastplate with the Urim and Thummim; only to those to whom I should be commanded to show them; if I did I should be destroyed. While he was conversing with me about the plates, the vision was opened to my mind that I could see the place where the plates were deposited, and that so clearly and distinctly that I knew the place again when I visited it."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_9",
+    "type": "intro",
+    "index": 9,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“After this communication, I saw the light in the room begin to gather immediately around the person of him who had been speaking to me, and it continued to do so until the room was again left dark, except just around him; when, instantly I saw, as it were, a conduit open right up into heaven, and he ascended till he entirely disappeared, and the room was left as it had been before this heavenly light had made its appearance."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_10",
+    "type": "intro",
+    "index": 10,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“I lay musing on the singularity of the scene, and marveling greatly at what had been told to me by this extraordinary messenger; when, in the midst of my meditation, I suddenly discovered that my room was again beginning to get lighted, and in an instant, as it were, the same heavenly messenger was again by my bedside."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_11",
+    "type": "intro",
+    "index": 11,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“He commenced, and again related the very same things which he had done at his first visit, without the least variation; which having done, he informed me of great judgments which were coming upon the earth, with great desolations by famine, sword, and pestilence; and that these grievous judgments would come on the earth in this generation. Having related these things, he again ascended as he had done before."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_12",
+    "type": "intro",
+    "index": 12,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“By this time, so deep were the impressions made on my mind, that sleep had fled from my eyes, and I lay overwhelmed in astonishment at what I had both seen and heard. But what was my surprise when again I beheld the same messenger at my bedside, and heard him rehearse or repeat over again to me the same things as before; and added a caution to me, telling me that Satan would try to tempt me (in consequence of the indigent circumstances of my father’s family), to get the plates for the purpose of getting rich. This he forbade me, saying that I must have no other object in view in getting the plates but to glorify God, and must not be influenced by any other motive than that of building his kingdom; otherwise I could not get them."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_13",
+    "type": "intro",
+    "index": 13,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“After this third visit, he again ascended into heaven as before, and I was again left to ponder on the strangeness of what I had just experienced; when almost immediately after the heavenly messenger had ascended from me for the third time, the cock crowed, and I found that day was approaching, so that our interviews must have occupied the whole of that night."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_14",
+    "type": "intro",
+    "index": 14,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“I shortly after arose from my bed, and, as usual, went to the necessary labors of the day; but, in attempting to work as at other times, I found my strength so exhausted as to render me entirely unable. My father, who was laboring along with me, discovered something to be wrong with me, and told me to go home. I started with the intention of going to the house; but, in attempting to cross the fence out of the field where we were, my strength entirely failed me, and I fell helpless on the ground, and for a time was quite unconscious of anything."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_15",
+    "type": "intro",
+    "index": 15,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“The first thing that I can recollect was a voice speaking unto me, calling me by name. I looked up, and beheld the same messenger standing over my head, surrounded by light as before. He then again related unto me all that he had related to me the previous night, and commanded me to go to my father and tell him of the vision and commandments which I had received."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_16",
+    "type": "intro",
+    "index": 16,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“I obeyed; I returned to my father in the field, and rehearsed the whole matter to him. He replied to me that it was of God, and told me to go and do as commanded by the messenger. I left the field, and went to the place where the messenger had told me the plates were deposited; and owing to the distinctness of the vision which I had had concerning it, I knew the place the instant that I arrived there."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_17",
+    "type": "intro",
+    "index": 17,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“Convenient to the village of Manchester, Ontario county, New York, stands a hill of considerable size, and the most elevated of any in the neighborhood. On the west side of this hill, not far from the top, under a stone of considerable size, lay the plates, deposited in a stone box. This stone was thick and rounding in the middle on the upper side, and thinner towards the edges, so that the middle part of it was visible above the ground, but the edge all around was covered with earth."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_18",
+    "type": "intro",
+    "index": 18,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“Having removed the earth, I obtained a lever, which I got fixed under the edge of the stone, and with a little exertion raised it up. I looked in, and there indeed did I behold the plates, the Urim and Thummim, and the breastplate, as stated by the messenger. The box in which they lay was formed by laying stones together in some kind of cement. In the bottom of the box were laid two stones crossways of the box, and on these stones lay the plates and the other things with them."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_19",
+    "type": "intro",
+    "index": 19,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“I made an attempt to take them out, but was forbidden by the messenger, and was again informed that the time for bringing them forth had not yet arrived, neither would it, until four years from that time; but he told me that I should come to that place precisely in one year from that time, and that he would there meet with me, and that I should continue to do so until the time should come for obtaining the plates."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_20",
+    "type": "intro",
+    "index": 20,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“Accordingly, as I had been commanded, I went at the end of each year, and at each time I found the same messenger there, and received instruction and intelligence from him at each of our interviews, respecting what the Lord was going to do, and how and in what manner his kingdom was to be conducted in the last days. …"
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_21",
+    "type": "intro",
+    "index": 21,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“At length the time arrived for obtaining the plates, the Urim and Thummim, and the breastplate. On the twenty-second day of September, one thousand eight hundred and twenty-seven, having gone as usual at the end of another year to the place where they were deposited, the same heavenly messenger delivered them up to me with this charge: that I should be responsible for them; that if I should let them go carelessly, or through any neglect of mine, I should be cut off; but that if I would use all my endeavors to preserve them, until he, the messenger, should call for them, they should be protected."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_22",
+    "type": "intro",
+    "index": 22,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "“I soon found out the reason why I had received such strict charges to keep them safe, and why it was that the messenger had said that when I had done what was required at my hand, he would call for them. For no sooner was it known that I had them, than the most strenuous exertions were used to get them from me. Every stratagem that could be invented was resorted to for that purpose. The persecution became more bitter and severe than before, and multitudes were on the alert continually to get them from me if possible. But by the wisdom of God, they remained safe in my hands, until I had accomplished by them what was required at my hand. When, according to arrangements, the messenger called for them, I delivered them up to him; and he has them in his charge until this day, being the second day of May, one thousand eight hundred and thirty-eight.”"
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_23",
+    "type": "intro",
+    "index": 23,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "For a more complete account, see Joseph Smith—History in the Pearl of Great Price."
+  },
+  {
+    "id": "intro_testimony-of-the-prophet-joseph-smith_24",
+    "type": "intro",
+    "index": 24,
+    "title": "Testimony of the Prophet Joseph Smith",
+    "text": "The ancient record thus brought forth from the earth as the voice of a people speaking from the dust, and translated into modern speech by the gift and power of God as attested by Divine affirmation, was first published to the world in the year 1830 as The Book of Mormon."
+  },
+  {
+    "id": "intro_brief-explanation-about-the-book-of-mormon_0",
+    "type": "intro",
+    "index": 0,
+    "title": "Brief Explanation about the Book of Mormon",
+    "text": "The Book of Mormon is a sacred record of peoples in ancient America and was engraved upon metal plates. Sources from which this record was compiled include the following:"
+  },
+  {
+    "id": "intro_brief-explanation-about-the-book-of-mormon_1",
+    "type": "intro",
+    "index": 1,
+    "title": "Brief Explanation about the Book of Mormon",
+    "text": "The Plates of Nephi, which were of two kinds: the small plates and the large plates. The former were more particularly devoted to spiritual matters and the ministry and teachings of the prophets, while the latter were occupied mostly by a secular history of the peoples concerned (1 Nephi 9:2–4). From the time of Mosiah, however, the large plates also included items of major spiritual importance."
+  },
+  {
+    "id": "intro_brief-explanation-about-the-book-of-mormon_2",
+    "type": "intro",
+    "index": 2,
+    "title": "Brief Explanation about the Book of Mormon",
+    "text": "The Plates of Mormon, which consist of an abridgment by Mormon from the large plates of Nephi, with many commentaries. These plates also contained a continuation of the history by Mormon and additions by his son Moroni."
+  },
+  {
+    "id": "intro_brief-explanation-about-the-book-of-mormon_3",
+    "type": "intro",
+    "index": 3,
+    "title": "Brief Explanation about the Book of Mormon",
+    "text": "The Plates of Ether, which present a history of the Jaredites. This record was abridged by Moroni, who inserted comments of his own and incorporated the record with the general history under the title “Book of Ether.”"
+  },
+  {
+    "id": "intro_brief-explanation-about-the-book-of-mormon_4",
+    "type": "intro",
+    "index": 4,
+    "title": "Brief Explanation about the Book of Mormon",
+    "text": "The Plates of Brass brought by the people of Lehi from Jerusalem in 600 B.C. These contained “the five books of Moses, … and also a record of the Jews from the beginning, … down to the commencement of the reign of Zedekiah, king of Judah; and also the prophecies of the holy prophets” (1 Nephi 5:11–13). Many quotations from these plates, citing Isaiah and other biblical and nonbiblical prophets, appear in the Book of Mormon."
+  },
+  {
+    "id": "intro_brief-explanation-about-the-book-of-mormon_5",
+    "type": "intro",
+    "index": 5,
+    "title": "Brief Explanation about the Book of Mormon",
+    "text": "The Book of Mormon comprises fifteen main parts or divisions, known, with one exception, as books, usually designated by the name of their principal author. The first portion (the first six books, ending with Omni) is a translation from the small plates of Nephi. Between the books of Omni and Mosiah is an insert called the Words of Mormon. This insert connects the record engraved on the small plates with Mormon’s abridgment of the large plates."
+  },
+  {
+    "id": "intro_brief-explanation-about-the-book-of-mormon_6",
+    "type": "intro",
+    "index": 6,
+    "title": "Brief Explanation about the Book of Mormon",
+    "text": "The longest portion, from Mosiah through Mormon chapter 7, is a translation of Mormon’s abridgment of the large plates of Nephi. The concluding portion, from Mormon chapter 8 to the end of the volume, was engraved by Mormon’s son Moroni, who, after finishing the record of his father’s life, made an abridgment of the Jaredite record (as the book of Ether) and later added the parts known as the book of Moroni."
+  },
+  {
+    "id": "intro_brief-explanation-about-the-book-of-mormon_7",
+    "type": "intro",
+    "index": 7,
+    "title": "Brief Explanation about the Book of Mormon",
+    "text": "In or about the year A.D. 421, Moroni, the last of the Nephite prophet-historians, sealed the sacred record and hid it up unto the Lord, to be brought forth in the latter days, as predicted by the voice of God through His ancient prophets. In A.D. 1823, this same Moroni, then a resurrected personage, visited the Prophet Joseph Smith and subsequently delivered the engraved plates to him."
+  },
+  {
+    "id": "intro_brief-explanation-about-the-book-of-mormon_8",
+    "type": "intro",
+    "index": 8,
+    "title": "Brief Explanation about the Book of Mormon",
+    "text": "About this edition: The original title page, immediately preceding the contents page, is taken from the plates and is part of the sacred text. Introductions in a non-italic typeface, such as in 1 Nephi and immediately preceding Mosiah chapter 9, are also part of the sacred text. Introductions in italics, such as in chapter headings, are not original to the text but are study helps included for convenience in reading."
+  },
+  {
+    "id": "intro_brief-explanation-about-the-book-of-mormon_9",
+    "type": "intro",
+    "index": 9,
+    "title": "Brief Explanation about the Book of Mormon",
+    "text": "Some minor errors in the text have been perpetuated in past editions of the Book of Mormon. This edition contains corrections that seem appropriate to bring the material into conformity with prepublication manuscripts and early editions edited by the Prophet Joseph Smith."
+  },
+  {
+    "id": "intro_testimony-of-eight-witnesses_0",
+    "type": "intro",
+    "index": 0,
+    "title": "Testimony of Eight Witnesses",
+    "text": "Be it known unto all nations, kindreds, tongues, and people, unto whom this work shall come: That Joseph Smith, Jun., the translator of this work, has shown unto us the plates of which hath been spoken, which have the appearance of gold; and as many of the leaves as the said Smith has translated we did handle with our hands; and we also saw the engravings thereon, all of which has the appearance of ancient work, and of curious workmanship. And this we bear record with words of soberness, that the said Smith has shown unto us, for we have seen and hefted, and know of a surety that the said Smith has got the plates of which we have spoken. And we give our names unto the world, to witness unto the world that which we have seen. And we lie not, God bearing witness of it."
+  },
+  {
+    "id": "intro_testimony-of-eight-witnesses_1",
+    "type": "intro",
+    "index": 1,
+    "title": "Testimony of Eight Witnesses",
+    "text": "Christian Whitmer"
+  },
+  {
+    "id": "intro_testimony-of-eight-witnesses_2",
+    "type": "intro",
+    "index": 2,
+    "title": "Testimony of Eight Witnesses",
+    "text": "Jacob Whitmer"
+  },
+  {
+    "id": "intro_testimony-of-eight-witnesses_3",
+    "type": "intro",
+    "index": 3,
+    "title": "Testimony of Eight Witnesses",
+    "text": "Peter Whitmer, Jun."
+  },
+  {
+    "id": "intro_testimony-of-eight-witnesses_4",
+    "type": "intro",
+    "index": 4,
+    "title": "Testimony of Eight Witnesses",
+    "text": "John Whitmer"
+  },
+  {
+    "id": "intro_testimony-of-eight-witnesses_5",
+    "type": "intro",
+    "index": 5,
+    "title": "Testimony of Eight Witnesses",
+    "text": "Hiram Page"
+  },
+  {
+    "id": "intro_testimony-of-eight-witnesses_6",
+    "type": "intro",
+    "index": 6,
+    "title": "Testimony of Eight Witnesses",
+    "text": "Joseph Smith, Sen."
+  },
+  {
+    "id": "intro_testimony-of-eight-witnesses_7",
+    "type": "intro",
+    "index": 7,
+    "title": "Testimony of Eight Witnesses",
+    "text": "Hyrum Smith"
+  },
+  {
+    "id": "intro_testimony-of-eight-witnesses_8",
+    "type": "intro",
+    "index": 8,
+    "title": "Testimony of Eight Witnesses",
+    "text": "Samuel H. Smith"
   }
 ]
