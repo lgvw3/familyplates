@@ -10,6 +10,7 @@ import Image from 'next/image'
 import { AnnotationMenu } from './annotation-menu'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from './ui/breadcrumb'
 import Link from 'next/link'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 interface SelectionInfo {
   text: string;
@@ -57,6 +58,7 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
   const [currentVerseNumber, setCurrentVerseNumber] = useState<number | null>(null)
   const { annotations, addAnnotation, removeAnnotation } = useAnnotations()
   const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isMobile = useIsMobile()
 
   const chapterNumber = Number(chapter.chapter_title.slice(8))
   const isFirstChapter = chapterNumber == 1;
@@ -97,7 +99,6 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
         
         // Calculate the distance from the bottom of the element to the viewport bottom
         const distanceToBottom = windowHeight - rect.bottom;
-        console.log(windowHeight, rect.bottom, distanceToBottom)
         // If the space available is less than the height of your annotation window plus the offset
         if (distanceToBottom < 300) {
           y -= Math.max(450, distanceToBottom + 100)
@@ -271,6 +272,21 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
                             variant="ghost"
                             size="icon"
                             className={`h-6 w-6 p-1 text-${annotation.color}-600`}
+                            onClick={() => {
+                              if (isMobile) {
+                                //open annotations
+
+                              }
+                              else {
+                                const element = document.getElementById('annotations-panel');
+                                if (element) {
+                                  element.scrollIntoView({
+                                    behavior: 'smooth', // Smooth scroll animation
+                                    block: 'start',     // Align to the top of the viewport
+                                  });
+                                }
+                              }
+                            }}
                           >
                             {getAnnotationIcon(annotation.type)}
                           </Button>
@@ -306,14 +322,7 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
             </div>
           </div>
 
-          {/* Annotations Panel */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" className="w-full md:hidden mb-4">
-                View Annotations
-              </Button>
-            </SheetTrigger>
-            <div className="hidden md:block">
+            <div className="hidden md:block" id='annotations-panel'>
               <div className="border rounded-lg p-4 space-y-4">
                 <h2 className="font-semibold">Annotations</h2>
                 {annotations.length === 0 ? (
@@ -361,12 +370,54 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
                 )}
               </div>
             </div>
+
+          {/* Annotations Panel */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" className="w-full md:hidden mb-4">
+                View Annotations
+              </Button>
+            </SheetTrigger>
             <SheetContent>
               <SheetHeader>
                 <SheetTitle>Annotations</SheetTitle>
               </SheetHeader>
-              <div className="mt-4 space-y-4">
-                {/* Same content as the desktop panel */}
+                <div className="space-y-4">
+                  {annotations.map((annotation) => (
+                    <div key={annotation.id} className="space-y-2">
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm font-medium">Verse {annotation.verseNumber}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeAnnotation(annotation.id)}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                      <p className={`text-sm p-2 rounded ${getHighlightStyle(annotation.color, annotation.style)}`}>
+                        &ldquo;{annotation.highlightedText}&rdquo;
+                      </p>
+                      <p className="text-sm">{annotation.text}</p>
+                      {annotation.url && (
+                        <a
+                          href={annotation.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          View Reference
+                        </a>
+                      )}
+                      {annotation.photoUrl && (
+                        <Image
+                          src={annotation.photoUrl}
+                          alt="Annotation"
+                          className="w-full h-32 object-cover rounded"
+                        />
+                      )}
+                    </div>
+                  ))}
               </div>
             </SheetContent>
           </Sheet>
