@@ -58,6 +58,7 @@ export default function IntroReader({intro}: {intro: Intro}) {
     const [currentVerseNumber, setCurrentVerseNumber] = useState<number | null>(null)
     const { annotations, addAnnotation, removeAnnotation } = useAnnotations()
     const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const [annotationsOpen, setAnnotationsOpen] = useState(false)
     const isMobile = useIsMobile()
     const isTitlePage = intro.title == 'Title Page'
     const introIndex = introMaterialOrder.indexOf(intro.title)
@@ -257,7 +258,7 @@ export default function IntroReader({intro}: {intro: Intro}) {
                                                 onClick={() => {
                                                     if (isMobile) {
                                                     //open annotations
-                    
+                                                        setAnnotationsOpen(true)
                                                     }
                                                     else {
                                                     const element = document.getElementById('annotations-panel');
@@ -365,9 +366,9 @@ export default function IntroReader({intro}: {intro: Intro}) {
                     </div>
 
                 {/* Annotations Panel */}
-                <Sheet>
+                <Sheet open={annotationsOpen} onOpenChange={(b) => setAnnotationsOpen(b)}>
                     <SheetTrigger asChild>
-                        <Button variant="outline" className="w-full md:hidden mb-4">
+                        <Button variant="outline" className="w-full md:hidden mb-4" onClick={() => setAnnotationsOpen(true)}>
                             View Annotations
                         </Button>
                     </SheetTrigger>

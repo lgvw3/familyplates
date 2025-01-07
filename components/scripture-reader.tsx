@@ -59,6 +59,7 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
   const { annotations, addAnnotation, removeAnnotation } = useAnnotations()
   const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isMobile = useIsMobile()
+  const [annotationsOpen, setAnnotationsOpen] = useState(false)
 
   const chapterNumber = Number(chapter.chapter_title.slice(8))
   const isFirstChapter = chapterNumber == 1;
@@ -275,7 +276,7 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
                             onClick={() => {
                               if (isMobile) {
                                 //open annotations
-
+                                setAnnotationsOpen(true)
                               }
                               else {
                                 const element = document.getElementById('annotations-panel');
@@ -372,9 +373,9 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
             </div>
 
           {/* Annotations Panel */}
-          <Sheet>
+          <Sheet open={annotationsOpen} onOpenChange={(b) => setAnnotationsOpen(b)}>
             <SheetTrigger asChild>
-              <Button variant="outline" className="w-full md:hidden mb-4">
+              <Button variant="outline" className="w-full md:hidden mb-4" onClick={() => setAnnotationsOpen(true)}>
                 View Annotations
               </Button>
             </SheetTrigger>
