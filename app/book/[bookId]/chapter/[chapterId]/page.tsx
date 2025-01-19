@@ -19,8 +19,8 @@ function toTitleCase(str: string): string {
 export async function generateMetadata({ params }: ChapterPageProps) {
     const { bookId, chapterId } = await params;
     return {
-        title: `${toTitleCase(bookId.replace(/-/g, " "))} Chapter ${chapterId}`,
-        description: `Read ${toTitleCase(bookId.replace(/-/g, " "))} Chapter ${chapterId} with annotations and highlights.`,
+        title: `${toTitleCase(bookId.replace(/-/g, " "))} | ${toTitleCase(chapterId.replace('_', ' '))}`,
+        description: `Read ${toTitleCase(bookId.replace(/-/g, " "))} ${toTitleCase(chapterId.replace('_', ' '))} with annotations and highlights.`,
     };
 }
 

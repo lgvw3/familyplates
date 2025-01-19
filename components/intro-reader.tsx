@@ -169,7 +169,7 @@ export default function IntroReader({intro}: {intro: Intro}) {
             )
         }
 
-        return <p className="text-lg leading-relaxed" dangerouslySetInnerHTML={{ __html: text }} />
+        return <p className="text-lg leading-relaxed font-serif" dangerouslySetInnerHTML={{ __html: text }} />
     }
 
     useEffect(() => {

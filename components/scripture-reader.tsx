@@ -157,7 +157,7 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
       )
     }
 
-    return <p className="text-lg leading-relaxed" dangerouslySetInnerHTML={{ __html: text }} />
+    return <p className="text-lg leading-relaxed font-serif" dangerouslySetInnerHTML={{ __html: text }} />
   }
 
   useEffect(() => {
@@ -231,16 +231,16 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
                   <>
                     <h1 className="text-3xl font-bold">{book.title}</h1>
                     <h2 className="text-xl font-bold">{book.subtitle}</h2>
-                    <h3 className="text-lg">{book.intro}</h3>
+                    <h3 className="text-lg font-serif">{book.intro}</h3>
                   </>
               )}
               {
                 chapter.chapter_heading ?
-                <p>{chapter.chapter_heading}</p>
+                <p className='font-serif'>{chapter.chapter_heading}</p>
                 : null
               }
-              <h4 className='text-muted-foreground text-center'>{chapter.chapter_title}</h4>
-              <p className="text-muted-foreground">{chapter.summary}</p>
+              <h4 className='text-muted-foreground text-center font-serif'>{chapter.chapter_title}</h4>
+              <p className="text-muted-foreground font-serif">{chapter.summary}</p>
             </div>
 
             <div className="space-y-4">
@@ -259,7 +259,7 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
                   >
                     <div className="flex gap-2">
                       {showVerseNumbers && (
-                        <span className="text-sm text-muted-foreground font-medium w-6 shrink-0">
+                        <span className="text-sm text-muted-foreground font-medium w-6 shrink-0 font-serif">
                           {verse.number}
                         </span>
                       )}
