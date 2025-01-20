@@ -1,11 +1,11 @@
 import { ContinueReading } from "@/components/continue-reading"
-//import RealTimeFeed from "@/components/real-time-feed"
+import RealTimeFeed from "@/components/real-time-feed"
 import { RecentAnnotations } from "@/components/recent-annotations"
 
 export default function HomePage() {
   return (
     <div className="space-y-8 pt-8 px-4">
-      {/* <RealTimeFeed /> */}
+      <RealTimeFeed />
       <ContinueReading />
       <div>
         <div className="flex flex-col gap-2">

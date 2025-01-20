@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 
 const RealTimeFeed = () => {
     const [input, setInput] = useState('');
-    const { messages, sendMessage } = useWebSocket();
+    const { sendMessage, annotations } = useWebSocket();
 
     const handleSend = () => {
         sendMessage(input); // Send the input as a message
@@ -17,8 +17,8 @@ const RealTimeFeed = () => {
             <h1>Real-Time Feed</h1>
             <ul>
                 {
-                    messages.map((msg, idx) => (
-                        <li key={idx}>{msg}</li>
+                    annotations.map((annotation, idx) => (
+                        <li key={idx}>{annotation.text}</li>
                     ))
                 }
             </ul>

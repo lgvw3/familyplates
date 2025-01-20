@@ -1,4 +1,5 @@
 import { FuseResultMatch } from "fuse.js";
+import { ObjectId } from "mongodb";
 
 export interface Verse {
   number: number;
@@ -29,13 +30,13 @@ export type HighlightColor = 'yellow' | 'green' | 'blue' | 'purple' | 'pink';
 export type TextStyle = 'underline' | 'bold' | 'italic' | 'none';
 
 export interface Annotation {
-  id: string;
+  _id: ObjectId | string | null;
   verseNumber: number;
   text: string;
   highlightedText: string;
   type: AnnotationType;
   color: HighlightColor;
-  createdAt: string;
+  createdAt: Date;
   url?: string;
   photoUrl?: string;
 }

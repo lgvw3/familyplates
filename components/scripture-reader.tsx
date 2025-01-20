@@ -11,6 +11,8 @@ import { AnnotationMenu } from './annotation-menu'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from './ui/breadcrumb'
 import Link from 'next/link'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { saveAnnotation } from '@/lib/annotations/actions'
+import { toast } from 'sonner'
 
 interface SelectionInfo {
   text: string;
@@ -109,17 +111,34 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
     }, 10)
   }
 
-  const handleAddAnnotation = (annotationData: Omit<Annotation, 'id' | 'verseNumber' | 'createdAt' | 'highlightedText'>) => {
+  const handleAddAnnotation = async (annotationData: Omit<Annotation, '_id' | 'verseNumber' | 'createdAt' | 'highlightedText'>) => {
     if (currentSelection && currentVerseNumber) {
-      addAnnotation({
-        ...annotationData,
+      const results = await saveAnnotation({
+        _id: null,
         verseNumber: currentVerseNumber,
+        text: annotationData.text,
         highlightedText: currentSelection.text,
+        type: annotationData.type,
+        color: annotationData.color,
+        createdAt: new Date()
       })
-      setMenuPosition(null)
-      setCurrentVerseNumber(null)
-      setCurrentSelection(null)
-      window.getSelection()?.removeAllRanges()
+      if (results.insertedId) {
+        toast.success('Note shared with the family!')
+        addAnnotation({
+          ...annotationData,
+          _id: results.insertedId,
+          createdAt: new Date(),
+          verseNumber: currentVerseNumber,
+          highlightedText: currentSelection.text,
+        })
+        setMenuPosition(null)
+        setCurrentVerseNumber(null)
+        setCurrentSelection(null)
+        window.getSelection()?.removeAllRanges()
+      }
+      else {
+        toast.success(`Shoot! ${results.message}`)
+      }
     }
   }
 
@@ -262,7 +281,7 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
                       <div className="absolute -right-8 top-1 flex flex-col gap-1">
                         {verseAnnotations.map((annotation) => (
                           <Button
-                            key={annotation.id}
+                            key={annotation._id?.toString()}
                             variant="ghost"
                             size="icon"
                             className={`h-6 w-6 p-1 text-${annotation.color}-600`}
@@ -326,13 +345,13 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
                 ) : (
                   <div className="space-y-4">
                     {annotations.map((annotation) => (
-                      <div key={annotation.id} className="space-y-2">
+                      <div key={annotation._id?.toString()} className="space-y-2">
                         <div className="flex justify-between items-start">
                           <span className="text-sm font-medium">Verse {annotation.verseNumber}</span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => removeAnnotation(annotation.id)}
+                            onClick={() => removeAnnotation(annotation._id?.toString() ?? '')}
                           >
                             Remove
                           </Button>
@@ -378,13 +397,13 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
               </SheetHeader>
                 <div className="space-y-4">
                   {annotations.map((annotation) => (
-                    <div key={annotation.id} className="space-y-2">
+                    <div key={annotation._id?.toString()} className="space-y-2">
                       <div className="flex justify-between items-start">
                         <span className="text-sm font-medium">Verse {annotation.verseNumber}</span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => removeAnnotation(annotation.id)}
+                          onClick={() => removeAnnotation(annotation._id?.toString() ?? '')}
                         >
                           Remove
                         </Button>

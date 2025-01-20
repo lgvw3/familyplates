@@ -1,10 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Annotation } from "@/types/scripture";
+
 
 export const useWebSocket = () => {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [messages, setMessages] = useState<string[]>([]);
+    const [annotations, setAnnotations] = useState<Annotation[]>([])
     const [retryCount, setRetryCount] = useState(0);
 
     useEffect(() => {
@@ -20,7 +23,12 @@ export const useWebSocket = () => {
 
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                setMessages((prev) => [...prev, data]);
+                if (data.type == 'annotation') {
+                    setAnnotations((prev) => [...prev, data.data])
+                }
+                else {
+                    setMessages((prev) => [...prev, data]);
+                }
             };
 
             ws.onerror = (error) => {
@@ -45,7 +53,7 @@ export const useWebSocket = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const checkServerHealth = async () => {
+/*     const checkServerHealth = async () => {
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_WEB_SOCKET_URL}/health`);
             return response.ok;
@@ -53,7 +61,7 @@ export const useWebSocket = () => {
             console.error('Health check failed:', error);
             return false;
         }
-    };
+    }; */
       
 
     const sendMessage = (message: string) => {
@@ -64,5 +72,5 @@ export const useWebSocket = () => {
         }
     };
 
-    return { messages, sendMessage };
+    return { messages, sendMessage, annotations };
 };

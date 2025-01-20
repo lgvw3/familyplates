@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
 import { Navigation } from '@/components/navigation';
+import { Toaster } from '@/components/ui/sonner';
 
 const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
@@ -33,6 +34,7 @@ export default function RootLayout({
           <main>
             {children}
           </main>
+          <Toaster richColors />
           <Footer />
         </ThemeProvider>
       </body>
