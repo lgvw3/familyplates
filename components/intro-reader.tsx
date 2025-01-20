@@ -33,7 +33,7 @@ const getAnnotationIcon = (type: AnnotationType) => {
     }
 }
 
-const getHighlightStyle = (color: 'yellow' | 'green' | 'blue' | 'purple' | 'pink', style: 'bold' | 'italic' | 'underline' | 'none') => {
+const getHighlightStyle = (color: 'yellow' | 'green' | 'blue' | 'purple' | 'pink') => {
     const colorClasses = {
         yellow: 'bg-yellow-200 dark:bg-yellow-900',
         green: 'bg-green-200 dark:bg-green-900',
@@ -41,15 +41,8 @@ const getHighlightStyle = (color: 'yellow' | 'green' | 'blue' | 'purple' | 'pink
         purple: 'bg-purple-200 dark:bg-purple-900',
         pink: 'bg-pink-200 dark:bg-pink-900',
     }
-    
-    const styleClasses = {
-        bold: 'font-bold',
-        italic: 'italic',
-        underline: 'underline',
-        none: '',
-    }
 
-    return `${colorClasses[color]} ${styleClasses[style]}`
+    return colorClasses[color]
 }
 
 export default function IntroReader({intro}: {intro: Intro}) {
@@ -153,7 +146,7 @@ export default function IntroReader({intro}: {intro: Intro}) {
         const verseAnnotations = annotations.filter(a => a.verseNumber === index)
         
         verseAnnotations.forEach(annotation => {
-            const highlightClass = getHighlightStyle(annotation.color, annotation.style)
+            const highlightClass = getHighlightStyle(annotation.color)
             text = text.replace(
                 annotation.highlightedText,
                 `<span class="${highlightClass}">${annotation.highlightedText}</span>`
@@ -337,7 +330,7 @@ export default function IntroReader({intro}: {intro: Intro}) {
                                                     Remove
                                                 </Button>
                                             </div>
-                                            <p className={`text-sm p-2 rounded ${getHighlightStyle(annotation.color, annotation.style)}`}>
+                                            <p className={`text-sm p-2 rounded ${getHighlightStyle(annotation.color)}`}>
                                                 &ldquo;{annotation.highlightedText}&rdquo;
                                             </p>
                                             <p className="text-sm">{annotation.text}</p>
@@ -395,7 +388,7 @@ export default function IntroReader({intro}: {intro: Intro}) {
                                                 Remove
                                             </Button>
                                         </div>
-                                        <p className={`text-sm p-2 rounded ${getHighlightStyle(annotation.color, annotation.style)}`}>
+                                        <p className={`text-sm p-2 rounded ${getHighlightStyle(annotation.color)}`}>
                                             &ldquo;{annotation.highlightedText}&rdquo;
                                         </p>
                                         <p className="text-sm">{annotation.text}</p>

@@ -35,7 +35,6 @@ export interface Annotation {
   highlightedText: string;
   type: AnnotationType;
   color: HighlightColor;
-  style: TextStyle;
   createdAt: string;
   url?: string;
   photoUrl?: string;

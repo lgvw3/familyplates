@@ -16,8 +16,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { AnnotationType, HighlightColor, TextStyle } from '../types/scripture'
-import { Link, Bold, Italic, Underline, StickyNote, X, ImageIcon } from 'lucide-react'
+import { AnnotationType, HighlightColor } from '../types/scripture'
+import { LinkIcon, StickyNoteIcon, XIcon, ImageIcon } from 'lucide-react'
 
 interface AnnotationMenuProps {
   position: { x: number; y: number; width?: number } | null;
@@ -27,7 +27,6 @@ interface AnnotationMenuProps {
     selectedText: string,
     type: AnnotationType;
     color: HighlightColor;
-    style: TextStyle;
     text: string;
     url?: string;
     photoUrl?: string;
@@ -37,7 +36,6 @@ interface AnnotationMenuProps {
 export function AnnotationMenu({ position, selectedText, onClose, onSave }: AnnotationMenuProps) {
   const [type, setType] = useState<AnnotationType>('note')
   const [color, setColor] = useState<HighlightColor>('yellow')
-  const [style, setStyle] = useState<TextStyle>('none')
   const [text, setText] = useState('')
   const [url, setUrl] = useState('')
   const [photoUrl, setPhotoUrl] = useState('')
@@ -49,7 +47,6 @@ export function AnnotationMenu({ position, selectedText, onClose, onSave }: Anno
       selectedText,
       type,
       color,
-      style,
       text,
       ...(url && { url }),
       ...(photoUrl && { photoUrl })
@@ -75,14 +72,14 @@ export function AnnotationMenu({ position, selectedText, onClose, onSave }: Anno
               size="sm"
               onClick={() => setType('note')}
             >
-              <StickyNote className="h-4 w-4" />
+              <StickyNoteIcon className="h-4 w-4" />
             </Button>
             <Button
               variant={type === 'link' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setType('link')}
             >
-              <Link className="h-4 w-4" />
+              <LinkIcon className="h-4 w-4" />
             </Button>
             <Button
               variant={type === 'photo' ? 'default' : 'ghost'}
@@ -93,35 +90,8 @@ export function AnnotationMenu({ position, selectedText, onClose, onSave }: Anno
             </Button>
           </div>
           <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
+            <XIcon className="h-4 w-4" />
           </Button>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Style</Label>
-          <div className="flex gap-2">
-            <Button
-              variant={style === 'bold' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setStyle('bold')}
-            >
-              <Bold className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={style === 'italic' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setStyle('italic')}
-            >
-              <Italic className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={style === 'underline' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setStyle('underline')}
-            >
-              <Underline className="h-4 w-4" />
-            </Button>
-          </div>
         </div>
 
         <div className="space-y-2">
