@@ -4,6 +4,7 @@ import { Annotation } from "@/types/scripture";
 import clientPromise from "../mongodb";
 import z from "zod";
 import redis from "ioredis";
+import sendErrorMessageToMe from "../dev/actions";
 
 const zAnnotation = z.object({
     verseNumber: z.number(),
@@ -68,6 +69,7 @@ export async function saveAnnotation(annotation: Annotation) {
             }
             catch(err) {
                 console.error(err)
+                sendErrorMessageToMe(annotation)
                 return {
                     message: `Real time update error: ${err}`
                 }
@@ -75,12 +77,14 @@ export async function saveAnnotation(annotation: Annotation) {
         }
         else {
             console.error("Database Error: Could not save annotation. Failed insert.")
+            sendErrorMessageToMe(annotation)
             return {
                 message: "Database Error: Could not save annotation"
             }
         }
     } catch(error) {
         console.error(error)
+        sendErrorMessageToMe(annotation)
         return {
             message: error
         }
