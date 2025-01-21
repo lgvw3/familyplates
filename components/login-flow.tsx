@@ -1,8 +1,8 @@
 "use client"
 
-import { Dispatch, SetStateAction, useState } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Loader2, Key, UserCircle2 } from "lucide-react"
+import { Key, UserCircle2, Loader2Icon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -10,6 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { toast } from "sonner"
 import { UserAccount } from "@/lib/auth/definitions"
 import { accounts } from "@/lib/auth/accounts"
+import { checkPassword } from "@/lib/auth/data"
 
 export default function LoginFlow() {
   const [step, setStep] = useState<"password" | "account">("password")
@@ -17,10 +18,26 @@ export default function LoginFlow() {
   const [isVerifying, setIsVerifying] = useState(false)
   const [selectedAccount, setSelectedAccount] = useState<UserAccount | null>(null)
 
+  const handlePasswordSet = async (passGuess: string) => {
+    setIsVerifying(true)
+    try {
+      const response = await checkPassword(passGuess)
+
+      if (response) {
+        setStep("account")
+      } else {
+        toast.warning('No Go.');
+      }
+    } catch (err) {
+      console.error('Error checking password', err);
+      toast.warning('Failed to check password. Please try again.');
+    }
+    setIsVerifying(false)
+  }
+
   const handleAccountSelect = async (account: UserAccount) => {
     setSelectedAccount(account)
     setIsVerifying(true)
-    console.log(account)
     try {
       const response = await fetch('/api/auth', {
         method: 'POST',
@@ -57,7 +74,7 @@ export default function LoginFlow() {
                 key="password"
                 password={password}
                 setPassword={setPassword}
-                setStep={setStep}
+                handlePasswordSet={handlePasswordSet}
                 isVerifying={isVerifying}
               />
             ) : (
@@ -79,11 +96,11 @@ export default function LoginFlow() {
 interface PasswordStepProps {
   password: string
   setPassword: (value: string) => void
-  setStep: Dispatch<SetStateAction<"password" | "account">>
+  handlePasswordSet: (pass: string) => void
   isVerifying: boolean
 }
 
-function PasswordStep({ password, setPassword, setStep, isVerifying }: PasswordStepProps) {
+function PasswordStep({ password, setPassword, handlePasswordSet, isVerifying }: PasswordStepProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -118,9 +135,11 @@ function PasswordStep({ password, setPassword, setStep, isVerifying }: PasswordS
           </div>
           <Button 
             className="w-full"
-            onClick={() => setStep("account")}
+            onClick={() => handlePasswordSet(password)}
+            aria-disabled={!password || isVerifying}
+            disabled={!password || isVerifying}
           >
-            Continue
+             {isVerifying ? <Loader2Icon className="w-4 h-4 animate-spin" /> : "Continue"}
           </Button>
         </div>
       </div>
@@ -179,7 +198,7 @@ function AccountStep({ accounts, onSelect, isVerifying, selectedAccount }: Accou
                     <div className="font-medium">{account.name}</div>
                   </div>
                   {isVerifying && selectedAccount?.id === account.id && (
-                    <Loader2 className="w-4 h-4 animate-spin ml-2" />
+                    <Loader2Icon className="w-4 h-4 animate-spin ml-2" />
                   )}
                 </div>
               </Button>
