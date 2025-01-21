@@ -50,18 +50,18 @@ const getHighlightStyle = (color: 'yellow' | 'green' | 'blue' | 'purple' | 'pink
 }
 
 export default function ScriptureReader({chapter, book, initialAnnotations}: {chapter: Chapter, book: Book, initialAnnotations: Annotation[]}) {
+  const chapterNumber = Number(chapter.chapter_title.slice(8))
+  const isFirstChapter = chapterNumber == 1;
+  
   const [showVerseNumbers, setShowVerseNumbers] = useState(true)
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number; width: number } | null>(null)
   const [currentSelection, setCurrentSelection] = useState<SelectionInfo | null>(null)
   const [currentVerseNumber, setCurrentVerseNumber] = useState<number | null>(null)
   const [currentVisibleVerse, setCurrentVisibleVerse] = useState(1);
-  const { annotations, addAnnotation} = useWebSocket(initialAnnotations)
+  const { annotations, addAnnotation} = useWebSocket(initialAnnotations, false, book.title.toLowerCase().replaceAll(' ', '-'), chapterNumber)
   const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isMobile = useIsMobile()
   const [annotationsOpen, setAnnotationsOpen] = useState(false)
-
-  const chapterNumber = Number(chapter.chapter_title.slice(8))
-  const isFirstChapter = chapterNumber == 1;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {

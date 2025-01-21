@@ -21,3 +21,7 @@ Here are some of the ideas for that, thank you Kayla!
 
 1. Real time collaboration
 2. Real time updates
+
+## Update as of Jan 21, 2025
+
+Real time updating happens on the feed and when reading thanks to the websocket that is powered with code in [this repo](https://github.com/lgvw3/familyPlatesWebSocketServer) have some things to fix but making progress!

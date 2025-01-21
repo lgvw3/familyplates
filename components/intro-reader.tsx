@@ -51,7 +51,7 @@ export default function IntroReader({intro, initialAnnotations}: {intro: Intro, 
     const [menuPosition, setMenuPosition] = useState<{ x: number; y: number; width: number } | null>(null)
     const [currentSelection, setCurrentSelection] = useState<SelectionInfo | null>(null)
     const [currentVerseNumber, setCurrentVerseNumber] = useState<number | null>(null)
-    const { annotations, addAnnotation } = useWebSocket(initialAnnotations)
+    const { annotations, addAnnotation } = useWebSocket(initialAnnotations, false, intro.title.replace(' ', '-').toLowerCase(), 1)
     const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const [annotationsOpen, setAnnotationsOpen] = useState(false)
     const isMobile = useIsMobile()

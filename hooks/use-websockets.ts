@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Annotation } from "@/types/scripture";
 
 
-export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boolean) => {
+export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boolean, bookId?: string, chapterNumber?: number) => {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [messages, setMessages] = useState<string[]>([]);
     const [annotations, setAnnotations] = useState<Annotation[]>(initialAnnotations)
@@ -83,11 +83,13 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
     };
 
     const addAnnotation = useCallback((annotation: Annotation) => {
-        setAnnotations(prev => {
-            const temp = prev.filter(a => a._id != annotation._id)
-            return [...temp, annotation]
-        })
-    }, [])
+        if (!bookId && !chapterNumber || (annotation.bookId == bookId && annotation.chapterNumber == chapterNumber )) {
+            setAnnotations(prev => {
+                const temp = prev.filter(a => a._id != annotation._id)
+                return [...temp, annotation]
+            })
+        }
+    }, [bookId, chapterNumber])
 
     const addAnnotationToTopOfFeed = useCallback((annotation: Annotation) => {
         setAnnotations(prev => {
