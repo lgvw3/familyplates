@@ -33,7 +33,9 @@ export default function LoginFlow() {
       });
 
       if (response.ok) {
-        router.replace('/');
+        setTimeout(() => {
+          router.push('/');
+        }, 100);
         return
       } else {
         toast.warning('Failed to log in. Please try again.');
