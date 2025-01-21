@@ -13,6 +13,9 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { saveAnnotation } from '@/lib/annotations/actions'
 import { toast } from 'sonner'
 import { useWebSocket } from '@/hooks/use-websockets'
+import { debounce } from 'lodash';
+import { saveBookmark } from '@/lib/reading/action'
+
 
 interface SelectionInfo {
   text: string;
@@ -51,6 +54,7 @@ export default function ScriptureReader({chapter, book, initialAnnotations}: {ch
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number; width: number } | null>(null)
   const [currentSelection, setCurrentSelection] = useState<SelectionInfo | null>(null)
   const [currentVerseNumber, setCurrentVerseNumber] = useState<number | null>(null)
+  const [currentVisibleVerse, setCurrentVisibleVerse] = useState(1);
   const { annotations, addAnnotation} = useWebSocket(initialAnnotations)
   const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isMobile = useIsMobile()
@@ -170,7 +174,13 @@ export default function ScriptureReader({chapter, book, initialAnnotations}: {ch
       )
     }
 
-    return <p className="text-lg leading-relaxed font-serif" dangerouslySetInnerHTML={{ __html: text }} />
+    return (
+      <p 
+        className="text-lg leading-relaxed font-serif verse" 
+        data-verse-id={verse.number} 
+        dangerouslySetInnerHTML={{ __html: text }} 
+      />
+    )
   }
 
   useEffect(() => {
@@ -205,7 +215,72 @@ export default function ScriptureReader({chapter, book, initialAnnotations}: {ch
             }
         }
     }
-}, []);
+  }, []);
+
+  const saveLastReadPlace = async (verseNumber: number) => {
+    try {
+      console.log('save place')
+      await saveBookmark({
+        _id: null,
+        verseNumber: verseNumber,
+        bookId: book.title.toLowerCase().replaceAll(' ', '-'),
+        chapterNumber: chapterNumber,
+        userId: 0,
+        lastRead: new Date()
+      })
+    } catch (error) {
+      console.error('Failed to save place:', error);
+    }
+  };
+
+  const debouncedSavePlace = debounce((verseId: number) => {
+    saveLastReadPlace(verseId);
+  }, 3000) 
+
+  useEffect(() => {
+    const verseElements = document.querySelectorAll('.verse'); // Select all verse divs
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries.filter(entry => entry.isIntersecting);
+
+        if (visibleEntries.length > 0) {
+          // Find the most "middle" element
+          const middleEntry = visibleEntries.reduce((closest, entry) => {
+            const box = entry.target.getBoundingClientRect();
+            const middleDistance = Math.abs(window.innerHeight / 2 - (box.top + box.height / 2));
+
+            return middleDistance < closest.distance
+              ? { distance: middleDistance, element: entry.target }
+              : closest;
+          }, { distance: Infinity, element: null as Element | null });
+
+          if (middleEntry.element) {
+            const verseId = middleEntry.element.getAttribute('data-verse-id');
+            if (verseId) {
+              setCurrentVisibleVerse(Number(verseId));
+            }
+          }
+        }
+      },
+      { threshold: 0.5 } // Consider a div visible if 50% or more is in the viewport
+    );
+
+    verseElements.forEach(el => observer.observe(el));
+
+    return () => observer.disconnect(); // Cleanup on unmount
+  }, []);
+
+  useEffect(() => {
+    // Call the debounced save function whenever the currentVisibleVerse changes
+    debouncedSavePlace(currentVisibleVerse);
+
+    // Cleanup debounced function on unmount
+    return () => {
+      debouncedSavePlace.cancel();
+    };
+  }, [currentVisibleVerse, debouncedSavePlace]);
+
 
   return (
     <div>

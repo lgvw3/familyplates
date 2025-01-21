@@ -9,9 +9,9 @@ export default async function HomePage() {
       <ContinueReading />
       <div>
         <div className="flex flex-col gap-2">
-          <h2 className="text-2xl font-bold tracking-tight">Recent Annotations</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Recent Annotations and Notes</h2>
           <p className="text-muted-foreground">
-            Explore the latest insights and thoughts shared by the community.
+            See thoughts shared by the fam
           </p>
         </div>
         <div className="mt-6">
