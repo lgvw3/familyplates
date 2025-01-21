@@ -5,7 +5,6 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { ChevronLeftIcon, ChevronRightIcon, ImageIcon, BookOpen, LinkIcon, StickyNoteIcon, MessageSquareIcon } from 'lucide-react'
 import { Annotation, AnnotationType, Book, Chapter } from '@/types/scripture'
-import { useAnnotations } from '@/hooks/use-annotations'
 import Image from 'next/image'
 import { AnnotationMenu } from './annotation-menu'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from './ui/breadcrumb'
@@ -13,6 +12,7 @@ import Link from 'next/link'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { saveAnnotation } from '@/lib/annotations/actions'
 import { toast } from 'sonner'
+import { useWebSocket } from '@/hooks/use-websockets'
 
 interface SelectionInfo {
   text: string;
@@ -51,7 +51,7 @@ export default function ScriptureReader({chapter, book, initialAnnotations}: {ch
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number; width: number } | null>(null)
   const [currentSelection, setCurrentSelection] = useState<SelectionInfo | null>(null)
   const [currentVerseNumber, setCurrentVerseNumber] = useState<number | null>(null)
-  const { annotations, addAnnotation, removeAnnotation } = useAnnotations(initialAnnotations)
+  const { annotations, addAnnotation} = useWebSocket(initialAnnotations)
   const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isMobile = useIsMobile()
   const [annotationsOpen, setAnnotationsOpen] = useState(false)
@@ -349,13 +349,6 @@ export default function ScriptureReader({chapter, book, initialAnnotations}: {ch
                       <div key={annotation._id?.toString()} className="space-y-2">
                         <div className="flex justify-between items-start">
                           <span className="text-sm font-medium">Verse {annotation.verseNumber}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeAnnotation(annotation._id?.toString() ?? '')}
-                          >
-                            Remove
-                          </Button>
                         </div>
                         <p className={`text-sm p-2 rounded ${getHighlightStyle(annotation.color)}`}>
                           &ldquo;{annotation.highlightedText}&rdquo;
@@ -401,13 +394,6 @@ export default function ScriptureReader({chapter, book, initialAnnotations}: {ch
                     <div key={annotation._id?.toString()} className="space-y-2">
                       <div className="flex justify-between items-start">
                         <span className="text-sm font-medium">Verse {annotation.verseNumber}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeAnnotation(annotation._id?.toString() ?? '')}
-                        >
-                          Remove
-                        </Button>
                       </div>
                       <p className={`text-sm p-2 rounded ${getHighlightStyle(annotation.color)}`}>
                         &ldquo;{annotation.highlightedText}&rdquo;

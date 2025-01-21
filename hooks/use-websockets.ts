@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Annotation } from "@/types/scripture";
 
 
-export const useWebSocket = () => {
+export const useWebSocket = (initialAnnotations: Annotation[] = []) => {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [messages, setMessages] = useState<string[]>([]);
-    const [annotations, setAnnotations] = useState<Annotation[]>([])
+    const [annotations, setAnnotations] = useState<Annotation[]>(initialAnnotations)
     const [retryCount, setRetryCount] = useState(0);
 
     useEffect(() => {
@@ -24,7 +24,7 @@ export const useWebSocket = () => {
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 if (data.type == 'annotation') {
-                    setAnnotations((prev) => [...prev, data.data])
+                    addAnnotation(data.data)
                 }
                 else {
                     setMessages((prev) => [...prev, data]);
@@ -72,5 +72,12 @@ export const useWebSocket = () => {
         }
     };
 
-    return { messages, sendMessage, annotations };
+    const addAnnotation = useCallback((annotation: Annotation) => {
+        setAnnotations(prev => {
+            const temp = prev.filter(a => a._id != annotation._id)
+            return [...temp, annotation]
+        })
+    }, [])
+
+    return { messages, sendMessage, annotations, setAnnotations, addAnnotation };
 };
