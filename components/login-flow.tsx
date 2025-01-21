@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { useRouter } from 'next/navigation'
 import { toast } from "sonner"
 import { UserAccount } from "@/lib/auth/definitions"
 import { accounts } from "@/lib/auth/accounts"
@@ -17,7 +16,6 @@ export default function LoginFlow() {
   const [password, setPassword] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
   const [selectedAccount, setSelectedAccount] = useState<UserAccount | null>(null)
-  const router = useRouter()
 
   const handleAccountSelect = async (account: UserAccount) => {
     setSelectedAccount(account)
@@ -32,10 +30,13 @@ export default function LoginFlow() {
         body: JSON.stringify({ password: password, userAccount: account }),
       });
 
+      if (response.redirected) {
+        window.location.href = response.url;
+        return;
+      }
+
       if (response.ok) {
-        setTimeout(() => {
-          router.push('/');
-        }, 200);
+        window.location.href = '/'
         return
       } else {
         toast.warning('Failed to log in. Please try again.');
@@ -47,7 +48,7 @@ export default function LoginFlow() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 p-4">
       <Card className="w-full max-w-md">
         <CardContent className="pt-6">
           <AnimatePresence mode="wait">

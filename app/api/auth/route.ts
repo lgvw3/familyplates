@@ -20,7 +20,8 @@ export async function POST(request: NextRequest) {
             const token = generateToken(userAccount.id);
             const maxAge = 60 * 60 * 24 * 365; // 1 year in seconds
     
-            const response = NextResponse.json({ message: 'Logged in successfully' });
+            const response = NextResponse.redirect(new URL('/', request.url))
+            response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
             response.cookies.set({
                 name: 'familyPlatesAuthToken',
                 value: token,
