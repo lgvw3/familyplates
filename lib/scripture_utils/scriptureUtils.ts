@@ -1,3 +1,4 @@
+import { Chapter, Intro } from '@/types/scripture';
 import fs from 'fs';
 import path from 'path';
 
@@ -17,13 +18,13 @@ export function loadChapter(bookName: string, chapterNumber: string) {
     `${chapterNumber}.json`
   );
   const fileContents = fs.readFileSync(filePath, 'utf8');
-  return JSON.parse(fileContents);
+  return JSON.parse(fileContents) as Chapter;
 }
 
 export function loadIntroMaterial(materialName: string) {
   const filePath = path.join(process.cwd(), 'lib', 'scripture_data', 'intro_material', `${materialName}.json`);
   const fileContents = fs.readFileSync(filePath, 'utf8');
-  return JSON.parse(fileContents);
+  return JSON.parse(fileContents) as Intro;
 }
 
 export function listChapters(bookName: string) {

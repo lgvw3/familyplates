@@ -12,6 +12,8 @@ import { fetchAccountById } from "../auth/accounts";
 
 const zAnnotation = z.object({
     verseNumber: z.number(),
+    bookId: z.string(),
+    chapterNumber: z.number(),
     text: z.string(),
     highlightedText: z.string(),
     type: z.enum(['note', 'link', 'photo', 'combo']),
@@ -50,7 +52,7 @@ export async function saveAnnotation(annotation: Annotation) {
         };
     }
 
-    const {verseNumber, text, highlightedText, type, color, url, photoUrl} = validatedFields.data
+    const {verseNumber, chapterNumber, bookId, text, highlightedText, type, color, url, photoUrl} = validatedFields.data
 
     const client = await clientPromise;
     const db = client.db("main"); // Replace with your database name
@@ -59,6 +61,8 @@ export async function saveAnnotation(annotation: Annotation) {
     const newAnnotation: Annotation = {
         _id: null,
         verseNumber: verseNumber,
+        chapterNumber: chapterNumber,
+        bookId: bookId,
         text: text,
         highlightedText: highlightedText,
         type: type,

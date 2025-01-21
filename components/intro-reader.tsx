@@ -47,11 +47,11 @@ const getHighlightStyle = (color: 'yellow' | 'green' | 'blue' | 'purple' | 'pink
     return colorClasses[color]
 }
 
-export default function IntroReader({intro}: {intro: Intro}) {
+export default function IntroReader({intro, initialAnnotations}: {intro: Intro, initialAnnotations: Annotation[]}) {
     const [menuPosition, setMenuPosition] = useState<{ x: number; y: number; width: number } | null>(null)
     const [currentSelection, setCurrentSelection] = useState<SelectionInfo | null>(null)
     const [currentVerseNumber, setCurrentVerseNumber] = useState<number | null>(null)
-    const { annotations, addAnnotation, removeAnnotation } = useAnnotations()
+    const { annotations, addAnnotation, removeAnnotation } = useAnnotations(initialAnnotations)
     const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const [annotationsOpen, setAnnotationsOpen] = useState(false)
     const isMobile = useIsMobile()
@@ -124,7 +124,7 @@ export default function IntroReader({intro}: {intro: Intro}) {
         }, 10)
     }
 
-    const handleAddAnnotation = async (annotationData: Omit<Annotation, '_id' | 'verseNumber' | 'createdAt' | 'highlightedText' | 'userId' | 'userName'>) => {
+    const handleAddAnnotation = async (annotationData: Omit<Annotation, '_id' | 'verseNumber' | 'createdAt' | 'highlightedText' | 'userId' | 'userName' | 'bookId' | 'chapterNumber'>) => {
         if (currentSelection && currentVerseNumber) {
             const results = await saveAnnotation({
                 _id: null,
@@ -135,7 +135,9 @@ export default function IntroReader({intro}: {intro: Intro}) {
                 color: annotationData.color,
                 createdAt: new Date(),
                 userId: 0,
-                userName: ''
+                userName: '',
+                chapterNumber: 1,
+                bookId: intro.title.toLowerCase().replaceAll(' ', '-')
             })
             if (results.insertedId) {
                 toast.success('Note shared with the family!')

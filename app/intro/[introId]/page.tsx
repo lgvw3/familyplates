@@ -1,4 +1,5 @@
 import IntroReader from "@/components/intro-reader";
+import { fetchAnnotationsByChapter } from "@/lib/annotations/data";
 import { loadIntroMaterial } from "@/lib/scripture_utils/scriptureUtils";
 
 interface ChapterPageProps {
@@ -29,7 +30,7 @@ export default async function Page({ params }: ChapterPageProps) {
 
     // Fetch data for the chapter and annotations
     const introData = loadIntroMaterial(introId);
-    //const annotations = await getAnnotations(bookId, chapterId);
+    const annotations = await fetchAnnotationsByChapter(introData.title.toLowerCase().replaceAll(' ', '-'), 1);
 
     if (!introData) {
         return <div>Introductary Material not found.</div>;
@@ -38,6 +39,7 @@ export default async function Page({ params }: ChapterPageProps) {
     return (
         <IntroReader  
             intro={introData}
+            initialAnnotations={annotations ?? []}
         />
     );
 };

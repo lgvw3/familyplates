@@ -31,7 +31,9 @@ export type TextStyle = 'underline' | 'bold' | 'italic' | 'none';
 
 export interface Annotation {
   _id: ObjectId | string | null;
-  verseNumber: number;
+  verseNumber: number,
+  chapterNumber: number,
+  bookId: string,
   text: string;
   highlightedText: string;
   type: AnnotationType;

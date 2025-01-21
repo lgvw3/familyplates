@@ -1,4 +1,5 @@
 import ScriptureReader from "@/components/scripture-reader";
+import { fetchAnnotationsByChapter } from "@/lib/annotations/data";
 import { loadBook, loadChapter } from "@/lib/scripture_utils/scriptureUtils";
 
 interface ChapterPageProps {
@@ -32,7 +33,7 @@ export default async function Page({ params }: ChapterPageProps) {
     // Fetch data for the chapter and annotations
     const chapterData = loadChapter(bookId, chapterId);
     const bookData = loadBook(bookId)
-    //const annotations = await getAnnotations(bookId, chapterId);
+    const annotations = await fetchAnnotationsByChapter(bookId, Number(chapterData.chapter_title.slice(8)));
 
     if (!chapterData) {
         return <div>Chapter not found.</div>;
@@ -42,6 +43,7 @@ export default async function Page({ params }: ChapterPageProps) {
         <ScriptureReader  
             chapter={chapterData}
             book={bookData}
+            initialAnnotations={annotations ?? []}
         />
     );
 };
