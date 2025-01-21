@@ -219,7 +219,6 @@ export default function ScriptureReader({chapter, book, initialAnnotations}: {ch
 
   const saveLastReadPlace = async (verseNumber: number) => {
     try {
-      console.log('save place')
       await saveBookmark({
         _id: null,
         verseNumber: verseNumber,

@@ -71,11 +71,8 @@ export async function saveBookmark(lastRead: BookmarkedSpot) {
             try {
                 const redisPub = new redis(process.env.KV_URL ?? '');
                 await redisPub.publish("bookmarks", JSON.stringify({
-                    type: "bookmark",
-                    data: {
-                        ...bookmarkData, 
-                        _id: result.upsertedId ? result.upsertedId.toString() : existing?._id?.toString()
-                    }
+                    ...bookmarkData, 
+                    _id: result.upsertedId ? result.upsertedId.toString() : existing?._id?.toString()
                 }
                 ));
                 return {

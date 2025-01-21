@@ -84,13 +84,9 @@ export async function saveAnnotation(annotation: Annotation) {
             try {
                 const redisPub = new redis(process.env.KV_URL ?? '');
                 await redisPub.publish("annotations", JSON.stringify({
-                    type: "annotation",
-                    data: {
-                        ...annotationData, 
-                        _id: result.insertedId.toString()
-                    }
-                }
-                ));
+                    ...annotationData, 
+                    _id: result.insertedId.toString()
+                }));
                 return {
                     message: 'Sucess',
                     insertedId: result.insertedId.toString(),

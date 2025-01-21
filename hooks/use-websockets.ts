@@ -23,13 +23,18 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
 
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                if (data.type == 'annotation') {
+                if (data.channel == 'annotations') {
                     if (isFeed) {
-                        addAnnotationToTopOfFeed(data.data)
+                        addAnnotationToTopOfFeed(JSON.parse(data.data))
                     }
                     else {
-                        addAnnotation(data.data)
+                        addAnnotation(JSON.parse(data.data))
                     }
+                }
+                else if (data.channel == 'bookmarks') {
+                    // local save of bookmarks of family members
+                    // when they are active display just once in feed
+                    // do a notification and invite to "read along"
                 }
                 else {
                     setMessages((prev) => [...prev, data]);
