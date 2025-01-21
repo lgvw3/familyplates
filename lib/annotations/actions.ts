@@ -5,6 +5,10 @@ import clientPromise from "../mongodb";
 import z from "zod";
 import redis from "ioredis";
 import sendErrorMessageToMe from "../dev/actions";
+import { cookies } from "next/headers";
+import { validateToken } from "../auth/utils";
+import { redirect } from "next/navigation";
+import { fetchAccountById } from "../auth/accounts";
 
 const zAnnotation = z.object({
     verseNumber: z.number(),
@@ -17,6 +21,25 @@ const zAnnotation = z.object({
 })
 
 export async function saveAnnotation(annotation: Annotation) {
+
+    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
+    if (!authToken) {
+        redirect('/sign-in')
+    }
+    const { userId } = validateToken(authToken);
+
+    if (!userId) {
+        return {
+            message: "Unauthorized. This app is just for my family for now"
+        }
+    }
+    const user = fetchAccountById(userId)
+
+    if (!user) {
+        return {
+            message: "Unauthorized. This app is just for my family for now"
+        }
+    }
 
     const validatedFields = zAnnotation.safeParse(annotation)
 
@@ -42,7 +65,9 @@ export async function saveAnnotation(annotation: Annotation) {
         color: color,
         createdAt: new Date(),
         url: url,
-        photoUrl: photoUrl
+        photoUrl: photoUrl,
+        userId: userId,
+        userName: user.name
     }
 
     // Save annotation to the database

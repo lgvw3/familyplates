@@ -39,6 +39,8 @@ export interface Annotation {
   createdAt: Date;
   url?: string;
   photoUrl?: string;
+  userId: number,
+  userName: string
 }
 
 export interface ScriptureItem {

@@ -21,8 +21,8 @@ export default async function sendErrorMessageToMe(annotation: Annotation) {
         const mailOptions: MailOptions = {
             from: process.env.EMAIL_USER,
             to: "logangvw3@gmail.com",
-            subject: 'Annotation Failed',
-            text: `An annotation failed for:
+            subject: `Annotation Failed For ${annotation.userName}`,
+            text: `An annotation failed:
             
             ${annotation}`,
         };
