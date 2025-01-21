@@ -89,7 +89,8 @@ export async function saveAnnotation(annotation: Annotation) {
                 ));
                 return {
                     message: 'Sucess',
-                    insertedId: result.insertedId.toString()
+                    insertedId: result.insertedId.toString(),
+                    annotation: newAnnotation
                 }
             }
             catch(err) {

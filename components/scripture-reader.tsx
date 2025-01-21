@@ -111,7 +111,7 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
     }, 10)
   }
 
-  const handleAddAnnotation = async (annotationData: Omit<Annotation, '_id' | 'verseNumber' | 'createdAt' | 'highlightedText'>) => {
+  const handleAddAnnotation = async (annotationData: Omit<Annotation, '_id' | 'verseNumber' | 'createdAt' | 'highlightedText' | 'userId' | 'userName'>) => {
     if (currentSelection && currentVerseNumber) {
       const results = await saveAnnotation({
         _id: null,
@@ -120,16 +120,15 @@ export default function ScriptureReader({chapter, book}: {chapter: Chapter, book
         highlightedText: currentSelection.text,
         type: annotationData.type,
         color: annotationData.color,
-        createdAt: new Date()
+        createdAt: new Date(),
+        userId: 0,
+        userName: ''
       })
       if (results.insertedId) {
         toast.success('Note shared with the family!')
         addAnnotation({
-          ...annotationData,
+          ...results.annotation,
           _id: results.insertedId,
-          createdAt: new Date(),
-          verseNumber: currentVerseNumber,
-          highlightedText: currentSelection.text,
         })
         setMenuPosition(null)
         setCurrentVerseNumber(null)
