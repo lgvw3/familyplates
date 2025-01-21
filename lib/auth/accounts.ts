@@ -14,6 +14,13 @@ export const accounts: UserAccount[] = [
   { id: 11, name: "Savanah Van Wagoner", avatar: "/placeholder.svg?height=40&width=40" },
 ]
 
+export function fetchUsersAsMap() {
+  return accounts.reduce((acc, user) => {
+    acc.set(user.id, user)
+    return acc;
+  }, new Map() as Map<number, UserAccount>);
+}
+
 export function fetchAccountById(userId: number) {
     return accounts.find(user => user.id == userId)
 }

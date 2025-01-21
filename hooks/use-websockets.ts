@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Annotation } from "@/types/scripture";
 
 
-export const useWebSocket = (initialAnnotations: Annotation[] = []) => {
+export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boolean) => {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [messages, setMessages] = useState<string[]>([]);
     const [annotations, setAnnotations] = useState<Annotation[]>(initialAnnotations)
@@ -24,7 +24,12 @@ export const useWebSocket = (initialAnnotations: Annotation[] = []) => {
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 if (data.type == 'annotation') {
-                    addAnnotation(data.data)
+                    if (isFeed) {
+                        addAnnotationToTopOfFeed(data.data)
+                    }
+                    else {
+                        addAnnotation(data.data)
+                    }
                 }
                 else {
                     setMessages((prev) => [...prev, data]);
@@ -79,5 +84,12 @@ export const useWebSocket = (initialAnnotations: Annotation[] = []) => {
         })
     }, [])
 
-    return { messages, sendMessage, annotations, setAnnotations, addAnnotation };
+    const addAnnotationToTopOfFeed = useCallback((annotation: Annotation) => {
+        setAnnotations(prev => {
+            const temp = prev.filter(a => a._id != annotation._id)
+            return [annotation, ...temp]
+        })
+    }, [])
+
+    return { messages, sendMessage, annotations, setAnnotations, addAnnotation, addAnnotationToTopOfFeed };
 };

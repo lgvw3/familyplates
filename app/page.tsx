@@ -1,7 +1,9 @@
 import { ContinueReading } from "@/components/continue-reading"
 import { RecentAnnotations } from "@/components/recent-annotations"
+import { fetchRecentAnnotations } from "@/lib/annotations/data"
 
-export default function HomePage() {
+export default async function HomePage() {
+  const recentAnnotations = await fetchRecentAnnotations()
   return (
     <div className="space-y-8 pt-8 px-4">
       <ContinueReading />
@@ -13,7 +15,7 @@ export default function HomePage() {
           </p>
         </div>
         <div className="mt-6">
-          <RecentAnnotations />
+          <RecentAnnotations recentAnnotations={recentAnnotations ?? []} />
         </div>
       </div>
     </div>
