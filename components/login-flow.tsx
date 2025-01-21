@@ -33,7 +33,8 @@ export default function LoginFlow() {
       });
 
       if (response.ok) {
-        router.push('/');
+        router.replace('/');
+        return
       } else {
         toast.warning('Failed to log in. Please try again.');
       }
