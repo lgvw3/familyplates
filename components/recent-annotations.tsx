@@ -4,15 +4,16 @@ import { Annotation, Chapter } from "@/types/scripture"
 import { fetchUsersAsMap } from "@/lib/auth/accounts"
 import { useWebSocket } from "@/hooks/use-websockets"
 import AnnotationViewer from "./feed/annotation-viewer"
-import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { fetchMoreAnnotations } from "@/lib/annotations/data"
 import { VariableSizeList as List } from "react-window";
 import { ContinueReading } from "./continue-reading"
 import { UserAccount } from "@/lib/auth/definitions"
 import { BookmarkedSpot } from "@/lib/reading/definitions"
+import Link from "next/link"
 
 
-function AnnotationCard({annotation, index, style, user, userMap, currentUserId, bookmark, chapterData, progress, commentsOpen, setCommentsOpen, addingComment, setAddingComment}: {
+function AnnotationCard({annotation, index, style, user, userMap, currentUserId, bookmark, chapterData, progress}: {
     annotation: Annotation,
     index: number,
     style: React.CSSProperties,
@@ -21,11 +22,7 @@ function AnnotationCard({annotation, index, style, user, userMap, currentUserId,
     currentUserId: number,
     bookmark: BookmarkedSpot | null,
     chapterData: Chapter | null,
-    progress: number,
-    commentsOpen: number[],
-    setCommentsOpen: Dispatch<SetStateAction<number[]>>,
-    addingComment: number[],
-    setAddingComment: Dispatch<SetStateAction<number[]>>
+    progress: number
 }) {
     // Special handling for the first item (ContinueReading)
     if (index === 0) {
@@ -44,19 +41,19 @@ function AnnotationCard({annotation, index, style, user, userMap, currentUserId,
     
     if (user) {
         return (
-            <div style={style} className="px-4 md:px-8">
+            <Link 
+                style={style} 
+                className="px-4 md:px-8"
+                href={`/annotation/${annotation._id?.toString()}`}
+            >
                 <AnnotationViewer 
                     index={index}
                     author={user} 
                     annotation={annotation} 
                     userMap={userMap}
                     currentUserId={currentUserId}
-                    commentsOpen={commentsOpen.includes(index)}
-                    setCommentsOpen={setCommentsOpen}
-                    addCommentOpen={addingComment.includes(index)}
-                    setAddCommentOpen={setAddingComment}
                 />
-            </div>
+            </Link>
         )
     }
     return null
@@ -79,9 +76,6 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
         width: 0,
         height: 0,
     })
-
-    const [commentsOpen, setCommentsOpen] = useState<number[]>([])
-    const [addingComment, setAddingComment] = useState<number[]>([])
 
     useEffect(() => {
         setDimensions({
@@ -118,24 +112,8 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
         const content = annotations[index - 1].text
         const baseHeight = 200 // Base height for card structure
         const contentLines = Math.ceil(content.length / 50) // Rough estimate of lines
-        const typicalHeight = baseHeight + contentLines * 20 // Add height for content
-        let finalHeight = typicalHeight
-        if (commentsOpen.includes(index)) {
-            const commentSize = 145 
-            finalHeight += commentSize * (annotations[index - 1].comments?.length ?? 0)
-        }
-        if (addingComment.includes(index)) {
-            const addingSize = 50
-            finalHeight += addingSize
-        }
-        return finalHeight
-    }, [annotations, commentsOpen, addingComment])
-
-    useEffect(() => {
-        if (listRef.current) {
-            listRef.current.resetAfterIndex(0, true); // Reset from the start
-        }
-    }, [commentsOpen.length, addingComment.length])
+        return baseHeight + contentLines * 20 // Add height for content
+    }, [annotations])
     
     return (
         <List
@@ -158,10 +136,6 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
                     bookmark={bookmark}
                     chapterData={chapterData}
                     progress={progress}
-                    commentsOpen={commentsOpen}
-                    setCommentsOpen={setCommentsOpen}
-                    addingComment={addingComment}
-                    setAddingComment={setAddingComment}
                 />
             )}
         </List>

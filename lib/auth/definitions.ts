@@ -1,5 +1,5 @@
 export interface UserAccount {
     id: number
     name: string
-    avatar?: string
+    avatar?: string | undefined
 }

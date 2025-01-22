@@ -5,50 +5,23 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Annotation } from "@/types/scripture"
 import { getInitials, toTitleCase } from "@/lib/utils"
-import { HeartIcon, ExternalLinkIcon, Loader2Icon, MessageCircleIcon } from "lucide-react"
+import { HeartIcon, ExternalLinkIcon, MessageCircleIcon } from "lucide-react"
 import { Button } from "../ui/button"
-import Link from "next/link"
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react"
-import { Textarea } from "../ui/textarea"
-import { addCommentToAnnotation, updateLikeStatusOfComment } from "@/lib/annotations/actions"
+import { updateLikeStatusOfComment } from "@/lib/annotations/actions"
 import { toast } from "sonner"
+import { useRouter } from 'next/navigation'
+import { useState } from "react"
 
-export default function AnnotationViewer({index, author, annotation, userMap, currentUserId, commentsOpen, setCommentsOpen, addCommentOpen, setAddCommentOpen} : {
-    index: number, 
+
+export default function AnnotationViewer({ index, author, annotation, userMap, currentUserId } : {
+    index?: number, 
     author: UserAccount, 
     annotation: Annotation, 
     userMap: Map<number, UserAccount>, 
     currentUserId: number,
-    commentsOpen: boolean,
-    setCommentsOpen: Dispatch<SetStateAction<number[]>>
-    addCommentOpen: boolean,
-    setAddCommentOpen: Dispatch<SetStateAction<number[]>>
 }) {
-    const [commentContent, setCommentContent] = useState('')
-    const [savingComment, setSavingComment] = useState(false)
     const [userLike, setUserLike] = useState(annotation.likes?.find(val => val.userId == currentUserId))
-
-    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-
-    useEffect(() => {
-        if (addCommentOpen && textareaRef.current) {
-            textareaRef.current.focus();
-        }
-    }, [addCommentOpen]);
-
-    const saveComment = async() => {
-        setSavingComment(true)
-        const results = await addCommentToAnnotation(commentContent, annotation._id?.toString() ?? '')
-        if (results.newComment) {
-            toast.success('Comment shared!')
-            setCommentContent('')
-            setAddCommentOpen((prev) => prev.filter(val => val != index))
-        }
-        else {
-            toast.warning(results.message as string)
-        }
-        setSavingComment(false)
-    }
+    const router = useRouter()
 
     const saveLike = async() => {
         const temp = userLike ? {...userLike} : userLike
@@ -68,148 +41,72 @@ export default function AnnotationViewer({index, author, annotation, userMap, cu
             }
         })
         const results = await updateLikeStatusOfComment(currentUserId, annotation._id?.toString() ?? '', userLike)
-        if (results.newLike) {
-            setCommentContent('')
-        }
-        else {
+        if (!results.newLike) {
             toast.warning(results.message as string)
             setUserLike(temp)
         }
     }
 
     return (
-        <div>
-        <Card 
-            key={annotation._id?.toString()} 
-            onClick={() => {
-                setCommentsOpen((prev) => {
-                    if (!commentsOpen) {
-                        //show them
-                        return [...prev, index]
-                    }
-                    else {
-                        // hide them
-                        const temp = [...prev] 
-                        return temp.filter(val => val != index)
-                    }
-                })
-            }}
-            className={`cursor-pointer ${index == 0 ? 'rounded-b-none' : 'rounded-none'}`}
-        >
-            <CardHeader>
-                <div className="flex items-center gap-4">
-                    <Avatar>
-                        <AvatarImage src={author?.avatar} alt={author?.name} />
-                        <AvatarFallback>{getInitials(author?.name)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                        <CardTitle className="text-base">{annotation.userName}</CardTitle>
-                        <CardDescription>
-                            on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • {new Date(annotation.createdAt).toLocaleTimeString()}
-                        </CardDescription>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <p className="text-foreground">{annotation.text}</p>
-            </CardContent>
-            <CardFooter className="flex items-center gap-4">
-                {
-                    addCommentOpen ?
-                        <div className="flex flex-col w-full">
-                            <Textarea 
-                                placeholder="Share your thoughts" 
-                                onChange={(e) => setCommentContent(e.target.value)} 
-                                ref={textareaRef}
-                            />
-                            <div>
-                                <Button 
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        saveComment()
-                                    }}
-                                    disabled={!commentContent.length || savingComment}
-                                    className="max-w-32"
-                                >
-                                    { savingComment ? <Loader2Icon className="w-4 h-4 animate-spin" /> : "Post Comment" }
-                                </Button>
-                                <Button 
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        setAddCommentOpen((prev) => prev.filter(val => val != index))
-
-                                    }}
-                                    disabled={savingComment}
-                                    className="max-w-32"
-                                    variant={'ghost'}
-                                >
-                                    Cancel
-                                </Button>
-                            </div>
+        <>
+            <Card 
+                key={annotation._id?.toString()}
+                className={`cursor-pointer ${index == 0 ? 'rounded-b-none' : 'rounded-none'}`}
+            >
+                <CardHeader>
+                    <div className="flex items-center gap-4">
+                        <Avatar>
+                            <AvatarImage src={author?.avatar} alt={author?.name} />
+                            <AvatarFallback>{getInitials(author?.name)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                            <CardTitle className="text-base">{annotation.userName}</CardTitle>
+                            <CardDescription>
+                                on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • {new Date(annotation.createdAt).toLocaleTimeString()}
+                            </CardDescription>
                         </div>
-                    :
-                    <>
-                        <Button variant="ghost" size="sm" className="gap-2" onClick={(e) => {
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-foreground">{annotation.text}</p>
+                </CardContent>
+                <CardFooter className="flex items-center gap-4">
+                    <Button variant="ghost" size="sm" className="gap-2">
+                        <MessageCircleIcon className="h-4 w-4" /> { annotation.comments?.length ?? null }
+                    </Button>
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="gap-2"
+                        onClick={(e) => {
                             e.stopPropagation()
-                            setAddCommentOpen((prev) => [...prev, index])
-                        }}>
-                            <MessageCircleIcon className="h-4 w-4" /> { annotation.comments?.length ?? null }
-                        </Button>
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="gap-2"
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                saveLike()
-                            }}
-                        >
-                            {
-                                userLike ?
-                                    <HeartIcon className="h-4 w-4 fill-red-500 stroke-red-500" color="red" />
-                                : 
-                                    <HeartIcon className="h-4 w-4" />
-                            }
-                            { annotation.likes?.length ?? null }
-                        </Button>
-                        <Button variant="ghost" size="sm" className="gap-2" asChild>
-                            <Link 
-                                href={`/book/${encodeURIComponent(annotation.bookId)}/chapter/chapter_${annotation.chapterNumber}/#verse-${annotation.verseNumber}`}
-                            >
-                                <ExternalLinkIcon className="h-4 w-4" />
-                                <span>View in Context</span>
-                            </Link>
-                        </Button>
-                    </>
-                }
-            </CardFooter>
-        </Card>
-        {
-            commentsOpen && annotation.comments?.map(comment => {
-                const commentAuthor = userMap.get(comment.userId)
-                return (
-                    <Card key={comment._id.toString()} className="mx-4 rounded-none">
-                        <CardHeader>
-                            <div className="flex items-center gap-4">
-                                <Avatar>
-                                    <AvatarImage src={commentAuthor?.avatar} alt={commentAuthor?.name} />
-                                    <AvatarFallback>{getInitials(commentAuthor?.name)}</AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1">
-                                    <CardTitle className="text-base">{comment.userName}</CardTitle>
-                                    <CardDescription>
-                                        {comment.timeStamp.toLocaleString()}
-                                    </CardDescription>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-foreground">{comment.content}</p>
-                        </CardContent>
-                    </Card>
-                )
-            })
-        }
-        </div>
+                            e.preventDefault()
+                            saveLike()
+                        }}
+                    >
+                        {
+                            userLike ?
+                                <HeartIcon className="h-4 w-4 fill-red-500 stroke-red-500" color="red" />
+                            : 
+                                <HeartIcon className="h-4 w-4" />
+                        }
+                        { annotation.likes?.length ?? null }
+                    </Button>
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="gap-2"
+                        onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            router.push(`/book/${encodeURIComponent(annotation.bookId)}/chapter/chapter_${annotation.chapterNumber}/#verse-${annotation.verseNumber}`)
+                        }}
+                    >
+                            <ExternalLinkIcon className="h-4 w-4" />
+                            <span>View in Context</span>
+                    </Button>
+                </CardFooter>
+            </Card>
+        </>
     )
 }

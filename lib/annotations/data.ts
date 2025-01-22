@@ -5,6 +5,7 @@ import clientPromise from "../mongodb";
 import { cookies } from "next/headers";
 import { validateToken } from "../auth/utils";
 import { redirect } from "next/navigation";
+import { ObjectId } from "mongodb";
 
 export async function fetchRecentAnnotations() {
     const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
@@ -116,7 +117,44 @@ export async function fetchAnnotationsByChapter(book: string, chapter: number) {
         if (results) {
             results.map(a => {
                 a._id = a._id ? a._id.toString() : null
+                a.comments?.map(c => c._id = c._id.toString())
+                a.likes?.map(l => l._id = l._id.toString())
             })
+            return results
+        }
+        else {
+            return null
+        }
+    } catch(error) {
+        console.error(error)
+        return null
+    }
+}
+
+export async function fetchAnnotationById(annotationId: string) {
+    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
+    if (!authToken) {
+        redirect('/sign-in')
+    }
+    const { userId } = validateToken(authToken);
+
+    if (!userId) {
+        return null
+    }
+
+
+    const client = await clientPromise;
+    const db = client.db("main");
+    const collection = db.collection("annotations");
+
+    // Save annotation to the database
+    try {
+        const results = await collection.findOne<Annotation>({_id: new ObjectId(annotationId)});
+
+        if (results) {
+            results._id = results._id?.toString() ? results._id.toString() : ''
+            results.comments?.map(c => c._id = c._id.toString())
+            results.likes?.map(l => l._id = l._id.toString())
             return results
         }
         else {
