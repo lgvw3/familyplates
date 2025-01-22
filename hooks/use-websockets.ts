@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Annotation, AnnotationComment } from "@/types/scripture";
+import { Annotation, AnnotationComment, AnnotationLike } from "@/types/scripture";
 
 
 export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boolean, bookId?: string, chapterNumber?: number) => {
@@ -27,7 +27,6 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
 
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                console.log(data)
                 if (data.channel == 'annotations') {
                     if (isFeed) {
                         addAnnotationToTopOfFeed(JSON.parse(data.data))
@@ -38,6 +37,9 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
                 }
                 else if (data.channel == 'comments') {
                     addComment(JSON.parse(data.data))
+                }
+                else if (data.channel == "likes") {
+                    addLikes(JSON.parse(data.data))
                 }
                 else if (data.channel == 'bookmarks') {
                     // local save of bookmarks of family members
@@ -107,9 +109,7 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
     }, [])
 
     const addComment = useCallback((commentData: { annotationId: string; comment: AnnotationComment; }) => {
-        console.log('where')
         setAnnotations(prev => {
-            console.log('o where')
             const temp = prev.find(val => val._id?.toString() === commentData.annotationId);
             if (temp) {
                 const updatedTemp = {
@@ -117,6 +117,21 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
                     comments: [...(temp.comments || []), { ...commentData.comment, _id: commentData.comment._id.toString() }],
                 };
                 return prev.map(val => (val._id?.toString() === commentData.annotationId ? updatedTemp : val));
+            } else {
+                return prev;
+            }
+        })
+    }, [])
+
+    const addLikes = useCallback((likeData: { likes: boolean, like: AnnotationLike; annotationId: string; }) => {
+        setAnnotations(prev => {
+            const temp = prev.find(val => val._id?.toString() === likeData.annotationId);
+            if (temp) {
+                const updatedTemp = {
+                    ...temp,
+                    likes: likeData.likes ? [...(temp.likes || []), { ...likeData.like, _id: likeData.like._id.toString() }] : [...(temp.likes?.filter(val => val.userId != likeData.like.userId) || [])],
+                };
+                return prev.map(val => (val._id?.toString() === likeData.annotationId ? updatedTemp : val));
             } else {
                 return prev;
             }

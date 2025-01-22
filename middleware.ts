@@ -11,7 +11,9 @@ export function middleware(request: NextRequest) {
 
     const authToken = request.cookies.get('familyPlatesAuthToken')?.value;
 
-    console.log('Auth Token from middleware:', authToken); // Debugging log
+    if (process.env.NODE_ENV != "production") {
+        console.log('Auth Token from middleware:', authToken) // Debugging log
+    }
     if (!authToken) {
         // Redirect to the sign-in page if no token is found
         return NextResponse.redirect(new URL('/sign-in', request.url));

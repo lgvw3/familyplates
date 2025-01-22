@@ -1,9 +1,15 @@
 import { ContinueReading } from "@/components/continue-reading"
 import { RecentAnnotations } from "@/components/recent-annotations"
 import { fetchRecentAnnotations } from "@/lib/annotations/data"
+import { fetchCurrentUserId } from "@/lib/auth/data"
+import { redirect } from "next/navigation"
 
 export default async function HomePage() {
   const recentAnnotations = await fetchRecentAnnotations()
+  const currentUserId = await fetchCurrentUserId()
+  if (!currentUserId) {
+    redirect('/sign-in')
+  }
   return (
     <div className="space-y-8 pt-8 px-4">
       <ContinueReading />
@@ -15,7 +21,7 @@ export default async function HomePage() {
           </p>
         </div>
         <div className="mt-6">
-          <RecentAnnotations recentAnnotations={recentAnnotations ?? []} />
+          <RecentAnnotations recentAnnotations={recentAnnotations ?? []} currentUserId={currentUserId} />
         </div>
       </div>
     </div>

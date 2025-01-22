@@ -25,3 +25,7 @@ Here are some of the ideas for that, thank you Kayla!
 ## Update as of Jan 21, 2025
 
 Real time updating happens on the feed and when reading thanks to the websocket that is powered with code in [this repo](https://github.com/lgvw3/familyPlatesWebSocketServer) have some things to fix but making progress!
+
+## Couple days later
+
+We also have real time likes and comments now!

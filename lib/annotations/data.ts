@@ -31,6 +31,10 @@ export async function fetchRecentAnnotations() {
                     comment._id = comment._id.toString()
                     return comment
                 })
+                a.likes?.map(like => {
+                    like._id = like._id.toString()
+                    return like
+                })
             })
             return results
         }

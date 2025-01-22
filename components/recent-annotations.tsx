@@ -5,7 +5,7 @@ import { fetchUsersAsMap } from "@/lib/auth/accounts"
 import { useWebSocket } from "@/hooks/use-websockets"
 import AnnotationViewer from "./feed/annotation-viewer"
 
-export function RecentAnnotations({recentAnnotations}: {recentAnnotations: Annotation[]}) {
+export function RecentAnnotations({recentAnnotations, currentUserId}: {recentAnnotations: Annotation[], currentUserId: number}) {
     const userMap = fetchUsersAsMap()
     const { annotations } = useWebSocket(recentAnnotations, true) 
     return (
@@ -20,6 +20,7 @@ export function RecentAnnotations({recentAnnotations}: {recentAnnotations: Annot
                             author={user} 
                             annotation={annotation} 
                             userMap={userMap}
+                            currentUserId={currentUserId}
                         />
                     : null
                 }

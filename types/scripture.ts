@@ -33,6 +33,13 @@ export type AnnotationComment = {
   content: string
 }
 
+export type AnnotationLike = {
+  _id: ObjectId | string;
+  userId: number,
+  userName: string,
+  timeStamp: Date
+}
+
 export type AnnotationType = 'note' | 'link' | 'photo' | 'combo';
 export type HighlightColor = 'yellow' | 'green' | 'blue' | 'purple' | 'pink';
 export type TextStyle = 'underline' | 'bold' | 'italic' | 'none';
@@ -52,6 +59,7 @@ export interface Annotation {
   userId: number,
   userName: string,
   comments?: AnnotationComment[]
+  likes?: AnnotationLike[]
 }
 
 export interface ScriptureItem {

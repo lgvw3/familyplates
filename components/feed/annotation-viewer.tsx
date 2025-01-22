@@ -10,14 +10,15 @@ import { Button } from "../ui/button"
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import { Textarea } from "../ui/textarea"
-import { addCommentToAnnotation } from "@/lib/annotations/actions"
+import { addCommentToAnnotation, updateLikeStatusOfComment } from "@/lib/annotations/actions"
 import { toast } from "sonner"
 
-export default function AnnotationViewer({index, author, annotation, userMap} : {index: number, author: UserAccount, annotation: Annotation, userMap: Map<number, UserAccount>}) {
+export default function AnnotationViewer({index, author, annotation, userMap, currentUserId} : {index: number, author: UserAccount, annotation: Annotation, userMap: Map<number, UserAccount>, currentUserId: number}) {
     const [showComments, setShowComments] = useState(false)
     const [addingComment, setAddingComment] = useState(false)
     const [commentContent, setCommentContent] = useState('')
     const [savingComment, setSavingComment] = useState(false)
+    const [userLike, setUserLike] = useState(annotation.likes?.find(val => val.userId == currentUserId))
 
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -39,6 +40,34 @@ export default function AnnotationViewer({index, author, annotation, userMap} : 
             toast.warning(results.message as string)
         }
         setSavingComment(false)
+    }
+
+    const saveLike = async() => {
+        const temp = userLike ? {...userLike} : userLike
+        setUserLike((prev) => { // optimistic set for perceived speed
+            if (prev) {
+                //likes: unlike
+                return undefined
+            }
+            else {
+                //no like: likes
+                return {
+                    _id: "",
+                    userId: currentUserId,
+                    userName: userMap.get(currentUserId)?.name ?? '',
+                    timeStamp: new Date()
+                }
+            }
+        })
+        const results = await updateLikeStatusOfComment(currentUserId, annotation._id?.toString() ?? '', userLike)
+        if (results.newLike) {
+            setAddingComment(false)
+            setCommentContent('')
+        }
+        else {
+            toast.warning(results.message as string)
+            setUserLike(temp)
+        }
     }
 
     return (
@@ -104,10 +133,24 @@ export default function AnnotationViewer({index, author, annotation, userMap} : 
                             e.stopPropagation()
                             setAddingComment(true)
                         }}>
-                            <MessageCircleIcon className="h-4 w-4" /> {annotation.comments?.length ?? null}
+                            <MessageCircleIcon className="h-4 w-4" /> { annotation.comments?.length ?? null }
                         </Button>
-                        <Button variant="ghost" size="sm" className="gap-2">
-                            <HeartIcon className="h-4 w-4" />
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="gap-2"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                saveLike()
+                            }}
+                        >
+                            {
+                                userLike ?
+                                    <HeartIcon className="h-4 w-4 fill-red-500 stroke-red-500" color="red" />
+                                : 
+                                    <HeartIcon className="h-4 w-4" />
+                            }
+                            { annotation.likes?.length ?? null }
                         </Button>
                         <Button variant="ghost" size="sm" className="gap-2" asChild>
                             <Link 

@@ -1,6 +1,6 @@
 'use server'
 
-import { Annotation, AnnotationComment } from "@/types/scripture";
+import { Annotation, AnnotationComment, AnnotationLike } from "@/types/scripture";
 import clientPromise from "../mongodb";
 import z from "zod";
 import redis from "ioredis";
@@ -9,7 +9,7 @@ import { cookies } from "next/headers";
 import { validateToken } from "../auth/utils";
 import { redirect } from "next/navigation";
 import { fetchAccountById } from "../auth/accounts";
-import { ObjectId } from "mongodb";
+import { ObjectId, UpdateResult } from "mongodb";
 
 const zAnnotation = z.object({
     verseNumber: z.number(),
@@ -204,7 +204,93 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
         else {
             console.error("Database Error: Could not save comment. Failed insert.")
             return {
-                message: "Database Error: Could not save annotation"
+                message: "Database Error: Could not save comment"
+            }
+        }
+    } catch(error) {
+        console.error(error)
+        return {
+            message: error
+        }
+    }
+}
+
+export async function updateLikeStatusOfComment(currentUserId: number, annotationId: string, userLike: AnnotationLike | undefined) {
+    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
+    if (!authToken) {
+        redirect('/sign-in')
+    }
+    const { userId } = validateToken(authToken);
+
+    if (!userId) {
+        return {
+            message: "Unauthorized. This app is just for my family for now"
+        }
+    }
+    const user = fetchAccountById(userId)
+
+    if (!user) {
+        return {
+            message: "Unauthorized. This app is just for my family for now"
+        }
+    }
+
+    const client = await clientPromise;
+    const db = client.db("main");
+    const collection = db.collection<Annotation>("annotations");
+
+    const updatedLike: AnnotationLike = {
+        _id: new ObjectId(),
+        userId: userId,
+        userName: user.name,
+        timeStamp: new Date()
+    }
+
+    try {
+        let results: UpdateResult<Annotation>
+        if (userLike) {
+            const existingAnnotation = await collection.findOne({_id: new ObjectId(annotationId)})
+            const existingLike = existingAnnotation?.likes?.find(val => val.userId == currentUserId)
+            // User already liked: Unlike
+            results = await collection.updateOne(
+                { _id: new ObjectId(annotationId) },
+                { $pull: { likes: existingLike} }
+            );
+        } else {
+            // User not liked: Like
+            results = await collection.updateOne(
+                { _id: new ObjectId(annotationId) },
+                { $addToSet: { likes: updatedLike } }
+            );
+        }
+
+        if (results.modifiedCount) {
+            try {
+                const redisPub = new redis(process.env.KV_URL ?? '');
+                await redisPub.publish("likes", JSON.stringify({
+                    like: updatedLike,
+                    likes: !userLike,
+                    annotationId: annotationId
+                }));
+                return {
+                    message: 'Sucess',
+                    newLike: {
+                        ...updatedLike,
+                        _id: updatedLike._id.toString()
+                    }
+                }
+            }
+            catch(err) {
+                console.error(err)
+                return {
+                    message: `Real time update error: ${err}`
+                }
+            }
+        }
+        else {
+            console.error("Database Error: Could not update like. Failed insert.")
+            return {
+                message: "Database Error: Could not update like"
             }
         }
     } catch(error) {

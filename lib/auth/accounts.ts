@@ -22,5 +22,5 @@ export function fetchUsersAsMap() {
 }
 
 export function fetchAccountById(userId: number) {
-    return accounts.find(user => user.id == userId)
+  return accounts.find(user => user.id == userId)
 }
