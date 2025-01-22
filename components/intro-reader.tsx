@@ -182,7 +182,7 @@ export default function IntroReader({intro, initialAnnotations}: {intro: Intro, 
             )
         }
 
-        return <p className="text-lg leading-relaxed font-serif" dangerouslySetInnerHTML={{ __html: text }} />
+        return <p className="text-lg leading-relaxed font-serif mr-4" dangerouslySetInnerHTML={{ __html: text }} />
     }
 
     useEffect(() => {
@@ -261,7 +261,7 @@ export default function IntroReader({intro, initialAnnotations}: {intro: Intro, 
                                         {renderIntroText(index, text)}
                                     </div>
                                     {verseAnnotations.length > 0 && (
-                                        <div className="absolute -right-8 top-1 flex flex-col gap-1">
+                                        <div className={`absolute ${isMobile ? "-right-3" : "-right-8"} top-1 flex flex-col gap-1`}>
                                             {verseAnnotations.map((annotation) => (
                                             <Button
                                                 key={annotation._id?.toString()}
@@ -378,7 +378,7 @@ export default function IntroReader({intro, initialAnnotations}: {intro: Intro, 
                             View Annotations
                         </Button>
                     </SheetTrigger>
-                    <SheetContent>
+                    <SheetContent className='overflow-y-auto'>
                         <SheetHeader>
                             <SheetTitle>Annotations</SheetTitle>
                         </SheetHeader>

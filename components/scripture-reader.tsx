@@ -176,7 +176,7 @@ export default function ScriptureReader({chapter, book, initialAnnotations}: {ch
 
     return (
       <p 
-        className="text-lg leading-relaxed font-serif verse" 
+        className="text-lg leading-relaxed font-serif verse mr-4" 
         data-verse-id={verse.number} 
         dangerouslySetInnerHTML={{ __html: text }} 
       />
@@ -353,7 +353,7 @@ export default function ScriptureReader({chapter, book, initialAnnotations}: {ch
                       {renderVerseText(verse)}
                     </div>
                     {verseAnnotations.length > 0 && (
-                      <div className="absolute -right-8 top-1 flex flex-col gap-1">
+                      <div className={`absolute ${isMobile ? "-right-3" : "-right-8"} top-1 flex flex-col gap-1`}>
                         {verseAnnotations.map((annotation) => (
                           <Button
                             key={annotation._id?.toString()}
@@ -459,7 +459,7 @@ export default function ScriptureReader({chapter, book, initialAnnotations}: {ch
                 View Annotations
               </Button>
             </SheetTrigger>
-            <SheetContent>
+            <SheetContent className='overflow-y-auto'>
               <SheetHeader>
                 <SheetTitle>Annotations</SheetTitle>
               </SheetHeader>

@@ -56,7 +56,7 @@ export function AnnotationMenu({ position, selectedText, onClose, onSave }: Anno
 
   return (
     <Card
-      className="fixed z-50 w-[calc(100vw-2rem)] md:w-80"
+      className="fixed z-50 w-[calc(100vw-2rem)] md:w-80 overflow-auto"
       style={{
         top: `${position.y}px`,
         left: position.width ? 

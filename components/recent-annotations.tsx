@@ -125,7 +125,7 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
                         annotation={annotations[index]}
                         index={index}
                         style={style} 
-                        user={userMap.get(currentUserId)} 
+                        user={userMap.get(annotations[index].userId)} 
                         userMap={userMap} 
                         currentUserId={currentUserId}
                         bookmark={bookmark}
