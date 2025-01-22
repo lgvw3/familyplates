@@ -108,6 +108,12 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
         })
     }, [])
 
+    const addAnnotationsToBottomOfFeed = useCallback((annotations: Annotation[]) => {
+        setAnnotations(prev => {
+            return [...prev, ...annotations]
+        })
+    }, [])
+
     const addComment = useCallback((commentData: { annotationId: string; comment: AnnotationComment; }) => {
         setAnnotations(prev => {
             const temp = prev.find(val => val._id?.toString() === commentData.annotationId);
@@ -138,5 +144,5 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
         })
     }, [])
 
-    return { messages, sendMessage, annotations, setAnnotations, addAnnotation, addAnnotationToTopOfFeed };
+    return { messages, sendMessage, annotations, setAnnotations, addAnnotation, addAnnotationToTopOfFeed, addAnnotationsToBottomOfFeed };
 };

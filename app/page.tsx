@@ -1,7 +1,9 @@
-import { ContinueReading } from "@/components/continue-reading"
 import { RecentAnnotations } from "@/components/recent-annotations"
 import { fetchRecentAnnotations } from "@/lib/annotations/data"
 import { fetchCurrentUserId } from "@/lib/auth/data"
+import { fetchBookmarkBySignedInUser } from "@/lib/reading/data"
+import { BookmarkedSpot } from "@/lib/reading/definitions"
+import { loadChapter } from "@/lib/scripture_utils/scriptureUtils"
 import { redirect } from "next/navigation"
 
 export default async function HomePage() {
@@ -10,20 +12,19 @@ export default async function HomePage() {
   if (!currentUserId) {
     redirect('/sign-in')
   }
+  const bookmark: BookmarkedSpot | null = await fetchBookmarkBySignedInUser()
+  const chapterData = bookmark ? loadChapter(bookmark.bookId, `chapter_${bookmark.chapterNumber.toString()}`) : null
+  const progress = bookmark ? (bookmark.verseNumber / (chapterData?.verses.length ?? 1)) * 100 : 0
+
   return (
-    <div className="space-y-8 pt-8 px-4">
-      <ContinueReading />
-      <div>
-        <div className="flex flex-col gap-2">
-          <h2 className="text-2xl font-bold tracking-tight">Recent Annotations and Notes</h2>
-          <p className="text-muted-foreground">
-            See thoughts shared by the fam
-          </p>
-        </div>
-        <div className="mt-6">
-          <RecentAnnotations recentAnnotations={recentAnnotations ?? []} currentUserId={currentUserId} />
-        </div>
-      </div>
+    <div className="space-y-8 pt-8 px-4 mt-6">
+        <RecentAnnotations 
+          recentAnnotations={recentAnnotations ?? []} 
+          currentUserId={currentUserId}
+          bookmark={bookmark}
+          chapterData={chapterData}
+          progress={progress}
+        />
     </div>
   )
 }
