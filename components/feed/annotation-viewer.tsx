@@ -8,14 +8,22 @@ import { getInitials, toTitleCase } from "@/lib/utils"
 import { HeartIcon, ExternalLinkIcon, Loader2Icon, MessageCircleIcon } from "lucide-react"
 import { Button } from "../ui/button"
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react"
 import { Textarea } from "../ui/textarea"
 import { addCommentToAnnotation, updateLikeStatusOfComment } from "@/lib/annotations/actions"
 import { toast } from "sonner"
 
-export default function AnnotationViewer({index, author, annotation, userMap, currentUserId} : {index: number, author: UserAccount, annotation: Annotation, userMap: Map<number, UserAccount>, currentUserId: number}) {
-    const [showComments, setShowComments] = useState(false)
-    const [addingComment, setAddingComment] = useState(false)
+export default function AnnotationViewer({index, author, annotation, userMap, currentUserId, commentsOpen, setCommentsOpen, addCommentOpen, setAddCommentOpen} : {
+    index: number, 
+    author: UserAccount, 
+    annotation: Annotation, 
+    userMap: Map<number, UserAccount>, 
+    currentUserId: number,
+    commentsOpen: boolean,
+    setCommentsOpen: Dispatch<SetStateAction<number[]>>
+    addCommentOpen: boolean,
+    setAddCommentOpen: Dispatch<SetStateAction<number[]>>
+}) {
     const [commentContent, setCommentContent] = useState('')
     const [savingComment, setSavingComment] = useState(false)
     const [userLike, setUserLike] = useState(annotation.likes?.find(val => val.userId == currentUserId))
@@ -23,18 +31,18 @@ export default function AnnotationViewer({index, author, annotation, userMap, cu
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
     useEffect(() => {
-        if (addingComment && textareaRef.current) {
+        if (addCommentOpen && textareaRef.current) {
             textareaRef.current.focus();
         }
-    }, [addingComment]);
+    }, [addCommentOpen]);
 
     const saveComment = async() => {
         setSavingComment(true)
         const results = await addCommentToAnnotation(commentContent, annotation._id?.toString() ?? '')
         if (results.newComment) {
             toast.success('Comment shared!')
-            setAddingComment(false)
             setCommentContent('')
+            setAddCommentOpen((prev) => prev.filter(val => val != index))
         }
         else {
             toast.warning(results.message as string)
@@ -61,7 +69,6 @@ export default function AnnotationViewer({index, author, annotation, userMap, cu
         })
         const results = await updateLikeStatusOfComment(currentUserId, annotation._id?.toString() ?? '', userLike)
         if (results.newLike) {
-            setAddingComment(false)
             setCommentContent('')
         }
         else {
@@ -74,7 +81,19 @@ export default function AnnotationViewer({index, author, annotation, userMap, cu
         <div>
         <Card 
             key={annotation._id?.toString()} 
-            onClick={() => setShowComments(!showComments)}
+            onClick={() => {
+                setCommentsOpen((prev) => {
+                    if (!commentsOpen) {
+                        //show them
+                        return [...prev, index]
+                    }
+                    else {
+                        // hide them
+                        const temp = [...prev] 
+                        return temp.filter(val => val != index)
+                    }
+                })
+            }}
             className={`cursor-pointer ${index == 0 ? 'rounded-b-none' : 'rounded-none'}`}
         >
             <CardHeader>
@@ -96,7 +115,7 @@ export default function AnnotationViewer({index, author, annotation, userMap, cu
             </CardContent>
             <CardFooter className="flex items-center gap-4">
                 {
-                    addingComment ?
+                    addCommentOpen ?
                         <div className="flex flex-col w-full">
                             <Textarea 
                                 placeholder="Share your thoughts" 
@@ -117,7 +136,8 @@ export default function AnnotationViewer({index, author, annotation, userMap, cu
                                 <Button 
                                     onClick={(e) => {
                                         e.stopPropagation()
-                                        setAddingComment(false)
+                                        setAddCommentOpen((prev) => prev.filter(val => val != index))
+
                                     }}
                                     disabled={savingComment}
                                     className="max-w-32"
@@ -131,7 +151,7 @@ export default function AnnotationViewer({index, author, annotation, userMap, cu
                     <>
                         <Button variant="ghost" size="sm" className="gap-2" onClick={(e) => {
                             e.stopPropagation()
-                            setAddingComment(true)
+                            setAddCommentOpen((prev) => [...prev, index])
                         }}>
                             <MessageCircleIcon className="h-4 w-4" /> { annotation.comments?.length ?? null }
                         </Button>
@@ -165,7 +185,7 @@ export default function AnnotationViewer({index, author, annotation, userMap, cu
             </CardFooter>
         </Card>
         {
-            showComments && annotation.comments?.map(comment => {
+            commentsOpen && annotation.comments?.map(comment => {
                 const commentAuthor = userMap.get(comment.userId)
                 return (
                     <Card key={comment._id.toString()} className="mx-4 rounded-none">
