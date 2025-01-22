@@ -1,6 +1,6 @@
 'use server'
 
-import { Annotation } from "@/types/scripture";
+import { Annotation, AnnotationComment } from "@/types/scripture";
 import clientPromise from "../mongodb";
 import z from "zod";
 import redis from "ioredis";
@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 import { validateToken } from "../auth/utils";
 import { redirect } from "next/navigation";
 import { fetchAccountById } from "../auth/accounts";
+import { ObjectId } from "mongodb";
 
 const zAnnotation = z.object({
     verseNumber: z.number(),
@@ -71,7 +72,8 @@ export async function saveAnnotation(annotation: Annotation) {
         url: url,
         photoUrl: photoUrl,
         userId: userId,
-        userName: user.name
+        userName: user.name,
+        comments: []
     }
 
     // Save annotation to the database
@@ -111,6 +113,102 @@ export async function saveAnnotation(annotation: Annotation) {
     } catch(error) {
         console.error(error)
         sendErrorMessageToMe(annotation)
+        return {
+            message: error
+        }
+    }
+}
+
+const zComment = z.object({
+    content: z.string()
+})
+
+export async function addCommentToAnnotation(comment: string, annotationId: string) {
+
+    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
+    if (!authToken) {
+        redirect('/sign-in')
+    }
+    const { userId } = validateToken(authToken);
+
+    if (!userId) {
+        return {
+            message: "Unauthorized. This app is just for my family for now"
+        }
+    }
+    const user = fetchAccountById(userId)
+
+    if (!user) {
+        return {
+            message: "Unauthorized. This app is just for my family for now"
+        }
+    }
+
+    const validatedFields = zComment.safeParse({content: comment})
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: "Missing fields. Failed to create annotation",
+        };
+    }
+
+    const {content} = validatedFields.data
+
+    const client = await clientPromise;
+    const db = client.db("main");
+    const collection = db.collection<Annotation>("annotations");
+
+    const newComment: AnnotationComment = {
+        _id: new ObjectId(),
+        userId: userId,
+        userName: user.name,
+        content: content,
+        timeStamp: new Date()
+    }
+
+    try {
+        const result = await collection.updateOne(
+            { _id: new ObjectId(annotationId) },
+            {
+              $push: {
+                comments: {
+                  ...newComment
+                }
+              }
+            }
+        );
+
+        if (result.modifiedCount) {
+            try {
+                const redisPub = new redis(process.env.KV_URL ?? '');
+                await redisPub.publish("comments", JSON.stringify({
+                    comment: newComment, 
+                    annotationId: annotationId
+                }));
+                return {
+                    message: 'Sucess',
+                    newComment: {
+                        ...newComment,
+                        _id: newComment._id.toString()
+                    }
+                }
+            }
+            catch(err) {
+                console.error(err)
+                return {
+                    message: `Real time update error: ${err}`
+                }
+            }
+        }
+        else {
+            console.error("Database Error: Could not save comment. Failed insert.")
+            return {
+                message: "Database Error: Could not save annotation"
+            }
+        }
+    } catch(error) {
+        console.error(error)
         return {
             message: error
         }

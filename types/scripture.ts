@@ -25,6 +25,14 @@ export type Intro = {
   paragraphs: string[]
 }
 
+export type AnnotationComment = {
+  _id: ObjectId | string;
+  userId: number,
+  userName: string,
+  timeStamp: Date,
+  content: string
+}
+
 export type AnnotationType = 'note' | 'link' | 'photo' | 'combo';
 export type HighlightColor = 'yellow' | 'green' | 'blue' | 'purple' | 'pink';
 export type TextStyle = 'underline' | 'bold' | 'italic' | 'none';
@@ -42,7 +50,8 @@ export interface Annotation {
   url?: string;
   photoUrl?: string;
   userId: number,
-  userName: string
+  userName: string,
+  comments?: AnnotationComment[]
 }
 
 export interface ScriptureItem {

@@ -27,6 +27,10 @@ export async function fetchRecentAnnotations() {
         if (results) {
             results.map(a => {
                 a._id = a._id ? a._id.toString() : null
+                a.comments = a.comments?.map(comment => {
+                    comment._id = comment._id.toString()
+                    return comment
+                })
             })
             return results
         }

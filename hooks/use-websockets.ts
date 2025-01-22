@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Annotation } from "@/types/scripture";
+import { Annotation, AnnotationComment } from "@/types/scripture";
 
 
 export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boolean, bookId?: string, chapterNumber?: number) => {
@@ -17,12 +17,17 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
             console.log(process.env.NEXT_PUBLIC_WEB_SOCKET_URL)
             ws.onopen = () => {
                 console.log('WebSocket connected');
+                if (socket) {
+                    console.log('Closing old connection')
+                    socket.close()
+                }
                 setSocket(ws)
                 setRetryCount(0); // Reset retry count on successful connection
             };
 
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
+                console.log(data)
                 if (data.channel == 'annotations') {
                     if (isFeed) {
                         addAnnotationToTopOfFeed(JSON.parse(data.data))
@@ -30,6 +35,9 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
                     else {
                         addAnnotation(JSON.parse(data.data))
                     }
+                }
+                else if (data.channel == 'comments') {
+                    addComment(JSON.parse(data.data))
                 }
                 else if (data.channel == 'bookmarks') {
                     // local save of bookmarks of family members
@@ -95,6 +103,23 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
         setAnnotations(prev => {
             const temp = prev.filter(a => a._id != annotation._id)
             return [annotation, ...temp]
+        })
+    }, [])
+
+    const addComment = useCallback((commentData: { annotationId: string; comment: AnnotationComment; }) => {
+        console.log('where')
+        setAnnotations(prev => {
+            console.log('o where')
+            const temp = prev.find(val => val._id?.toString() === commentData.annotationId);
+            if (temp) {
+                const updatedTemp = {
+                    ...temp,
+                    comments: [...(temp.comments || []), { ...commentData.comment, _id: commentData.comment._id.toString() }],
+                };
+                return prev.map(val => (val._id?.toString() === commentData.annotationId ? updatedTemp : val));
+            } else {
+                return prev;
+            }
         })
     }, [])
 
