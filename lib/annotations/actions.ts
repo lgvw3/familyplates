@@ -187,11 +187,16 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
 
         if (result.modifiedCount) {
             try {
+                // real time
                 const redisPub = new redis(process.env.KV_URL ?? '');
                 await redisPub.publish("comments", JSON.stringify({
                     comment: newComment, 
                     annotationId: annotationId
                 }));
+
+                //offline
+                await sendNotificationToOfflineUsers(newComment.content, `New comment from ${newComment.userName} `)
+
                 return {
                     message: 'Sucess',
                     newComment: {
@@ -254,8 +259,8 @@ export async function updateLikeStatusOfComment(currentUserId: number, annotatio
 
     try {
         let results: UpdateResult<Annotation>
+        const existingAnnotation = await collection.findOne({_id: new ObjectId(annotationId)})
         if (userLike) {
-            const existingAnnotation = await collection.findOne({_id: new ObjectId(annotationId)})
             const existingLike = existingAnnotation?.likes?.find(val => val.userId == currentUserId)
             // User already liked: Unlike
             results = await collection.updateOne(
@@ -272,12 +277,18 @@ export async function updateLikeStatusOfComment(currentUserId: number, annotatio
 
         if (results.modifiedCount) {
             try {
+                // real time
                 const redisPub = new redis(process.env.KV_URL ?? '');
                 await redisPub.publish("likes", JSON.stringify({
                     like: updatedLike,
                     likes: !userLike,
                     annotationId: annotationId
                 }));
+                // offline
+                if (!userLike) {
+                    // liking it
+                    await sendNotificationToOfflineUsers('', `${updatedLike.userName} liked ${existingAnnotation?.userName}'s thoughts `)
+                }
                 return {
                     message: 'Sucess',
                     newLike: {
