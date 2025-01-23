@@ -1,5 +1,6 @@
 import IntroReader from "@/components/intro-reader";
 import { fetchAnnotationsByChapter } from "@/lib/annotations/data";
+import { fetchCurrentUserId } from "@/lib/auth/data";
 import { loadIntroMaterial } from "@/lib/scripture_utils/scriptureUtils";
 
 interface ChapterPageProps {
@@ -36,10 +37,15 @@ export default async function Page({ params }: ChapterPageProps) {
         return <div>Introductary Material not found.</div>;
     }
 
+    const currentUserId = await fetchCurrentUserId()
+    if (currentUserId === null) {
+        return <div>No go</div>;
+    }
     return (
         <IntroReader  
             intro={introData}
             initialAnnotations={annotations ?? []}
+            currentUserId={currentUserId}
         />
     );
 };

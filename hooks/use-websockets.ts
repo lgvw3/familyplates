@@ -9,12 +9,12 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
     const [messages, setMessages] = useState<string[]>([]);
     const [annotations, setAnnotations] = useState<Annotation[]>(initialAnnotations)
     const [retryCount, setRetryCount] = useState(0);
+    const [notification, setNotification] = useState<Annotation | null>()
 
     useEffect(() => {
         let ws: WebSocket | null = null;
         const connect = () => {
             ws = new WebSocket(process.env.NEXT_PUBLIC_WEB_SOCKET_URL ?? '');
-            console.log(process.env.NEXT_PUBLIC_WEB_SOCKET_URL)
             ws.onopen = () => {
                 console.log('WebSocket connected');
                 if (socket) {
@@ -28,6 +28,7 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 if (data.channel == 'annotations') {
+                    setNotification(JSON.parse(data.data))
                     if (isFeed) {
                         addAnnotationToTopOfFeed(JSON.parse(data.data))
                     }
@@ -144,5 +145,5 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
         })
     }, [])
 
-    return { messages, sendMessage, annotations, setAnnotations, addAnnotation, addAnnotationToTopOfFeed, addAnnotationsToBottomOfFeed };
+    return { messages, sendMessage, annotations, setAnnotations, addAnnotation, addAnnotationToTopOfFeed, addAnnotationsToBottomOfFeed, notification, setNotification };
 };

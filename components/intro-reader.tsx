@@ -47,11 +47,11 @@ const getHighlightStyle = (color: 'yellow' | 'green' | 'blue' | 'purple' | 'pink
     return colorClasses[color]
 }
 
-export default function IntroReader({intro, initialAnnotations}: {intro: Intro, initialAnnotations: Annotation[]}) {
+export default function IntroReader({intro, initialAnnotations, currentUserId}: {intro: Intro, initialAnnotations: Annotation[], currentUserId: number}) {
     const [menuPosition, setMenuPosition] = useState<{ x: number; y: number; width: number } | null>(null)
     const [currentSelection, setCurrentSelection] = useState<SelectionInfo | null>(null)
     const [currentVerseNumber, setCurrentVerseNumber] = useState<number | null>(null)
-    const { annotations, addAnnotation } = useWebSocket(initialAnnotations, false, intro.title.replace(' ', '-').toLowerCase(), 1)
+    const { annotations, addAnnotation, notification, setNotification } = useWebSocket(initialAnnotations, false, intro.title.replace(' ', '-').toLowerCase(), 1)
     const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const [annotationsOpen, setAnnotationsOpen] = useState(false)
     const isMobile = useIsMobile()
@@ -60,6 +60,11 @@ export default function IntroReader({intro, initialAnnotations}: {intro: Intro, 
     let lastBook = ''
     if (introIndex > 0) {
         lastBook = introMaterialOrder[introIndex - 1]
+    }
+
+    if (notification && notification.userId != currentUserId) {
+        toast(`New Annotation by ${notification.userName}`, {position: 'top-center'})
+        setNotification(null)
     }
 
     let nextBook = ''

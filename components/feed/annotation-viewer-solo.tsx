@@ -13,6 +13,7 @@ import { addCommentToAnnotation, updateLikeStatusOfComment } from "@/lib/annotat
 import { toast } from "sonner"
 import Link from "next/link"
 import { fetchUsersAsMap } from "@/lib/auth/accounts"
+import { useWebSocket } from "@/hooks/use-websockets"
 
 
 export default function AnnotationViewerSolo({author, annotation, currentUserId, userName } : {
@@ -26,6 +27,12 @@ export default function AnnotationViewerSolo({author, annotation, currentUserId,
     const [savingComment, setSavingComment] = useState(false)
     const [userLike, setUserLike] = useState(annotation.likes?.find(val => val.userId == currentUserId))
     const [addCommentOpen, setAddCommentOpen] = useState(false)
+
+    const { notification, setNotification } = useWebSocket() 
+    if (notification && notification.userId != currentUserId) {
+        toast(`New Annotation by ${notification.userName}`, {position: 'top-center'})
+        setNotification(null)
+    }
 
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 

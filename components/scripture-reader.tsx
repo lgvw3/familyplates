@@ -49,7 +49,7 @@ const getHighlightStyle = (color: 'yellow' | 'green' | 'blue' | 'purple' | 'pink
   return colorClasses[color]
 }
 
-export default function ScriptureReader({chapter, book, initialAnnotations}: {chapter: Chapter, book: Book, initialAnnotations: Annotation[]}) {
+export default function ScriptureReader({chapter, book, initialAnnotations, currentUserId}: {chapter: Chapter, book: Book, initialAnnotations: Annotation[], currentUserId: number}) {
   const chapterNumber = Number(chapter.chapter_title.slice(8))
   const isFirstChapter = chapterNumber == 1;
   
@@ -58,10 +58,14 @@ export default function ScriptureReader({chapter, book, initialAnnotations}: {ch
   const [currentSelection, setCurrentSelection] = useState<SelectionInfo | null>(null)
   const [currentVerseNumber, setCurrentVerseNumber] = useState<number | null>(null)
   const [currentVisibleVerse, setCurrentVisibleVerse] = useState(1);
-  const { annotations, addAnnotation} = useWebSocket(initialAnnotations, false, book.title.toLowerCase().replaceAll(' ', '-'), chapterNumber)
+  const { annotations, addAnnotation, notification, setNotification} = useWebSocket(initialAnnotations, false, book.title.toLowerCase().replaceAll(' ', '-'), chapterNumber)
   const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isMobile = useIsMobile()
   const [annotationsOpen, setAnnotationsOpen] = useState(false)
+  if (notification && notification.userId != currentUserId) {
+      toast(`New Annotation by ${notification.userName}`, {position: 'top-center'})
+      setNotification(null)
+  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {

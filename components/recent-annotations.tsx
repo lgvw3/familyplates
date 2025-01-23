@@ -11,6 +11,7 @@ import { ContinueReading } from "./continue-reading"
 import { UserAccount } from "@/lib/auth/definitions"
 import { BookmarkedSpot } from "@/lib/reading/definitions"
 import Link from "next/link"
+import { toast } from "sonner"
 
 
 function AnnotationCard({annotation, index, style, user, userMap, currentUserId, bookmark, chapterData, progress}: {
@@ -68,7 +69,11 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
     progress: number
 }) {
     const userMap = fetchUsersAsMap()
-    const { annotations, addAnnotationsToBottomOfFeed } = useWebSocket(recentAnnotations, true) 
+    const { annotations, addAnnotationsToBottomOfFeed, notification, setNotification } = useWebSocket(recentAnnotations, true) 
+    if (notification && notification.userId != currentUserId) {
+        toast(`New Annotation by ${notification.userName}`, {position: 'top-center'})
+        setNotification(null)
+    }
     const isLoading = useRef(false);
     const listRef = useRef<List>(null);
 
