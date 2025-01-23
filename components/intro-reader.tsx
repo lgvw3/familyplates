@@ -63,7 +63,7 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
     }
 
     if (notification && notification.userId != currentUserId) {
-        toast(`New Annotation by ${notification.userName}`, {position: 'top-center'})
+        toast(`New ${notification.type} by ${notification.userName}`, {position: 'top-center'})
         setNotification(null)
     }
 

@@ -3,13 +3,23 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Annotation, AnnotationComment, AnnotationLike } from "@/types/scripture";
 
+export type NotificationParam = {
+    annotation?: Annotation,
+    comment?: AnnotationComment,
+    like?: AnnotationLike,
+    doesLike?: boolean,
+    userName: string,
+    userId: number,
+    type: 'annotation' | 'comment' | 'like'
+}
+
 
 export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boolean, bookId?: string, chapterNumber?: number) => {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [messages, setMessages] = useState<string[]>([]);
     const [annotations, setAnnotations] = useState<Annotation[]>(initialAnnotations)
     const [retryCount, setRetryCount] = useState(0);
-    const [notification, setNotification] = useState<Annotation | null>()
+    const [notification, setNotification] = useState<NotificationParam | null>()
 
     useEffect(() => {
         let ws: WebSocket | null = null;
@@ -29,7 +39,12 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
                 const data = JSON.parse(event.data);
                 if (data.channel == 'annotations') {
                     const ann: Annotation = JSON.parse(data.data)
-                    setNotification(ann)
+                    setNotification({
+                        annotation: ann,
+                        userName: ann.userName,
+                        userId: ann.userId,
+                        type: 'annotation'
+                    })
                     if (isFeed) {
                         addAnnotationToTopOfFeed(ann)
                     }
@@ -38,10 +53,25 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
                     }
                 }
                 else if (data.channel == 'comments') {
-                    addComment(JSON.parse(data.data))
+                    const commentChannelData: { annotationId: string; comment: AnnotationComment; } = JSON.parse(data.data)
+                    addComment(commentChannelData)
+                    setNotification({
+                        comment: commentChannelData.comment,
+                        userName: commentChannelData.comment.userName,
+                        userId: commentChannelData.comment.userId,
+                        type: 'comment'
+                    })
                 }
                 else if (data.channel == "likes") {
-                    addLikes(JSON.parse(data.data))
+                    const likeChannelData: { likes: boolean, like: AnnotationLike; annotationId: string; } = JSON.parse(data.data)
+                    addLikes(likeChannelData)
+                    setNotification({
+                        like: likeChannelData.like,
+                        doesLike: likeChannelData.likes,
+                        userName: likeChannelData.like.userName,
+                        userId: likeChannelData.like.userId,
+                        type: 'like'
+                    })
                 }
                 else if (data.channel == 'bookmarks') {
                     // local save of bookmarks of family members

@@ -71,7 +71,7 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
     const userMap = fetchUsersAsMap()
     const { annotations, addAnnotationsToBottomOfFeed, notification, setNotification } = useWebSocket(recentAnnotations, true) 
     if (notification && notification.userId != currentUserId) {
-        toast(`New Annotation by ${notification.userName}`, {position: 'top-center'})
+        toast(`New ${notification.type} by ${notification.userName}`, {position: 'top-center'})
         setNotification(null)
     }
     const isLoading = useRef(false);

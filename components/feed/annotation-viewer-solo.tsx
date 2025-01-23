@@ -32,7 +32,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
     const [addCommentOpen, setAddCommentOpen] = useState(false)
 
     if (notification && notification.userId != currentUserId) {
-        toast(`New Annotation by ${notification.userName}`, {position: 'top-center'})
+        toast(`New ${notification.type} by ${notification.userName}`, {position: 'top-center'})
         setNotification(null)
     }
 
