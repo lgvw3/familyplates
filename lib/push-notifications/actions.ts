@@ -125,6 +125,8 @@ export async function sendNotificationToOfflineUsers(message: string, title: str
         return
     }
 
+    // TODO: Make this for people who are not online only
+
     try {
         const client = await clientPromise;
         const db = client.db("main");

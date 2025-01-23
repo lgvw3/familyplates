@@ -70,6 +70,7 @@ export default function NotificationManager({existingSubscription}: {existingSub
         <div>
             { subscription && process.env.NODE_ENV != "production" ? 
                 <Button onClick={unsubscribeFromPush}>Unsubscribe</Button>
+            : subscription && process.env.NODE_ENV == "production" ? null 
             : (
             <>
                 <p className='flex'>
