@@ -23,7 +23,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
     userName: string
 }) {
 
-    const { annotations } = useWebSocket([initialAnnotation], false)
+    const { annotations, notification, setNotification } = useWebSocket([initialAnnotation], false) 
     const annotation = annotations[0]
     const userMap = fetchUsersAsMap()
     const [commentContent, setCommentContent] = useState('')
@@ -31,7 +31,6 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
     const [userLike, setUserLike] = useState(annotation.likes?.find(val => val.userId == currentUserId))
     const [addCommentOpen, setAddCommentOpen] = useState(false)
 
-    const { notification, setNotification } = useWebSocket() 
     if (notification && notification.userId != currentUserId) {
         toast(`New Annotation by ${notification.userName}`, {position: 'top-center'})
         setNotification(null)
