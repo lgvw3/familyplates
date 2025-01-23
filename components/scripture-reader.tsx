@@ -73,7 +73,7 @@ export default function ScriptureReader({chapter, book, initialAnnotations}: {ch
       }
     }
 
-    document.addEventListener('touchstart', handleClickOutside)
+    //document.addEventListener('touchstart', handleClickOutside)
     
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)

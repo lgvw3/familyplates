@@ -81,8 +81,6 @@ export default function IntroReader({intro, initialAnnotations}: {intro: Intro, 
                 window.getSelection()?.removeAllRanges()
             }
         }
-
-        document.addEventListener('touchstart', handleClickOutside)
         
         return () => {
             document.removeEventListener('mousedown', handleClickOutside)
