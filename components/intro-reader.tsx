@@ -338,7 +338,14 @@ export default function IntroReader({intro, initialAnnotations}: {intro: Intro, 
                                 </p>
                             ) : (
                                 <div className="space-y-4">
-                                    {annotations.map((annotation) => (
+                                    {annotations.sort((a, b) => {
+                                        if (a.verseNumber > b.verseNumber) {
+                                            return 1
+                                        }
+                                        else {
+                                            return -1
+                                        }
+                                    }).map((annotation) => (
                                         <div key={annotation._id?.toString()} className="space-y-2">
                                             <div className="flex justify-between items-start">
                                                 <span className="text-sm font-medium">Verse {annotation.verseNumber}</span>
@@ -389,7 +396,14 @@ export default function IntroReader({intro, initialAnnotations}: {intro: Intro, 
                                 </p>
                             ) : (
                             <div className="space-y-4">
-                                {annotations.map((annotation) => (
+                                {annotations.sort((a, b) => {
+                                    if (a.verseNumber > b.verseNumber) {
+                                        return 1
+                                    }
+                                    else {
+                                        return -1
+                                    }
+                                }).map((annotation) => (
                                     <div key={annotation._id?.toString()} className="space-y-2">
                                         <div className="flex justify-between items-start">
                                             <span className="text-sm font-medium">Verse {annotation.verseNumber}</span>
