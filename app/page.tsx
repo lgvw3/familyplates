@@ -1,6 +1,8 @@
+import NotificationManager from "@/components/push-notifications/notification-manager"
 import { RecentAnnotations } from "@/components/recent-annotations"
 import { fetchRecentAnnotations } from "@/lib/annotations/data"
 import { fetchCurrentUserId } from "@/lib/auth/data"
+import { fetchUserNotificationSubscription } from "@/lib/push-notifications/data"
 import { fetchBookmarkBySignedInUser } from "@/lib/reading/data"
 import { BookmarkedSpot } from "@/lib/reading/definitions"
 import { loadChapter } from "@/lib/scripture_utils/scriptureUtils"
@@ -8,6 +10,7 @@ import { redirect } from "next/navigation"
 
 export default async function HomePage() {
   const recentAnnotations = await fetchRecentAnnotations()
+  const subscription = await fetchUserNotificationSubscription()
   const currentUserId = await fetchCurrentUserId()
   if (!currentUserId) {
     redirect('/sign-in')
@@ -18,13 +21,16 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-8 pt-8 mt-6">
-        <RecentAnnotations 
-          recentAnnotations={recentAnnotations ?? []} 
-          currentUserId={currentUserId}
-          bookmark={bookmark}
-          chapterData={chapterData}
-          progress={progress}
-        />
+      <NotificationManager 
+        existingSubscription={subscription?.sub ?? null} 
+      />
+      <RecentAnnotations 
+        recentAnnotations={recentAnnotations ?? []} 
+        currentUserId={currentUserId}
+        bookmark={bookmark}
+        chapterData={chapterData}
+        progress={progress}
+      />
     </div>
   )
 }
