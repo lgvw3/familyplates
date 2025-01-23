@@ -41,7 +41,6 @@ export default async function Page({ params }: AnnotationPageProps) {
         return <div>Annotation not found.</div>;
     }
 
-    console.log(author, annotationData, userMap, currentUserId)
     return (
         <AnnotationViewerSolo
             author={author} 

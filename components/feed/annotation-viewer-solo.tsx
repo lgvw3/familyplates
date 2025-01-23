@@ -77,7 +77,7 @@ export default function AnnotationViewerSolo({author, annotation, currentUserId,
     }
 
     return (
-        <div className="mx-4 min-h-lvh mt-4">
+        <div className="md:mx-4 min-h-lvh mt-4">
             <Card 
                 key={annotation._id?.toString()}
                 className={`cursor-pointer rounded-b-none`}

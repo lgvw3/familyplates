@@ -17,7 +17,7 @@ export default async function HomePage() {
   const progress = bookmark ? (bookmark.verseNumber / (chapterData?.verses.length ?? 1)) * 100 : 0
 
   return (
-    <div className="space-y-8 pt-8 px-4 mt-6">
+    <div className="space-y-8 pt-8 mt-6">
         <RecentAnnotations 
           recentAnnotations={recentAnnotations ?? []} 
           currentUserId={currentUserId}

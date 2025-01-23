@@ -43,7 +43,7 @@ function AnnotationCard({annotation, index, style, user, userMap, currentUserId,
         return (
             <Link 
                 style={style} 
-                className="px-4 md:px-8"
+                className="md:px-8"
                 href={`/annotation/${annotation._id?.toString()}`}
             >
                 <AnnotationViewer 
