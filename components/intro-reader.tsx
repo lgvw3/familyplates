@@ -346,7 +346,8 @@ export default function IntroReader({intro, initialAnnotations}: {intro: Intro, 
                                             return -1
                                         }
                                     }).map((annotation) => (
-                                        <div key={annotation._id?.toString()} className="space-y-2">
+                                        <Link key={annotation._id?.toString()} href={`/annotation/${annotation._id?.toString()}`}>
+                                        <div className="space-y-2 rounded border">
                                             <div className="flex justify-between items-start">
                                                 <span className="text-sm font-medium">Verse {annotation.verseNumber}</span>
                                             </div>
@@ -354,6 +355,7 @@ export default function IntroReader({intro, initialAnnotations}: {intro: Intro, 
                                                 &ldquo;{annotation.highlightedText}&rdquo;
                                             </p>
                                             <p className="text-sm">{annotation.text}</p>
+                                            <p className="text-sm">{annotation.userName}</p>
                                             {annotation.url && (
                                                 <a
                                                     href={annotation.url}
@@ -372,6 +374,7 @@ export default function IntroReader({intro, initialAnnotations}: {intro: Intro, 
                                                 />
                                             )}
                                         </div>
+                                        </Link>
                                     ))}
                                 </div>
                             )}
