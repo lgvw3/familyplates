@@ -114,7 +114,7 @@ export async function sendNotification(message: string, title: string) {
     }
 }
 
-export async function sendNotificationToOfflineUsers(message: string, title: string) {
+export async function sendNotificationToOfflineUsers(message: string, title: string, authorId: number) {
     const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
     if (!authToken) {
         return
@@ -136,13 +136,15 @@ export async function sendNotificationToOfflineUsers(message: string, title: str
         const notificationPromises: Promise<webpush.SendResult>[] = []
         
         subs.map(sub => {
-            notificationPromises.push(webpush.sendNotification(
-                JSON.parse(JSON.stringify(sub.sub)),
-                JSON.stringify({
-                    title: title,
-                    body: message,
-                })
-            ))
+            if (sub.userId != authorId || process.env.NODE_ENV != 'production') {
+                notificationPromises.push(webpush.sendNotification(
+                    JSON.parse(JSON.stringify(sub.sub)),
+                    JSON.stringify({
+                        title: title,
+                        body: message,
+                    })
+                ))
+            }
         })
 
         await Promise.all(notificationPromises)

@@ -93,7 +93,7 @@ export async function saveAnnotation(annotation: Annotation) {
                 }));
 
                 // subscribers offline
-                await sendNotificationToOfflineUsers(annotationData.text, `New annotation from ${annotationData.userName} `)
+                await sendNotificationToOfflineUsers(annotationData.text, `New annotation from ${annotationData.userName} `, userId)
 
                 return {
                     message: 'Sucess',
@@ -195,7 +195,7 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
                 }));
 
                 //offline
-                await sendNotificationToOfflineUsers(newComment.content, `New comment from ${newComment.userName} `)
+                await sendNotificationToOfflineUsers(newComment.content, `New comment from ${newComment.userName} `, userId)
 
                 return {
                     message: 'Sucess',
@@ -287,7 +287,7 @@ export async function updateLikeStatusOfComment(currentUserId: number, annotatio
                 // offline
                 if (!userLike) {
                     // liking it
-                    await sendNotificationToOfflineUsers('', `${updatedLike.userName} liked ${existingAnnotation?.userName}'s thoughts `)
+                    await sendNotificationToOfflineUsers('', `${updatedLike.userName} liked ${existingAnnotation?.userName}'s thoughts `, userId)
                 }
                 return {
                     message: 'Sucess',
