@@ -136,7 +136,20 @@ export async function sendNotificationToOfflineUsers(message: string, title: str
         const notificationPromises: Promise<webpush.SendResult>[] = []
         
         subs.map(sub => {
-            if (sub.userId != authorId || process.env.NODE_ENV != 'production') {
+            if (process.env.NODE_ENV != 'production') {
+                //dev
+                if (sub.userId == 8) {// me for now
+                    notificationPromises.push(webpush.sendNotification(
+                        JSON.parse(JSON.stringify(sub.sub)),
+                        JSON.stringify({
+                            title: title,
+                            body: message,
+                        })
+                    ))
+                }
+            }
+            else if (sub.userId != authorId) {
+                // do not bother them while i'm in dev mode lol
                 notificationPromises.push(webpush.sendNotification(
                     JSON.parse(JSON.stringify(sub.sub)),
                     JSON.stringify({
