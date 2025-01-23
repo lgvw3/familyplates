@@ -51,7 +51,7 @@ export default function NotificationManager({existingSubscription}: {existingSub
         const serializedSub = JSON.parse(JSON.stringify(sub))
         const results = await subscribeUser(serializedSub)
         if (results.success) {
-            toast.success("Ahh inside jokes… I'd love to be apart of one one day")
+            toast.success("Ahh inside jokes… I'd love to be a part of one one day")
             await sendNotification('Notifications will look like this', 'Hola')
         }
     }

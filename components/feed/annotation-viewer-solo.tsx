@@ -16,12 +16,15 @@ import { fetchUsersAsMap } from "@/lib/auth/accounts"
 import { useWebSocket } from "@/hooks/use-websockets"
 
 
-export default function AnnotationViewerSolo({author, annotation, currentUserId, userName } : {
+export default function AnnotationViewerSolo({author, initialAnnotation, currentUserId, userName } : {
     author: UserAccount, 
-    annotation: Annotation, 
+    initialAnnotation: Annotation, 
     currentUserId: number,
     userName: string
 }) {
+
+    const { annotations } = useWebSocket([initialAnnotation], false)
+    const annotation = annotations[0]
     const userMap = fetchUsersAsMap()
     const [commentContent, setCommentContent] = useState('')
     const [savingComment, setSavingComment] = useState(false)

@@ -44,7 +44,7 @@ export default async function Page({ params }: AnnotationPageProps) {
     return (
         <AnnotationViewerSolo
             author={author} 
-            annotation={annotationData} 
+            initialAnnotation={annotationData} 
             currentUserId={currentUserId}
             userName={user?.name}
         />
