@@ -28,12 +28,13 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 if (data.channel == 'annotations') {
-                    setNotification(JSON.parse(data.data))
+                    const ann: Annotation = JSON.parse(data.data)
+                    setNotification(ann)
                     if (isFeed) {
-                        addAnnotationToTopOfFeed(JSON.parse(data.data))
+                        addAnnotationToTopOfFeed(ann)
                     }
                     else {
-                        addAnnotation(JSON.parse(data.data))
+                        addAnnotation(ann)
                     }
                 }
                 else if (data.channel == 'comments') {

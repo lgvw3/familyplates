@@ -10,6 +10,7 @@ import { validateToken } from "../auth/utils";
 import { redirect } from "next/navigation";
 import { fetchAccountById } from "../auth/accounts";
 import { ObjectId, UpdateResult } from "mongodb";
+import { sendNotificationToOfflineUsers } from "../push-notifications/actions";
 
 const zAnnotation = z.object({
     verseNumber: z.number(),
@@ -84,11 +85,16 @@ export async function saveAnnotation(annotation: Annotation) {
 
         if (result.insertedId) {
             try {
+                //real time
                 const redisPub = new redis(process.env.KV_URL ?? '');
                 await redisPub.publish("annotations", JSON.stringify({
                     ...annotationData, 
                     _id: result.insertedId.toString()
                 }));
+
+                // subscribers offline
+                await sendNotificationToOfflineUsers(annotationData.text, `New annotation from ${annotationData.userName} `)
+
                 return {
                     message: 'Sucess',
                     insertedId: result.insertedId.toString(),

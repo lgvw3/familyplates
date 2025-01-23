@@ -113,3 +113,38 @@ export async function sendNotification(message: string, title: string) {
         return { success: false, error: 'Failed to send notification' }
     }
 }
+
+export async function sendNotificationToOfflineUsers(message: string, title: string) {
+    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
+    if (!authToken) {
+        return
+    }
+    const { userId } = validateToken(authToken);
+
+    if (!userId) {
+        return
+    }
+
+    try {
+        const client = await clientPromise;
+        const db = client.db("main");
+        const collection = db.collection("notificationSubscriptions");
+
+        const subs = await collection.find<NotificationSubscription>({}).toArray()
+        const notificationPromises: Promise<webpush.SendResult>[] = []
+        
+        subs.map(sub => {
+            notificationPromises.push(webpush.sendNotification(
+                JSON.parse(JSON.stringify(sub.sub)),
+                JSON.stringify({
+                    title: title,
+                    body: message,
+                })
+            ))
+        })
+
+        await Promise.all(notificationPromises)
+    } catch(error) {
+        console.error(error)
+    }
+}
