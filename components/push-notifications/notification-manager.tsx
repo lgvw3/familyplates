@@ -23,7 +23,7 @@ function urlBase64ToUint8Array(base64String: string) {
 export default function NotificationManager({existingSubscription}: {existingSubscription: PushSubscription | null}) {
     const [isSupported, setIsSupported] = useState(false)
     const [subscription, setSubscription] = useState<PushSubscription | null>(existingSubscription) //load it in
-    const [hideAlert, setHideAlert] = useState(false)
+    const [hideAlert, setHideAlert] = useState(process.env.NODE_ENV != 'production')
    
     useEffect(() => {
         if ('serviceWorker' in navigator && 'PushManager' in window) {

@@ -4,7 +4,7 @@ import { UserAccount } from "@/lib/auth/definitions"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Annotation } from "@/types/scripture"
-import { getInitials, toTitleCase } from "@/lib/utils"
+import { cn, getInitials, toTitleCase } from "@/lib/utils"
 import { HeartIcon, ExternalLinkIcon, MessageCircleIcon } from "lucide-react"
 import { Button } from "../ui/button"
 import { updateLikeStatusOfComment } from "@/lib/annotations/actions"
@@ -47,6 +47,23 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
         }
     }
 
+    const getBackgroundColor = () => {
+        switch (annotation.color) {
+            case 'yellow':
+                return 'bg-yellow-300';
+            case 'blue':
+                return 'bg-blue-300';
+            case 'green':
+                return 'bg-green-300';
+            case 'blue':
+                return 'bg-blue-300'
+            case 'purple':
+                return 'bg-purple-300'
+            default:
+                return '';
+        }
+    }
+
     return (
         <>
             <Card 
@@ -68,6 +85,13 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                     </div>
                 </CardHeader>
                 <CardContent>
+                    <div className="flex items-center space-x-4 rounded-md border p-4">
+                        <div className="flex-1 space-y-1">
+                            <span className={cn(getBackgroundColor(), 'rounded p-1 text-sm font-medium leading-none')}>
+                                {annotation.highlightedText}
+                            </span>
+                        </div>
+                    </div>
                     <p className="text-foreground">{annotation.text}</p>
                 </CardContent>
                 <CardFooter className="flex items-center gap-4">

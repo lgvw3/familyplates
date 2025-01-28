@@ -83,11 +83,19 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
     })
 
     useEffect(() => {
-        setDimensions({
+        const handleResize = () => {
+          setDimensions({
             width: window.innerWidth,
-            height: window.innerHeight
-        })
-    }, [])
+            height: window.innerHeight,
+          });
+        };
+    
+        window.addEventListener('resize', handleResize);
+        handleResize()
+    
+        // Cleanup the listener on unmount
+        return () => window.removeEventListener('resize', handleResize);
+      }, []);
 
     const loadMoreAnnotations = async () => {
         if (isLoading.current) return;
@@ -115,14 +123,28 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
         if (index === 0) return 350 // Height for ContinueReading + section title
         
         const content = annotations[index - 1].text
+        const highlightedText = annotations[index - 1].highlightedText;
+
+        const availableWidth = dimensions.width ? Math.ceil(dimensions.width / 10) : 100
+
+        const width = availableWidth > 0 ? availableWidth : 100
         const baseHeight = 200 // Base height for card structure
-        const contentLines = Math.ceil(content.length / 50) // Rough estimate of lines
-        return baseHeight + contentLines * 20 // Add height for content
-    }, [annotations])
+        const fontSize = 14; // Font size in px
+        const lineHeight = fontSize * 1.5; // Line height multiplier
+        const highlightedLineHeight = fontSize * 1.6
+        const contentLines = Math.ceil(content.length / width);
+        const highlightedLines = Math.ceil(highlightedText.length / width);
+        
+        return baseHeight + (contentLines * lineHeight) + (highlightedLines * highlightedLineHeight);
+    }, [annotations, dimensions.width])
+
+    useEffect(() => {
+        listRef.current?.resetAfterIndex(0);
+    }, [dimensions.width]);
     
     return (
         <List
-            height={dimensions.height - 120} // Subtract header + navigation height
+            height={dimensions.height ? dimensions.height - 120 : 600} // Subtract header + navigation height
             itemCount={annotations.length}
             itemSize={getRowSize}
             width="100%"
