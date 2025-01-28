@@ -21,9 +21,11 @@ export default async function HomePage() {
 
   return (
     <div className="pt-8 mt-6">
-      <NotificationManager 
-        existingSubscription={subscription?.sub ?? null} 
-      />
+      <div className="px-4 md:px-8">
+        <NotificationManager 
+          existingSubscription={subscription?.sub ?? null} 
+        />
+      </div>
       <RecentAnnotations 
         recentAnnotations={recentAnnotations ?? []} 
         currentUserId={currentUserId}

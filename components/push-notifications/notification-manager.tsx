@@ -63,7 +63,14 @@ export default function NotificationManager({existingSubscription}: {existingSub
     }
    
     if (!isSupported) {
-        return <p>Push notifications are not supported in this browser.</p>
+        return (
+            <>
+                <p className='flex'>
+                    You can &ldquo;download&rdquo; this by clicking share <ShareIcon className='w-4 h-4 mx-2'/> and &ldquo;Add to Home Screen&rdquo;
+                </p>
+                <p className='flex'>This will also let you get notifications when family members share insights! <LaughIcon className='w-2 h-2' /></p>
+            </>
+        )
     }
    
     return (
