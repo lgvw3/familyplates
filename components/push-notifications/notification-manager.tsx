@@ -3,8 +3,9 @@
 import { sendNotification, subscribeUser, unsubscribeUser } from '@/lib/push-notifications/actions'
 import { useState, useEffect } from 'react'
 import { Button } from '../ui/button'
-import { LaughIcon, ShareIcon } from 'lucide-react'
+import { LaughIcon, ShareIcon, Terminal, XIcon } from 'lucide-react'
 import { toast } from 'sonner'
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
  
 function urlBase64ToUint8Array(base64String: string) {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -22,6 +23,7 @@ function urlBase64ToUint8Array(base64String: string) {
 export default function NotificationManager({existingSubscription}: {existingSubscription: PushSubscription | null}) {
     const [isSupported, setIsSupported] = useState(false)
     const [subscription, setSubscription] = useState<PushSubscription | null>(existingSubscription) //load it in
+    const [hideAlert, setHideAlert] = useState(false)
    
     useEffect(() => {
         if ('serviceWorker' in navigator && 'PushManager' in window) {
@@ -64,12 +66,28 @@ export default function NotificationManager({existingSubscription}: {existingSub
    
     if (!isSupported) {
         return (
-            <>
-                <p className='flex'>
-                    You can &ldquo;download&rdquo; this by clicking share <ShareIcon className='w-4 h-4 mx-2'/> and &ldquo;Add to Home Screen&rdquo;
-                </p>
-                <p className='flex'>This will also let you get notifications when family members share insights! <LaughIcon className='w-2 h-2' /></p>
-            </>
+            hideAlert ?
+                null
+            :
+            (
+                <Alert>
+                    <Terminal className="h-4 w-4" />
+                    <AlertTitle className='flex items-center'>
+                        <div className='flex-grow'>
+                            Hi family!
+                        </div>
+                        <Button variant={'ghost'} size={'icon'} onClick={() => setHideAlert(true)}>
+                            <XIcon className='w-4 h-4' />
+                        </Button>
+                    </AlertTitle>
+                    <AlertDescription>
+                        <p className='pb-4'>
+                            You can download this by clicking the share button<ShareIcon className='w-4 h-4 mx-2 inline'/> and &ldquo;Add to Home Screen&rdquo;
+                        </p>
+                        <p>This will also let you get notifications when family members share insights! <LaughIcon className='w-4 h-4 inline-block' /></p>
+                    </AlertDescription>
+                </Alert>
+            )
         )
     }
    
@@ -78,12 +96,26 @@ export default function NotificationManager({existingSubscription}: {existingSub
             { subscription && process.env.NODE_ENV != "production" ? 
                 <Button onClick={unsubscribeFromPush}>Unsubscribe</Button>
             : subscription && process.env.NODE_ENV == "production" ? null 
-            : (
+            : hideAlert ? null : (
             <>
-                <p className='flex'>
-                    You can &ldquo;download&rdquo; this by clicking share <ShareIcon className='w-4 h-4 mx-2'/> and &ldquo;Add to Home Screen&rdquo;
-                </p>
-                <Button onClick={subscribeToPush}>Enable Push Notifications to Get Family Updates! <LaughIcon className='w-2 h-2' /></Button>
+            <Alert>
+                <Terminal className="h-4 w-4" />
+                <AlertTitle className='flex items-center'>
+                    <div className='flex-grow'>
+                        Hi family!
+                    </div>
+                    <Button variant={'ghost'} size={'icon'} onClick={() => setHideAlert(true)}>
+                        <XIcon className='w-4 h-4' />
+                    </Button>
+                </AlertTitle>
+                <AlertDescription>
+                    <p className='flex'>
+                        You can &ldquo;download&rdquo; this by clicking share <ShareIcon className='w-4 h-4 mx-2'/> and &ldquo;Add to Home Screen&rdquo;
+                    </p>
+                    <Button onClick={subscribeToPush}>Enable Push Notifications to Get Family Updates! <LaughIcon className='w-2 h-2' /></Button>
+                </AlertDescription>
+            </Alert>
+                
             </>
             )}
         </div>
