@@ -102,6 +102,40 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
         }
     }
 
+    function getHourDifference(date1: Date, date2: Date): number {
+        const diffInMs = Math.abs(date1.getTime() - date2.getTime());
+      
+        return diffInMs / 3600000
+    }
+
+    function getMinuteDifference(date1: Date, date2: Date): number {
+        const diffInMs = Math.abs(date1.getTime() - date2.getTime());
+      
+        return diffInMs / (1000 * 60);
+    }
+
+    function formatDateToShortString(date: Date): string {
+        return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
+      }
+
+    const getPostDate = (): string => {
+        const now = new Date()
+        const date = new Date(annotation.createdAt)
+        const hourDiff = Math.floor(getHourDifference(date, now))
+        if (now.getFullYear() != date.getFullYear()) {
+            return `${formatDateToShortString(date)}, ${date.getFullYear()}`
+        }
+        else if (hourDiff > 24) {
+            return formatDateToShortString(date)
+        }
+        else if (hourDiff < 1) {
+            return `${Math.floor(getMinuteDifference(now, date))}m`
+        }
+        else {
+            return `${hourDiff}h`
+        }
+    }
+
     return (
         <div className="md:mx-4 min-h-lvh mt-4">
             <Card>
@@ -123,7 +157,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                         <div className="flex-1">
                             <CardTitle className="text-base">{annotation.userName}</CardTitle>
                             <CardDescription>
-                                on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • {new Date(annotation.createdAt).toLocaleTimeString()}
+                                on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • {getPostDate()}
                             </CardDescription>
                         </div>
                     </div>
