@@ -14,6 +14,7 @@ import { toast } from "sonner"
 import Link from "next/link"
 import { fetchUsersAsMap } from "@/lib/auth/accounts"
 import { useWebSocket } from "@/hooks/use-websockets"
+import { motion } from "framer-motion"
 
 
 export default function AnnotationViewerSolo({author, initialAnnotation, currentUserId, userName } : {
@@ -214,23 +215,25 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                             }}>
                                 <MessageCircleIcon className="h-4 w-4" /> { annotation.comments?.length ?? null }
                             </Button>
-                            <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="gap-2"
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    saveLike()
-                                }}
-                            >
-                                {
-                                    userLike ?
-                                        <HeartIcon className="h-4 w-4 fill-red-500 stroke-red-500" color="red" />
-                                    : 
-                                        <HeartIcon className="h-4 w-4" />
-                                }
-                                { annotation.likes?.length ?? null }
-                            </Button>
+                            <motion.div whileTap={{ scale: 0.8 }}>
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="gap-2"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        saveLike()
+                                    }}
+                                >
+                                    {
+                                        userLike ?
+                                            <HeartIcon className="h-4 w-4 fill-red-500 stroke-red-500" color="red" />
+                                        : 
+                                            <HeartIcon className="h-4 w-4" />
+                                    }
+                                    { annotation.likes?.length ?? null }
+                                </Button>
+                            </motion.div>
                             <Link 
                                 className={cn(buttonVariants({variant: 'ghost', size: 'sm'}), "gap-2")}
                                 href={`/book/${encodeURIComponent(annotation.bookId)}/chapter/chapter_${annotation.chapterNumber}/#verse-${annotation.verseNumber}`}

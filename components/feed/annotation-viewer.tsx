@@ -11,6 +11,7 @@ import { updateLikeStatusOfComment } from "@/lib/annotations/actions"
 import { toast } from "sonner"
 import { useRouter } from 'next/navigation'
 import { useState } from "react"
+import { motion } from "framer-motion"
 
 
 export default function AnnotationViewer({ index, author, annotation, userMap, currentUserId } : {
@@ -132,24 +133,26 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                     <Button variant="ghost" size="sm" className="gap-2">
                         <MessageCircleIcon className="h-4 w-4" /> { annotation.comments?.length ?? null }
                     </Button>
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="gap-2"
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            e.preventDefault()
-                            saveLike()
-                        }}
-                    >
-                        {
-                            userLike ?
-                                <HeartIcon className="h-4 w-4 fill-red-500 stroke-red-500" color="red" />
-                            : 
-                                <HeartIcon className="h-4 w-4" />
-                        }
-                        { annotation.likes?.length ?? null }
-                    </Button>
+                    <motion.div whileTap={{ scale: 0.8 }}>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="gap-2"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                e.preventDefault()
+                                saveLike()
+                            }}
+                        >
+                            {
+                                userLike ?
+                                    <HeartIcon className="h-4 w-4 fill-red-500 stroke-red-500" color="red" />
+                                : 
+                                    <HeartIcon className="h-4 w-4" />
+                            }
+                            { annotation.likes?.length ?? null }
+                        </Button>
+                    </motion.div>
                     <Button 
                         variant="ghost" 
                         size="sm" 
