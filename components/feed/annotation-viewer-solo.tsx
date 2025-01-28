@@ -85,12 +85,26 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
         }
     }
 
+    const getBackgroundColor = () => {
+        switch (annotation.color) {
+            case 'yellow':
+                return 'bg-yellow-300';
+            case 'blue':
+                return 'bg-blue-300';
+            case 'green':
+                return 'bg-green-300';
+            case 'blue':
+                return 'bg-blue-300'
+            case 'purple':
+                return 'bg-purple-300'
+            default:
+                return '';
+        }
+    }
+
     return (
         <div className="md:mx-4 min-h-lvh mt-4">
-            <Card 
-                key={annotation._id?.toString()}
-                className={`cursor-pointer rounded-b-none`}
-            >
+            <Card>
                 <CardHeader>
                     <div className="flex items-center pb-4">
                         <Link 
@@ -115,6 +129,13 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                     </div>
                 </CardHeader>
                 <CardContent>
+                    <div className="flex items-center space-x-4 rounded-md border p-4">
+                        <div className="flex-1 space-y-1">
+                            <span className={cn(getBackgroundColor(), 'rounded p-1 text-sm font-medium leading-none')}>
+                                {annotation.highlightedText}
+                            </span>
+                        </div>
+                    </div>
                     <p className="text-foreground">{annotation.text}</p>
                 </CardContent>
                 <CardFooter className="flex items-center gap-4 pt-4 border-t-4 border-b">
