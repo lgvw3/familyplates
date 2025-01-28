@@ -65,13 +65,15 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
                 else if (data.channel == "likes") {
                     const likeChannelData: { likes: boolean, like: AnnotationLike; annotationId: string; } = JSON.parse(data.data)
                     addLikes(likeChannelData)
-                    setNotification({
-                        like: likeChannelData.like,
-                        doesLike: likeChannelData.likes,
-                        userName: likeChannelData.like.userName,
-                        userId: likeChannelData.like.userId,
-                        type: 'like'
-                    })
+                    if (likeChannelData.likes) {
+                        setNotification({
+                            like: likeChannelData.like,
+                            doesLike: likeChannelData.likes,
+                            userName: likeChannelData.like.userName,
+                            userId: likeChannelData.like.userId,
+                            type: 'like'
+                        })
+                    }
                 }
                 else if (data.channel == 'bookmarks') {
                     // local save of bookmarks of family members
