@@ -357,7 +357,7 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
                                             <p className={`text-sm p-2 rounded ${getHighlightStyle(annotation.color)}`}>
                                                 &ldquo;{annotation.highlightedText}&rdquo;
                                             </p>
-                                            <p className="text-sm">{annotation.text}</p>
+                                            <p className="text-sm whitespace-pre-wrap">{annotation.text}</p>
                                             <p className="text-sm">{annotation.userName}</p>
                                             {annotation.url && (
                                                 <a
@@ -410,32 +410,35 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
                                         return -1
                                     }
                                 }).map((annotation) => (
-                                    <div key={annotation._id?.toString()} className="space-y-2">
-                                        <div className="flex justify-between items-start">
-                                            <span className="text-sm font-medium">Verse {annotation.verseNumber}</span>
+                                    <Link key={annotation._id?.toString()} href={`/annotation/${annotation._id?.toString()}`}>
+                                        <div className="space-y-2 rounded border">
+                                            <div className="flex justify-between items-start">
+                                                <span className="text-sm font-medium">Verse {annotation.verseNumber}</span>
+                                            </div>
+                                            <p className={`text-sm p-2 rounded ${getHighlightStyle(annotation.color)}`}>
+                                                &ldquo;{annotation.highlightedText}&rdquo;
+                                            </p>
+                                            <p className="text-sm whitespace-pre-wrap">{annotation.text}</p>
+                                            <p className="text-sm">{annotation.userName}</p>
+                                            {annotation.url && (
+                                                <a
+                                                    href={annotation.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-sm text-blue-600 hover:underline"
+                                                >
+                                                    View Reference
+                                                </a>
+                                            )}
+                                            {annotation.photoUrl && (
+                                                <Image
+                                                    src={annotation.photoUrl}
+                                                    alt="Annotation"
+                                                    className="w-full h-32 object-cover rounded"
+                                                />
+                                            )}
                                         </div>
-                                        <p className={`text-sm p-2 rounded ${getHighlightStyle(annotation.color)}`}>
-                                            &ldquo;{annotation.highlightedText}&rdquo;
-                                        </p>
-                                        <p className="text-sm">{annotation.text}</p>
-                                        {annotation.url && (
-                                            <a
-                                                href={annotation.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-sm text-blue-600 hover:underline"
-                                            >
-                                                View Reference
-                                            </a>
-                                        )}
-                                        {annotation.photoUrl && (
-                                            <Image
-                                                src={annotation.photoUrl}
-                                                alt="Annotation"
-                                                className="w-full h-32 object-cover rounded"
-                                            />
-                                        )}
-                                    </div>
+                                    </Link>
                                 ))}
                             </div>
                             )}
