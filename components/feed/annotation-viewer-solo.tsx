@@ -136,7 +136,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                             </span>
                         </div>
                     </div>
-                    <p className="text-foreground">{annotation.text}</p>
+                    <p className="text-foreground whitespace-pre-wrap">{annotation.text}</p>
                 </CardContent>
                 <CardFooter className="flex items-center gap-4 pt-4 border-t-4 border-b">
                     {
