@@ -89,15 +89,15 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
     const getBackgroundColor = () => {
         switch (annotation.color) {
             case 'yellow':
-                return 'bg-yellow-300';
+                return 'bg-yellow-300 dark:bg-yellow-800';
             case 'blue':
-                return 'bg-blue-300';
+                return 'bg-blue-300 dark:bg-blue-800';
             case 'green':
-                return 'bg-green-300';
+                return 'bg-green-300 dark:bg-green-800';
             case 'blue':
-                return 'bg-blue-300'
+                return 'bg-blue-300 dark:bg-blue-800'
             case 'purple':
-                return 'bg-purple-300'
+                return 'bg-purple-300 dark:bg-purple-800'
             default:
                 return '';
         }
@@ -119,9 +119,8 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
         return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
       }
 
-    const getPostDate = (): string => {
+    const getPostDate = (date: Date): string => {
         const now = new Date()
-        const date = new Date(annotation.createdAt)
         const hourDiff = Math.floor(getHourDifference(date, now))
         if (now.getFullYear() != date.getFullYear()) {
             return `${formatDateToShortString(date)}, ${date.getFullYear()}`
@@ -158,7 +157,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                         <div className="flex-1">
                             <CardTitle className="text-base">{annotation.userName}</CardTitle>
                             <CardDescription>
-                                on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • {getPostDate()}
+                                on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • {getPostDate(new Date(annotation.createdAt))}
                             </CardDescription>
                         </div>
                     </div>
@@ -259,7 +258,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                     <div className="flex-1">
                                         <CardTitle className="text-base">{comment.userName}</CardTitle>
                                         <CardDescription>
-                                            {comment.timeStamp.toLocaleString()}
+                                            {getPostDate(new Date(comment.timeStamp))}
                                         </CardDescription>
                                     </div>
                                 </div>

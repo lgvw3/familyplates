@@ -51,15 +51,15 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
     const getBackgroundColor = () => {
         switch (annotation.color) {
             case 'yellow':
-                return 'bg-yellow-300';
+                return 'bg-yellow-300 dark:bg-yellow-800';
             case 'blue':
-                return 'bg-blue-300';
+                return 'bg-blue-300 dark:bg-blue-800';
             case 'green':
-                return 'bg-green-300';
+                return 'bg-green-300 dark:bg-green-800';
             case 'blue':
-                return 'bg-blue-300'
+                return 'bg-blue-300 dark:bg-blue-800'
             case 'purple':
-                return 'bg-purple-300'
+                return 'bg-purple-300 dark:bg-purple-800'
             default:
                 return '';
         }
