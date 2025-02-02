@@ -4,18 +4,20 @@ import { fetchRecentAnnotations } from "@/lib/annotations/data"
 import { fetchCurrentUserId } from "@/lib/auth/data"
 import { fetchUserNotificationSubscription } from "@/lib/push-notifications/data"
 import { fetchBookmarkBySignedInUser } from "@/lib/reading/data"
-import { BookmarkedSpot } from "@/lib/reading/definitions"
 import { loadChapter } from "@/lib/scripture_utils/scriptureUtils"
 import { redirect } from "next/navigation"
 
 export default async function HomePage() {
-  const recentAnnotations = await fetchRecentAnnotations()
-  const subscription = await fetchUserNotificationSubscription()
   const currentUserId = await fetchCurrentUserId()
   if (!currentUserId) {
     redirect('/sign-in')
   }
-  const bookmark: BookmarkedSpot | null = await fetchBookmarkBySignedInUser()
+  const recentAnnotationsPromise = fetchRecentAnnotations()
+  const subscriptionPromise = fetchUserNotificationSubscription()
+  const bookmarkPromise = fetchBookmarkBySignedInUser()
+
+  const [recentAnnotations, subscription, bookmark] = await Promise.all([recentAnnotationsPromise, subscriptionPromise, bookmarkPromise])
+
   const chapterData = bookmark ? loadChapter(bookmark.bookId, `chapter_${bookmark.chapterNumber.toString()}`) : null
   const progress = bookmark ? (bookmark.verseNumber / (chapterData?.verses.length ?? 1)) * 100 : 0
 

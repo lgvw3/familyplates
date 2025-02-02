@@ -22,7 +22,6 @@ export async function fetchRecentAnnotations() {
     const db = client.db("main");
     const collection = db.collection("annotations");
 
-    // Save annotation to the database
     try {
         const results = await collection.find<Annotation>({}).sort({ createdAt: -1}).limit(10).toArray();
         if (results) {
@@ -60,7 +59,7 @@ export async function fetchMoreAnnotations(lastAnnotation: Annotation, limit: nu
     }
 
     const client = await clientPromise;
-    const db = client.db("main"); // Replace with your database name
+    const db = client.db("main");
     const collection = db.collection("annotations");
 
     try {
@@ -110,7 +109,6 @@ export async function fetchAnnotationsByChapter(book: string, chapter: number) {
     const db = client.db("main");
     const collection = db.collection("annotations");
 
-    // Save annotation to the database
     try {
         const results = await collection.find<Annotation>({bookId: book, chapterNumber: chapter}).toArray();
 
