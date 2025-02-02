@@ -196,6 +196,7 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
                 if (verseElement) {
                     verseElement.classList.add(
                         "bg-yellow-200",
+                        "dark:bg-yellow-800",
                         "transition-colors",
                         "duration-1000",
                         "ease-in-out",
@@ -206,7 +207,7 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
                     setTimeout(() => {
                         verseElement.classList.add("opacity-0");
                         setTimeout(() => {
-                            verseElement.classList.remove("bg-yellow-200", "opacity-0");
+                            verseElement.classList.remove("bg-yellow-200", "dark:bg-yellow-800", "opacity-0");
                         }, 1000); // Wait for fade-out to finish
                     }, 2000);
                     const offset = 80
