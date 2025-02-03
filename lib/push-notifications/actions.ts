@@ -6,6 +6,8 @@ import webpush from 'web-push'
 import { validateToken } from '../auth/utils'
 import clientPromise from '../mongodb'
 import { NotificationSubscription } from './definitions'
+import { Redis } from "@upstash/redis";
+
  
 webpush.setVapidDetails(
     process.env.VAPID_MAIL_ADDRESS!,
@@ -14,6 +16,8 @@ webpush.setVapidDetails(
 )
  
 let subscription: PushSubscription | null = null
+
+const redis = Redis.fromEnv();
  
 export async function subscribeUser(sub: PushSubscription) {
     subscription = sub;
@@ -135,10 +139,17 @@ export async function sendNotificationToOfflineUsers(message: string, title: str
         const subs = await collection.find<NotificationSubscription>({}).toArray()
         const notificationPromises: Promise<webpush.SendResult>[] = []
         
-        subs.map(sub => {
+        subs.map(async sub => {
             if (process.env.NODE_ENV != 'production') {
                 //dev
                 if (sub.userId == 8) {// me for now
+                    const isOnline = await redis.exists(`online:${userId}`);
+                    if (isOnline) {
+                        console.log('Redis says you are online')
+                    }
+                    else {
+                        console.log('Redis says you are offline')
+                    }
                     notificationPromises.push(webpush.sendNotification(
                         JSON.parse(JSON.stringify(sub.sub)),
                         JSON.stringify({
@@ -147,16 +158,19 @@ export async function sendNotificationToOfflineUsers(message: string, title: str
                         })
                     ))
                 }
-            }
-            else if (sub.userId != authorId) {
-                // do not bother them while i'm in dev mode lol
-                notificationPromises.push(webpush.sendNotification(
-                    JSON.parse(JSON.stringify(sub.sub)),
-                    JSON.stringify({
-                        title: title,
-                        body: message,
-                    })
-                ))
+            } // do not bother them while i'm in dev mode lol
+            else if (sub.userId != authorId) { // Prod
+                const isOnline = await redis.exists(`online:${userId}`);
+
+                if (!isOnline) {
+                    notificationPromises.push(webpush.sendNotification(
+                        JSON.parse(JSON.stringify(sub.sub)),
+                        JSON.stringify({
+                            title: title,
+                            body: message,
+                        })
+                    ))
+                }
             }
         })
 
