@@ -133,7 +133,7 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
         const lineHeight = fontSize * 1.5; // Line height multiplier
         const highlightedLineHeight = fontSize * 1.6
         const contentLines = Math.ceil(content.length / width);
-        const highlightedLines = Math.ceil(highlightedText.length / width);
+        const highlightedLines = Math.ceil(highlightedText.length / (width - 4));
         
         return baseHeight + (contentLines * lineHeight) + (highlightedLines * highlightedLineHeight);
     }, [annotations, dimensions.width])
