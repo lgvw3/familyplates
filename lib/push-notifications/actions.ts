@@ -143,7 +143,7 @@ export async function sendNotificationToOfflineUsers(message: string, title: str
             if (process.env.NODE_ENV != 'production') {
                 //dev
                 if (sub.userId == 8) {// me for now
-                    const isOnline = await redis.exists(`online:${userId}`);
+                    const isOnline = await redis.exists(`online:${sub.userId}`);
                     if (isOnline) {
                         console.log('Redis says you are online')
                     }
@@ -160,7 +160,7 @@ export async function sendNotificationToOfflineUsers(message: string, title: str
                 }
             } // do not bother them while i'm in dev mode lol
             else if (sub.userId != authorId) { // Prod
-                const isOnline = await redis.exists(`online:${userId}`);
+                const isOnline = await redis.exists(`online:${sub.userId}`);
 
                 if (!isOnline) {
                     notificationPromises.push(webpush.sendNotification(
