@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Annotation, AnnotationComment, AnnotationLike } from "@/types/scripture";
+import { fetchCurrentUserId } from '@/lib/auth/data';
 
 export type NotificationParam = {
     annotation?: Annotation,
@@ -22,9 +23,12 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
     const [notification, setNotification] = useState<NotificationParam | null>()
 
     useEffect(() => {
+
         let ws: WebSocket | null = null;
-        const connect = () => {
-            ws = new WebSocket(process.env.NEXT_PUBLIC_WEB_SOCKET_URL ?? '');
+        const connect = async () => {
+            const userId = await fetchCurrentUserId()
+
+            ws = new WebSocket(`${process.env.NEXT_PUBLIC_WEB_SOCKET_URL}?userId=${userId}`);
             ws.onopen = () => {
                 console.log('WebSocket connected');
                 if (socket) {
