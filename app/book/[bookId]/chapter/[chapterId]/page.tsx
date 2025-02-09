@@ -49,7 +49,6 @@ export default async function Page({ params }: ChapterPageProps) {
     let previousBook: string | null = null
     let previousBookLastChapter = 1
     const books = getBooksInTheBookOfMormon()
-    console.log(bookData.title)
     books.map((bookTitle, index) => {
         if (bookData.title == bookTitle) {
             if (index < books.length - 1) {

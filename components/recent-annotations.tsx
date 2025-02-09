@@ -89,13 +89,21 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
             height: window.innerHeight,
           });
         };
+
+        const healthCheckForWebSocketServer = async () => {
+            const results = await fetch(`${process.env.NEXT_PUBLIC_WEB_SOCKET_URL}/health`)
+            if (results) {
+                console.log('WSS Server health check good')
+            }
+        }
     
         window.addEventListener('resize', handleResize);
         handleResize()
+        healthCheckForWebSocketServer()
     
         // Cleanup the listener on unmount
         return () => window.removeEventListener('resize', handleResize);
-      }, []);
+    }, []);
 
     const loadMoreAnnotations = async () => {
         if (isLoading.current) return;
