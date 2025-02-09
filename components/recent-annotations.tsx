@@ -22,7 +22,7 @@ function AnnotationCard({annotation, index, style, user, userMap, currentUserId,
     userMap: Map<number, UserAccount>, 
     currentUserId: number,
     bookmark: BookmarkedSpot | null,
-    chapterData: Chapter | null,
+    chapterData: Chapter | null | undefined,
     progress: number
 }) {
     // Special handling for the first item (ContinueReading)
@@ -65,7 +65,7 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
     recentAnnotations: Annotation[],
     currentUserId: number,
     bookmark: BookmarkedSpot | null,
-    chapterData: Chapter | null,
+    chapterData: Chapter | null | undefined,
     progress: number
 }) {
     const userMap = fetchUsersAsMap()

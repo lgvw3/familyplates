@@ -16,7 +16,7 @@ import { Chapter } from "@/types/scripture"
 
 export function ContinueReading({bookmark, chapterData, progress}: {
     bookmark: BookmarkedSpot | null,
-    chapterData: Chapter | null,
+    chapterData: Chapter | null | undefined,
     progress: number
 }) {
     return (
