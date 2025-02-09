@@ -31,11 +31,10 @@ export default async function Page({ params }: ChapterPageProps) {
 
     // Fetch data for the chapter and annotations
     const introData = loadIntroMaterial(introId);
-    const annotations = await fetchAnnotationsByChapter(introData.title.toLowerCase().replaceAll(' ', '-'), 1);
-
     if (!introData) {
         return <div>Introductary Material not found.</div>;
     }
+    const annotations = await fetchAnnotationsByChapter(introData.title.toLowerCase().replaceAll(' ', '-'), 1);
 
     const currentUserId = await fetchCurrentUserId()
     if (currentUserId === null) {
