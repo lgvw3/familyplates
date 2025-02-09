@@ -49,10 +49,22 @@ const getHighlightStyle = (color: 'yellow' | 'green' | 'blue' | 'purple' | 'pink
   return colorClasses[color]
 }
 
-export default function ScriptureReader({chapter, book, initialAnnotations, currentUserId}: {chapter: Chapter, book: Book, initialAnnotations: Annotation[], currentUserId: number}) {
+interface ScriptureReaderProps {
+  chapter: Chapter,
+  book: Book,
+  initialAnnotations: Annotation[],
+  currentUserId: number,
+  chapters: string[],
+  nextBook: string | null,
+  previousBook: string | null,
+  previousBookLastChapter: number
+}
+
+export default function ScriptureReader({chapter, book, initialAnnotations, currentUserId, chapters, nextBook, previousBook, previousBookLastChapter}: ScriptureReaderProps) {
   const chapterNumber = Number(chapter.chapter_title.slice(8))
+  const numberOfChaptersInBook = chapters.length;
   const isFirstChapter = chapterNumber == 1;
-  
+
   const [showVerseNumbers, setShowVerseNumbers] = useState(true)
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number; width: number } | null>(null)
   const [currentSelection, setCurrentSelection] = useState<SelectionInfo | null>(null)
@@ -402,16 +414,43 @@ export default function ScriptureReader({chapter, book, initialAnnotations, curr
                   <ChevronLeftIcon className="h-4 w-4 mr-2" />
                   Previous Chapter
                 </Link>
+                : previousBook ?
+                <Link 
+                  className={buttonVariants({'variant': 'outline'})}
+                  href={`/book/${encodeURIComponent(previousBook.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_${previousBookLastChapter}`}
+                >
+                  <ChevronLeftIcon className="h-4 w-4 ml-2" />
+                  Previous Book
+                </Link>
                 :
-                null
+                <Link 
+                  className={buttonVariants({'variant': 'outline'})}
+                  href={'/intro/brief-explanation-about-the-book-of-mormon'}
+                >
+                  <ChevronLeftIcon className="h-4 w-4 ml-2" />
+                  Previous
+                </Link>
               }
-              <Link 
-                className={buttonVariants({'variant': 'outline'})}
-                href={`/book/${encodeURIComponent(book.title.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_${chapterNumber + 1}`}
-              >
-                Next Chapter
-                <ChevronRightIcon className="h-4 w-4 ml-2" />
-              </Link>
+              {
+                numberOfChaptersInBook > chapterNumber ?
+                <Link 
+                  className={buttonVariants({'variant': 'outline'})}
+                  href={`/book/${encodeURIComponent(book.title.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_${chapterNumber + 1}`}
+                >
+                  Next Chapter
+                  <ChevronRightIcon className="h-4 w-4 ml-2" />
+                </Link>
+                : nextBook ?
+                <Link 
+                  className={buttonVariants({'variant': 'outline'})}
+                  href={`/book/${encodeURIComponent(nextBook.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_1`}
+                >
+                  Next Book
+                  <ChevronRightIcon className="h-4 w-4 ml-2" />
+                </Link>
+                :
+                <>The End</>
+              }
             </div>
           </div>
 
