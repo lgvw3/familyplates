@@ -17,7 +17,6 @@ export type NotificationParam = {
 
 export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boolean, bookId?: string, chapterNumber?: number) => {
     const [socket, setSocket] = useState<WebSocket | null>(null);
-    const [messages, setMessages] = useState<string[]>([]);
     const [annotations, setAnnotations] = useState<Annotation[]>(initialAnnotations)
     const [retryCount, setRetryCount] = useState(0);
     const [notification, setNotification] = useState<NotificationParam | null>()
@@ -84,9 +83,6 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
                     // when they are active display just once in feed
                     // do a notification and invite to "read along"
                 }
-                else {
-                    setMessages((prev) => [...prev, data]);
-                }
             };
 
             ws.onerror = (error) => {
@@ -111,22 +107,13 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-/*     const checkServerHealth = async () => {
+    const checkServerHealth = async () => {
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_WEB_SOCKET_URL}/health`);
+            const response = await fetch(`${process.env.NEXT_PUBLIC_WEB_SOCKET_URL?.replace('wss', 'https').replace('ws', 'http')}/health`);
             return response.ok;
         } catch (error) {
             console.error('Health check failed:', error);
             return false;
-        }
-    }; */
-      
-
-    const sendMessage = (message: string) => {
-        if (socket?.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify(message));
-        } else {
-            console.error('WebSocket is not open');
         }
     };
 
@@ -182,5 +169,5 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
         })
     }, [])
 
-    return { messages, sendMessage, annotations, setAnnotations, addAnnotation, addAnnotationToTopOfFeed, addAnnotationsToBottomOfFeed, notification, setNotification };
+    return { checkServerHealth, annotations, setAnnotations, addAnnotation, addAnnotationToTopOfFeed, addAnnotationsToBottomOfFeed, notification, setNotification };
 };

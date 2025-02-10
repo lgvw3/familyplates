@@ -69,7 +69,7 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
     progress: number
 }) {
     const userMap = fetchUsersAsMap()
-    const { annotations, addAnnotationsToBottomOfFeed, notification, setNotification } = useWebSocket(recentAnnotations, true) 
+    const { checkServerHealth, annotations, addAnnotationsToBottomOfFeed, notification, setNotification } = useWebSocket(recentAnnotations, true) 
     if (notification && notification.userId != currentUserId) {
         toast(`New ${notification.type} by ${notification.userName}`, {position: 'top-center'})
         setNotification(null)
@@ -89,20 +89,14 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
             height: window.innerHeight,
           });
         };
-
-        const healthCheckForWebSocketServer = async () => {
-            const results = await fetch(`${process.env.NEXT_PUBLIC_WEB_SOCKET_URL}/health`)
-            if (results) {
-                console.log('WSS Server health check good')
-            }
-        }
     
         window.addEventListener('resize', handleResize);
         handleResize()
-        healthCheckForWebSocketServer()
+        checkServerHealth()
     
         // Cleanup the listener on unmount
         return () => window.removeEventListener('resize', handleResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const loadMoreAnnotations = async () => {
