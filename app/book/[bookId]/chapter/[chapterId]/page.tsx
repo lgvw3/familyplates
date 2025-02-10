@@ -57,7 +57,7 @@ export default async function Page({ params }: ChapterPageProps) {
     
             if (index > 0) {
                 previousBook = books[index - 1]
-                previousBookLastChapter = listChapters(previousBook.replaceAll(' ', '-')).length
+                previousBookLastChapter = listChapters(previousBook.toLowerCase().replaceAll(' ', '-')).length
             }
         }
     })
