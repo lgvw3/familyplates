@@ -5,7 +5,7 @@ import { fetchUsersAsMap } from "@/lib/auth/accounts"
 import { useWebSocket } from "@/hooks/use-websockets"
 import AnnotationViewer from "./feed/annotation-viewer"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { fetchMoreAnnotations } from "@/lib/annotations/data"
+import { fetchMoreAnnotations, fetchRecentAnnotations } from "@/lib/annotations/data"
 import { VariableSizeList as List } from "react-window";
 import { ContinueReading } from "./continue-reading"
 import { UserAccount } from "@/lib/auth/definitions"
@@ -69,7 +69,7 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
     progress: number
 }) {
     const userMap = fetchUsersAsMap()
-    const { checkServerHealth, annotations, addAnnotationsToBottomOfFeed, notification, setNotification } = useWebSocket(recentAnnotations, true) 
+    const { checkServerHealth, annotations, setAnnotations, addAnnotationsToBottomOfFeed, notification, setNotification } = useWebSocket(recentAnnotations, true) 
     if (notification && notification.userId != currentUserId) {
         toast(`New ${notification.type} by ${notification.userName}`, {position: 'top-center'})
         setNotification(null)
@@ -89,10 +89,20 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
             height: window.innerHeight,
           });
         };
+
+        const healthCheck = async() => {
+            const results = await checkServerHealth()
+            if (!results) {
+                const annotationResults = await fetchRecentAnnotations()
+                if (annotationResults) {
+                    setAnnotations(annotationResults)
+                }
+            }
+        }
     
         window.addEventListener('resize', handleResize);
         handleResize()
-        checkServerHealth()
+        healthCheck()
     
         // Cleanup the listener on unmount
         return () => window.removeEventListener('resize', handleResize);
