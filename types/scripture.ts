@@ -58,6 +58,7 @@ export interface Annotation {
   photoUrl?: string;
   userId: number,
   userName: string,
+  unboundAnnotation?: boolean,
   comments?: AnnotationComment[]
   likes?: AnnotationLike[]
 }

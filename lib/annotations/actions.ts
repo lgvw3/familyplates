@@ -21,7 +21,8 @@ const zAnnotation = z.object({
     type: z.enum(['note', 'link', 'photo', 'combo']),
     color: z.enum(['yellow', 'green', 'blue', 'purple', 'pink']),
     url: z.string().optional(),
-    photoUrl: z.string().optional()
+    photoUrl: z.string().optional(),
+    unboundAnnotation: z.boolean().optional()
 })
 
 export async function saveAnnotation(annotation: Annotation) {
@@ -54,7 +55,7 @@ export async function saveAnnotation(annotation: Annotation) {
         };
     }
 
-    const {verseNumber, chapterNumber, bookId, text, highlightedText, type, color, url, photoUrl} = validatedFields.data
+    const {verseNumber, chapterNumber, bookId, text, highlightedText, type, color, url, photoUrl, unboundAnnotation} = validatedFields.data
 
     const client = await clientPromise;
     const db = client.db("main");
@@ -75,6 +76,10 @@ export async function saveAnnotation(annotation: Annotation) {
         userId: userId,
         userName: user.name,
         comments: []
+    }
+
+    if (unboundAnnotation) {
+        newAnnotation.unboundAnnotation = true
     }
 
     // Save annotation to the database

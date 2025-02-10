@@ -157,19 +157,29 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                         <div className="flex-1">
                             <CardTitle className="text-base">{annotation.userName}</CardTitle>
                             <CardDescription>
-                                on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • {getPostDate(new Date(annotation.createdAt))}
+                                {
+                                    !annotation.unboundAnnotation ?
+                                    <>on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • </> 
+                                    : null
+                                }
+                                {getPostDate(new Date(annotation.createdAt))}
                             </CardDescription>
                         </div>
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-center space-x-4 rounded-md border p-4">
-                        <div className="flex-1 space-y-1">
-                            <span className={cn(getBackgroundColor(), 'rounded p-1 text-sm font-medium leading-none')}>
-                                {annotation.highlightedText}
-                            </span>
+                    {
+                        !annotation.unboundAnnotation ?
+                        <div className="flex items-center space-x-4 rounded-md border p-4">
+                            <div className="flex-1 space-y-1">
+                                <span className={cn(getBackgroundColor(), 'rounded p-1 text-sm font-medium leading-none')}>
+                                    {annotation.highlightedText}
+                                </span>
+                            </div>
                         </div>
-                    </div>
+                        :
+                        null
+                    }
                     <p className="text-foreground whitespace-pre-wrap">{annotation.text}</p>
                 </CardContent>
                 <CardFooter className="flex items-center gap-4 pt-4 border-t-4 border-b">
@@ -233,13 +243,18 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                     { annotation.likes?.length ?? null }
                                 </Button>
                             </motion.div>
-                            <Link 
-                                className={cn(buttonVariants({variant: 'ghost', size: 'sm'}), "gap-2")}
-                                href={`/book/${encodeURIComponent(annotation.bookId)}/chapter/chapter_${annotation.chapterNumber}/#verse-${annotation.verseNumber}`}
-                            >
-                                    <ExternalLinkIcon className="h-4 w-4" />
-                                    <span>View in Context</span>
-                            </Link>
+                            {
+                                !annotation.unboundAnnotation ?
+                                <Link 
+                                    className={cn(buttonVariants({variant: 'ghost', size: 'sm'}), "gap-2")}
+                                    href={`/book/${encodeURIComponent(annotation.bookId)}/chapter/chapter_${annotation.chapterNumber}/#verse-${annotation.verseNumber}`}
+                                >
+                                        <ExternalLinkIcon className="h-4 w-4" />
+                                        <span>View in Context</span>
+                                </Link>
+                                :
+                                null
+                            }
                         </>
                     }
                 </CardFooter>

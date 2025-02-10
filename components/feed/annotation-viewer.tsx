@@ -114,19 +114,28 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                         <div className="flex-1">
                             <CardTitle className="text-base">{annotation.userName}</CardTitle>
                             <CardDescription>
-                                on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • {getPostDate()}
+                                {
+                                    !annotation.unboundAnnotation ?
+                                    <>on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • </> 
+                                    : null
+                                }
+                                {getPostDate()}
                             </CardDescription>
                         </div>
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-center space-x-4 rounded-md border p-4">
-                        <div className="flex-1 space-y-1">
-                            <span className={cn(getBackgroundColor(), 'rounded p-1 text-sm font-medium leading-none')}>
-                                {annotation.highlightedText}
-                            </span>
+                    {
+                        !annotation.unboundAnnotation ?
+                        <div className="flex items-center space-x-4 rounded-md border p-4">
+                            <div className="flex-1 space-y-1">
+                                <span className={cn(getBackgroundColor(), 'rounded p-1 text-sm font-medium leading-none')}>
+                                    {annotation.highlightedText}
+                                </span>
+                            </div>
                         </div>
-                    </div>
+                        : null 
+                    }
                     <p className="text-foreground">{annotation.text}</p>
                 </CardContent>
                 <CardFooter className="flex items-center gap-4">
@@ -153,19 +162,24 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                             { annotation.likes?.length ?? null }
                         </Button>
                     </motion.div>
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="gap-2"
-                        onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            router.push(`/book/${encodeURIComponent(annotation.bookId)}/chapter/chapter_${annotation.chapterNumber}/#verse-${annotation.verseNumber}`)
-                        }}
-                    >
-                            <ExternalLinkIcon className="h-4 w-4" />
-                            <span>View in Context</span>
-                    </Button>
+                    {
+                        !annotation.unboundAnnotation ?
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="gap-2"
+                                onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    router.push(`/book/${encodeURIComponent(annotation.bookId)}/chapter/chapter_${annotation.chapterNumber}/#verse-${annotation.verseNumber}`)
+                                }}
+                            >
+                                    <ExternalLinkIcon className="h-4 w-4" />
+                                    <span>View in Context</span>
+                            </Button>
+                        :
+                            null
+                    }
                 </CardFooter>
             </Card>
         </>

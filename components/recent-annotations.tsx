@@ -12,9 +12,10 @@ import { UserAccount } from "@/lib/auth/definitions"
 import { BookmarkedSpot } from "@/lib/reading/definitions"
 import Link from "next/link"
 import { toast } from "sonner"
+import { AnnotationCreation } from "./feed/annotation-creation"
 
 
-function AnnotationCard({annotation, index, style, user, userMap, currentUserId, bookmark, chapterData, progress}: {
+function AnnotationCard({annotation, index, style, user, userMap, currentUserId, bookmark, chapterData, progress, annotationCreated}: {
     annotation: Annotation,
     index: number,
     style: React.CSSProperties,
@@ -23,18 +24,22 @@ function AnnotationCard({annotation, index, style, user, userMap, currentUserId,
     currentUserId: number,
     bookmark: BookmarkedSpot | null,
     chapterData: Chapter | null | undefined,
-    progress: number
+    progress: number,
+    annotationCreated: () => void
 }) {
     // Special handling for the first item (ContinueReading)
     if (index === 0) {
         return (
-            <div style={style} className="px-4 md:px-8 pb-16 mb-16">
-                <div className="py-4">
+            <div style={style} className="pb-16 mb-16">
+                <div className="py-4 px-4 md:px-8">
                     <ContinueReading bookmark={bookmark} chapterData={chapterData} progress={progress} />
                 </div>
-                <div className="flex flex-col gap-2 pt-4 pb-8">
+                <div className="flex flex-col gap-2 pt-4 px-4 md:px-8">
                     <h2 className="text-2xl font-bold tracking-tight">Recent Annotations & Notes</h2>
                     <p className="text-muted-foreground">See thoughts shared by the fam</p>
+                </div>
+                <div className="pt-4 pb-2 md:px-8">
+                    <AnnotationCreation annotationCreated={annotationCreated} />
                 </div>
             </div>
         )
@@ -132,7 +137,7 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
     };
 
     const getRowSize = useCallback((index: number) => {
-        if (index === 0) return 350 // Height for ContinueReading + section title
+        if (index === 0) return 490 // Height for ContinueReading + section title
         
         const content = annotations[index - 1].text
         const highlightedText = annotations[index - 1].highlightedText;
@@ -149,6 +154,10 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
         
         return baseHeight + (contentLines * lineHeight) + (highlightedLines * highlightedLineHeight);
     }, [annotations, dimensions.width])
+
+    const annotationCreated = () => {
+        listRef.current?.resetAfterIndex(0);
+    }
 
     useEffect(() => {
         listRef.current?.resetAfterIndex(0);
@@ -175,6 +184,7 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
                     bookmark={bookmark}
                     chapterData={chapterData}
                     progress={progress}
+                    annotationCreated={annotationCreated}
                 />
             )}
         </List>
