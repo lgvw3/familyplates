@@ -137,7 +137,7 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
     };
 
     const getRowSize = useCallback((index: number) => {
-        if (index === 0) return 490 // Height for ContinueReading + section title
+        if (index === 0) return 510 // Height for ContinueReading + section title
         
         const content = annotations[index - 1].text
         const highlightedText = annotations[index - 1].highlightedText;
