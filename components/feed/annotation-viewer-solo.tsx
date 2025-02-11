@@ -279,7 +279,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-foreground">{comment.content}</p>
+                                <p className="text-foreground whitespace-pre-wrap">{comment.content}</p>
                             </CardContent>
                         </Card>
                     )
