@@ -75,7 +75,8 @@ export async function saveAnnotation(annotation: Annotation) {
         photoUrl: photoUrl,
         userId: userId,
         userName: user.name,
-        comments: []
+        comments: [],
+        likes: []
     }
 
     if (unboundAnnotation) {

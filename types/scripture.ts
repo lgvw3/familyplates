@@ -59,8 +59,8 @@ export interface Annotation {
   userId: number,
   userName: string,
   unboundAnnotation?: boolean,
-  comments?: AnnotationComment[]
-  likes?: AnnotationLike[]
+  comments: AnnotationComment[]
+  likes: AnnotationLike[]
 }
 
 export interface ScriptureItem {

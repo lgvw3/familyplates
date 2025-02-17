@@ -21,7 +21,7 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
     userMap: Map<number, UserAccount>, 
     currentUserId: number,
 }) {
-    const [userLike, setUserLike] = useState(annotation.likes?.find(val => val.userId == currentUserId))
+    const [userLike, setUserLike] = useState(annotation.likes.find(val => val.userId == currentUserId))
     const router = useRouter()
 
     const saveLike = async() => {
@@ -140,7 +140,7 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                 </CardContent>
                 <CardFooter className="flex items-center gap-4">
                     <Button variant="ghost" size="sm" className="gap-2">
-                        <MessageCircleIcon className="h-4 w-4" /> { annotation.comments?.length ?? null }
+                        <MessageCircleIcon className="h-4 w-4" /> { annotation.comments.length ?? null }
                     </Button>
                     <motion.div whileTap={{ scale: 0.8 }}>
                         <Button 
@@ -159,7 +159,7 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                                 : 
                                     <HeartIcon className="h-4 w-4" />
                             }
-                            { annotation.likes?.length ?? null }
+                            { annotation.likes.length ?? null }
                         </Button>
                     </motion.div>
                     {

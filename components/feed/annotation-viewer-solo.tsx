@@ -222,7 +222,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                 e.stopPropagation()
                                 setAddCommentOpen(true)
                             }}>
-                                <MessageCircleIcon className="h-4 w-4" /> { annotation.comments?.length ?? null }
+                                <MessageCircleIcon className="h-4 w-4" /> { annotation.comments.length ?? null }
                             </Button>
                             <motion.div whileTap={{ scale: 0.8 }}>
                                 <Button 
@@ -240,7 +240,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                         : 
                                             <HeartIcon className="h-4 w-4" />
                                     }
-                                    { annotation.likes?.length ?? null }
+                                    { annotation.likes.length ?? null }
                                 </Button>
                             </motion.div>
                             {
@@ -260,7 +260,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                 </CardFooter>
             </Card>
             {
-                annotation.comments?.map(comment => {
+                annotation.comments.map(comment => {
                     const commentAuthor = userMap.get(comment.userId)
                     return (
                         <Card key={comment._id.toString()} className="rounded-none">

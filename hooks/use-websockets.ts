@@ -21,6 +21,59 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
     const [retryCount, setRetryCount] = useState(0);
     const [notification, setNotification] = useState<NotificationParam | null>()
 
+
+    const addAnnotation = useCallback((annotation: Annotation) => {
+        if (!bookId && !chapterNumber || (annotation.bookId == bookId && annotation.chapterNumber == chapterNumber )) {
+            setAnnotations(prev => {
+                const temp = prev.filter(a => a._id != annotation._id)
+                return [...temp, annotation]
+            })
+        }
+    }, [bookId, chapterNumber])
+
+    const addAnnotationToTopOfFeed = useCallback((annotation: Annotation) => {
+        setAnnotations(prev => {
+            const temp = prev.filter(a => a._id != annotation._id)
+            return [annotation, ...temp]
+        })
+    }, [])
+
+    const addAnnotationsToBottomOfFeed = useCallback((annotations: Annotation[]) => {
+        setAnnotations(prev => {
+            return [...prev, ...annotations]
+        })
+    }, [])
+
+    const addComment = useCallback((commentData: { annotationId: string; comment: AnnotationComment; }) => {
+        setAnnotations(prev => {
+            const temp = prev.find(val => val._id?.toString() === commentData.annotationId);
+            if (temp) {
+                const updatedTemp = {
+                    ...temp,
+                    comments: [...(temp.comments || []), { ...commentData.comment, _id: commentData.comment._id.toString() }],
+                };
+                return prev.map(val => (val._id?.toString() === commentData.annotationId ? updatedTemp : val));
+            } else {
+                return [...prev];
+            }
+        })
+    }, [])
+
+    const addLikes = useCallback((likeData: { likes: boolean, like: AnnotationLike; annotationId: string; }) => {
+        setAnnotations(prev => {
+            const temp = prev.find(val => val._id?.toString() === likeData.annotationId);
+            if (temp) {
+                const updatedTemp = {
+                    ...temp,
+                    likes: likeData.likes ? [...(temp.likes || []), { ...likeData.like, _id: likeData.like._id.toString() }] : [...(temp.likes?.filter(val => val.userId != likeData.like.userId) || [])],
+                };
+                return prev.map(val => (val._id?.toString() === likeData.annotationId ? updatedTemp : val));
+            } else {
+                return prev;
+            }
+        })
+    }, [])
+
     useEffect(() => {
 
         let ws: WebSocket | null = null;
@@ -105,7 +158,7 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
             ws?.close();
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [addAnnotation, addAnnotationToTopOfFeed, addComment, addLikes, isFeed]);
 
     const checkServerHealth = async () => {
         try {
@@ -116,58 +169,6 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
             return false;
         }
     };
-
-    const addAnnotation = useCallback((annotation: Annotation) => {
-        if (!bookId && !chapterNumber || (annotation.bookId == bookId && annotation.chapterNumber == chapterNumber )) {
-            setAnnotations(prev => {
-                const temp = prev.filter(a => a._id != annotation._id)
-                return [...temp, annotation]
-            })
-        }
-    }, [bookId, chapterNumber])
-
-    const addAnnotationToTopOfFeed = useCallback((annotation: Annotation) => {
-        setAnnotations(prev => {
-            const temp = prev.filter(a => a._id != annotation._id)
-            return [annotation, ...temp]
-        })
-    }, [])
-
-    const addAnnotationsToBottomOfFeed = useCallback((annotations: Annotation[]) => {
-        setAnnotations(prev => {
-            return [...prev, ...annotations]
-        })
-    }, [])
-
-    const addComment = useCallback((commentData: { annotationId: string; comment: AnnotationComment; }) => {
-        setAnnotations(prev => {
-            const temp = prev.find(val => val._id?.toString() === commentData.annotationId);
-            if (temp) {
-                const updatedTemp = {
-                    ...temp,
-                    comments: [...(temp.comments || []), { ...commentData.comment, _id: commentData.comment._id.toString() }],
-                };
-                return prev.map(val => (val._id?.toString() === commentData.annotationId ? updatedTemp : val));
-            } else {
-                return prev;
-            }
-        })
-    }, [])
-
-    const addLikes = useCallback((likeData: { likes: boolean, like: AnnotationLike; annotationId: string; }) => {
-        setAnnotations(prev => {
-            const temp = prev.find(val => val._id?.toString() === likeData.annotationId);
-            if (temp) {
-                const updatedTemp = {
-                    ...temp,
-                    likes: likeData.likes ? [...(temp.likes || []), { ...likeData.like, _id: likeData.like._id.toString() }] : [...(temp.likes?.filter(val => val.userId != likeData.like.userId) || [])],
-                };
-                return prev.map(val => (val._id?.toString() === likeData.annotationId ? updatedTemp : val));
-            } else {
-                return prev;
-            }
-        })
-    }, [])
 
     return { checkServerHealth, annotations, setAnnotations, addAnnotation, addAnnotationToTopOfFeed, addAnnotationsToBottomOfFeed, notification, setNotification };
 };
