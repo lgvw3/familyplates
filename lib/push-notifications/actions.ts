@@ -160,9 +160,9 @@ export async function sendNotificationToOfflineUsers(message: string, title: str
                 }
             } // do not bother them while i'm in dev mode lol
             else if (sub.userId != authorId) { // Prod
-                const isOnline = await redis.exists(`online:${sub.userId}`);
+                //const isOnline = await redis.exists(`online:${sub.userId}`);
 
-                if (!isOnline) {
+                //if (!isOnline) {
                     notificationPromises.push(webpush.sendNotification(
                         JSON.parse(JSON.stringify(sub.sub)),
                         JSON.stringify({
@@ -170,7 +170,7 @@ export async function sendNotificationToOfflineUsers(message: string, title: str
                             body: message,
                         })
                     ))
-                }
+                //}
             }
         })
 
