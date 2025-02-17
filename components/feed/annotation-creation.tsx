@@ -33,7 +33,9 @@ export function AnnotationCreation({ annotationCreated }: {annotationCreated: ()
         createdAt: new Date(),
         userId: user.id,
         userName: user.name,
-        unboundAnnotation: true
+        unboundAnnotation: true,
+        comments: [],
+        likes: []
       })
       if (!results.insertedId) {
         toast.warning("Sharing annotation failed")

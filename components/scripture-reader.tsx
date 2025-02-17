@@ -131,7 +131,7 @@ export default function ScriptureReader({chapter, book, initialAnnotations, curr
     }, 10)
   }
 
-  const handleAddAnnotation = async (annotationData: Omit<Annotation, '_id' | 'verseNumber' | 'createdAt' | 'highlightedText' | 'userId' | 'userName' | 'chapterNumber' | 'bookId'>) => {
+  const handleAddAnnotation = async (annotationData: Omit<Annotation, '_id' | 'verseNumber' | 'createdAt' | 'highlightedText' | 'userId' | 'userName' | 'chapterNumber' | 'bookId' | 'comments' | 'likes'>) => {
     if (currentSelection && currentVerseNumber) {
       const results = await saveAnnotation({
         _id: null,
@@ -144,7 +144,9 @@ export default function ScriptureReader({chapter, book, initialAnnotations, curr
         userId: 0,
         userName: '',
         bookId: book.title.toLowerCase().replaceAll(' ', '-'),
-        chapterNumber: chapterNumber
+        chapterNumber: chapterNumber,
+        comments: [],
+        likes: []
       })
       if (results.insertedId) {
         toast.success('Note shared with the family!')

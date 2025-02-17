@@ -127,7 +127,7 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
         }, 10)
     }
 
-    const handleAddAnnotation = async (annotationData: Omit<Annotation, '_id' | 'verseNumber' | 'createdAt' | 'highlightedText' | 'userId' | 'userName' | 'bookId' | 'chapterNumber'>) => {
+    const handleAddAnnotation = async (annotationData: Omit<Annotation, '_id' | 'verseNumber' | 'createdAt' | 'highlightedText' | 'userId' | 'userName' | 'bookId' | 'chapterNumber' | 'comments' | 'likes'>) => {
         if (currentSelection && currentVerseNumber) {
             const results = await saveAnnotation({
                 _id: null,
@@ -140,7 +140,9 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
                 userId: 0,
                 userName: '',
                 chapterNumber: 1,
-                bookId: intro.title.toLowerCase().replaceAll(' ', '-')
+                bookId: intro.title.toLowerCase().replaceAll(' ', '-'),
+                comments: [],
+                likes: []
             })
             if (results.insertedId) {
                 toast.success('Note shared with the family!')
