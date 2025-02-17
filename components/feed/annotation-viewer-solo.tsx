@@ -8,7 +8,7 @@ import { cn, getInitials, toTitleCase } from "@/lib/utils"
 import { HeartIcon, ExternalLinkIcon, Loader2Icon, MessageCircleIcon, ArrowLeftIcon } from "lucide-react"
 import { Button, buttonVariants } from "../ui/button"
 import { useEffect, useRef, useState } from "react"
-import { Textarea } from "../ui/textarea"
+import { AutoResizeTextarea } from "../ui/auto-resize-textarea"
 import { addCommentToAnnotation, updateLikeStatusOfComment } from "@/lib/annotations/actions"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -186,7 +186,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                     {
                         addCommentOpen ?
                             <div className="flex flex-col w-full">
-                                <Textarea 
+                                <AutoResizeTextarea 
                                     placeholder="Share your thoughts" 
                                     onChange={(e) => setCommentContent(e.target.value)} 
                                     ref={textareaRef}

@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { UserAccount } from '@/lib/auth/definitions'
 import { fetchCurrentUserId } from '@/lib/auth/data'
@@ -14,6 +13,7 @@ import { fetchAccountById } from '@/lib/auth/accounts'
 import { getInitials } from '@/lib/utils'
 import { saveAnnotation } from '@/lib/annotations/actions'
 import { toast } from 'sonner'
+import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea'
 
 export function AnnotationCreation({ annotationCreated }: {annotationCreated: () => void}) {
   const [text, setText] = useState('')
@@ -65,11 +65,11 @@ export function AnnotationCreation({ annotationCreated }: {annotationCreated: ()
           <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
         </Avatar>
         <div className='w-full'>
-          <Textarea
+          <AutoResizeTextarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Share your insights"
-            className="h-20"
+            maxHeight={100}
           />
 
           <Button onClick={handleSave} className="w-full">

@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea"
 import { Label } from "@/components/ui/label"
 import { AnnotationType, HighlightColor } from '../types/scripture'
 import { LinkIcon, StickyNoteIcon, XIcon, ImageIcon } from 'lucide-react'
@@ -137,7 +137,7 @@ export function AnnotationMenu({ position, selectedText, onClose, onSave }: Anno
 
         <div className="space-y-2">
           <Label>Note</Label>
-          <Textarea
+          <AutoResizeTextarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Add your annotation..."
