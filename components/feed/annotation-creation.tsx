@@ -70,6 +70,7 @@ export function AnnotationCreation({ annotationCreated }: {annotationCreated: ()
             onChange={(e) => setText(e.target.value)}
             placeholder="Share your insights"
             maxHeight={100}
+            canGoFullScreen={false}
           />
 
           <Button onClick={handleSave} className="w-full">
