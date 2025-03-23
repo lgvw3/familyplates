@@ -33,6 +33,7 @@
     "nodemailer": "^6.9.16",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-virtuoso": "^4.12.5",
     "react-window": "^1.8.11",
     "sonner": "^1.7.2",
     "tailwind-merge": "^2.6.0",

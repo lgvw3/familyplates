@@ -15,7 +15,7 @@ import { saveAnnotation } from '@/lib/annotations/actions'
 import { toast } from 'sonner'
 import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea'
 
-export function AnnotationCreation({ annotationCreated }: {annotationCreated: () => void}) {
+export function AnnotationCreation() {
   const [text, setText] = useState('')
   const [user, setUser] = useState<UserAccount>()
 
@@ -39,9 +39,6 @@ export function AnnotationCreation({ annotationCreated }: {annotationCreated: ()
       })
       if (!results.insertedId) {
         toast.warning("Sharing annotation failed")
-      }
-      else {
-        annotationCreated()
       }
     }
   }
