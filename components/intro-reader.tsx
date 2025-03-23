@@ -7,7 +7,6 @@ import { ChevronLeftIcon, ChevronRightIcon, ImageIcon, LinkIcon, StickyNoteIcon,
 import { Annotation, AnnotationType, Intro } from '@/types/scripture'
 import Image from 'next/image'
 import { AnnotationMenu } from './annotation-menu'
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from './ui/breadcrumb'
 import Link from 'next/link'
 import { introMaterialOrder } from './navigation'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -227,21 +226,6 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
 
     return (
     <div>
-        <div className="relative flex items-center mx-4 mt-4">
-            <Breadcrumb className='flex-grow'>
-                <BreadcrumbList>
-                    <BreadcrumbItem>
-                        <BreadcrumbLink href="/book/the-first-book-of-nephi/chapter/chapter_1">Book of Mormon</BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                        <BreadcrumbLink href={`/book/${encodeURIComponent(intro.title.toLowerCase().replaceAll(' ', '-'))}`}>{intro.title}</BreadcrumbLink>
-                    </BreadcrumbItem>
-                </BreadcrumbList>
-            </Breadcrumb>
-        </div>
-
-
         <div className="container mx-auto p-4 space-y-6 bg-background text-foreground">
             <div className="grid md:grid-cols-[1fr,300px] gap-6">
                 <div className="space-y-6">

@@ -312,10 +312,6 @@ export default function ScriptureReader({chapter, book, initialAnnotations, curr
             <BreadcrumbItem>
               <BreadcrumbLink href={`/book/${encodeURIComponent(book.title.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_1`}>{book.title}</BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink href="#top">{chapter.chapter_title}</BreadcrumbLink>
-            </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
         <Button
