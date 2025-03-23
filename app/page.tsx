@@ -22,7 +22,7 @@ export default async function HomePage() {
   const progress = bookmark ? (bookmark.verseNumber / (chapterData?.verses.length ?? 1)) * 100 : 0
 
   return (
-    <div className="pt-8 mt-6">
+    <main className="">
       <div className="px-4 md:px-8">
         <NotificationManager 
           existingSubscription={subscription?.sub ?? null} 
@@ -35,7 +35,7 @@ export default async function HomePage() {
         chapterData={chapterData}
         progress={progress}
       />
-    </div>
+    </main>
   )
 }
 

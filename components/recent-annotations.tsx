@@ -170,7 +170,7 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
     
     return (
         <List
-            height={dimensions.height ? dimensions.height - 120 : 600} // Subtract header + navigation height
+            height={dimensions.height ? dimensions.height : 600} // Subtract header + navigation height
             itemCount={annotations.length}
             itemSize={getRowSize}
             width="100%"
