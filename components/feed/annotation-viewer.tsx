@@ -136,7 +136,7 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                         </div>
                         : null 
                     }
-                    <p className="text-foreground">{annotation.text}</p>
+                    <p className="text-foreground whitespace-pre-wrap">{annotation.text}</p>
                 </CardContent>
                 <CardFooter className="flex items-center gap-4">
                     <Button variant="ghost" size="sm" className="gap-2">
