@@ -245,8 +245,11 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
         <div className="container mx-auto p-4 space-y-6 bg-background text-foreground">
             <div className="grid md:grid-cols-[1fr,300px] gap-6">
                 <div className="space-y-6">
-                    <div className="space-y-4">
+                    <div className="space-y-4 text-center">
                         <h1 className="text-3xl font-bold">{intro.title}</h1>
+                        <h2 className='text-2xl font-bold'>{intro.header}</h2>
+                        <h2 className='text-xl font-bold'>{intro.subtitle}</h2>
+                        <h2 className='text-xl font-bold'>{intro.additional}</h2>
                     </div>
 
                     <div className="space-y-4">

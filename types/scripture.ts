@@ -22,6 +22,9 @@ export type Book = {
 
 export type Intro = {
   title: string,
+  header?: string,
+  subtitle?: string,
+  additional: string,
   paragraphs: string[]
 }
 
