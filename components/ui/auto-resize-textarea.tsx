@@ -10,7 +10,7 @@ interface AutoResizeTextareaProps {
     canGoFullScreen?: boolean
 }
 
-export function AutoResizeTextarea({maxHeight=200, canGoFullScreen=true, ...props}: AutoResizeTextareaProps & React.ComponentProps<"textarea">) {
+export function AutoResizeTextarea({ maxHeight = 200, canGoFullScreen = true, ...props }: AutoResizeTextareaProps & React.ComponentProps<"textarea">) {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -23,12 +23,17 @@ export function AutoResizeTextarea({maxHeight=200, canGoFullScreen=true, ...prop
         }
     };
 
+    useEffect(() => {
+        adjustHeight()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
     // Close full screen when pressing "Escape"
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === "Escape" && isFullScreen) {
-            setIsFullScreen(false);
-        }
+            if (event.key === "Escape" && isFullScreen) {
+                setIsFullScreen(false);
+            }
         };
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
@@ -49,9 +54,9 @@ export function AutoResizeTextarea({maxHeight=200, canGoFullScreen=true, ...prop
                             >
                                 <ExpandIcon size={18} />
                             </Button>
-                        : null
+                            : null
                     }
-            
+
                     <Textarea
                         {...props}
                         ref={textareaRef}
@@ -64,7 +69,7 @@ export function AutoResizeTextarea({maxHeight=200, canGoFullScreen=true, ...prop
                             resize: "none",
                         }}
                     />
-                    </div>
+                </div>
             ) : (
                 // Full-Window Mode
                 <div className="fixed inset-0 z-50 flex flex-col bg-white p-6">
@@ -78,7 +83,7 @@ export function AutoResizeTextarea({maxHeight=200, canGoFullScreen=true, ...prop
                             <XIcon size={24} />
                         </Button>
                     </div>
-            
+
                     {/* Full-Screen Textarea */}
                     <Textarea
                         {...props}

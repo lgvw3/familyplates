@@ -76,7 +76,7 @@ export async function saveBookmark(lastRead: BookmarkedSpot) {
                 }
                 ));
                 return {
-                    message: 'Sucess',
+                    message: 'Success',
                 }
             }
             catch(err) {

@@ -5,11 +5,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Annotation } from "@/types/scripture"
 import { cn, getInitials, toTitleCase } from "@/lib/utils"
-import { HeartIcon, ExternalLinkIcon, Loader2Icon, MessageCircleIcon, ArrowLeftIcon } from "lucide-react"
+import { HeartIcon, ExternalLinkIcon, Loader2Icon, MessageCircleIcon, ArrowLeftIcon, Edit3Icon, LoaderCircleIcon } from "lucide-react"
 import { Button, buttonVariants } from "../ui/button"
 import { useEffect, useRef, useState } from "react"
 import { AutoResizeTextarea } from "../ui/auto-resize-textarea"
-import { addCommentToAnnotation, updateLikeStatusOfComment } from "@/lib/annotations/actions"
+import { addCommentToAnnotation, updateAnnotation, updateLikeStatusOfComment } from "@/lib/annotations/actions"
 import { toast } from "sonner"
 import Link from "next/link"
 import { fetchUsersAsMap } from "@/lib/auth/accounts"
@@ -24,13 +24,16 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
     userName: string
 }) {
 
-    const { annotations, notification, setNotification } = useWebSocket([initialAnnotation], false) 
+    const { annotations, setAnnotations, notification, setNotification } = useWebSocket([initialAnnotation], false) 
     const annotation = annotations[0]
     const userMap = fetchUsersAsMap()
     const [commentContent, setCommentContent] = useState('')
     const [savingComment, setSavingComment] = useState(false)
     const [userLike, setUserLike] = useState(annotation.likes?.find(val => val.userId == currentUserId))
     const [addCommentOpen, setAddCommentOpen] = useState(false)
+    const [editMode, setEditMode] = useState(false)
+    const [editedVersion, setEditedVersion] = useState('')
+    const [editSaving, setEditSaving] = useState(false)
 
     if (notification && notification.userId != currentUserId) {
         toast(`New ${notification.type} by ${notification.userName}`, {position: 'top-center'})
@@ -44,6 +47,20 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
             textareaRef.current.focus();
         }
     }, [addCommentOpen]);
+
+    const saveEditOfAnnotation = async () => {
+        setEditSaving(true)
+        const editResults = await updateAnnotation(initialAnnotation._id!.toString(), editedVersion)
+        if (editResults.message == 'Success') {
+            toast.success('Annotation updated!')
+        }
+        setAnnotations([{
+            ...annotation,
+            text: editedVersion
+        }])
+        setEditMode(false)
+        setEditSaving(false)
+    }
 
     const saveComment = async() => {
         setSavingComment(true)
@@ -140,7 +157,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
         <div className="md:mx-4 min-h-lvh mt-4">
             <Card>
                 <CardHeader>
-                    <div className="flex items-center pb-4">
+                    <div className="flex flex-grow items-center pb-4">
                         <Link 
                             href={'/'}
                             className={buttonVariants({variant: 'ghost', size: 'icon'})}
@@ -149,38 +166,99 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                         </Link>
                         Annotation
                     </div>
-                    <div className="flex items-center gap-4">
-                        <Avatar>
-                            <AvatarImage src={author?.avatar} alt={author?.name} />
-                            <AvatarFallback>{getInitials(author?.name)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                            <CardTitle className="text-base">{annotation.userName}</CardTitle>
-                            <CardDescription>
-                                {
-                                    !annotation.unboundAnnotation ?
-                                    <>on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • </> 
-                                    : null
-                                }
-                                {getPostDate(new Date(annotation.createdAt))}
-                            </CardDescription>
+                    {
+                        author.id == currentUserId ?
+                        <div className="flex flex-row">
+                            <div className="flex flex-grow items-center gap-4">
+                                <Avatar>
+                                    <AvatarImage src={author?.avatar} alt={author?.name} />
+                                    <AvatarFallback>{getInitials(author?.name)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                    <CardTitle className="text-base">{annotation.userName}</CardTitle>
+                                    <CardDescription>
+                                        {
+                                            !annotation.unboundAnnotation ?
+                                            <>on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • </> 
+                                            : null
+                                        }
+                                        {getPostDate(new Date(annotation.createdAt))}
+                                    </CardDescription>
+                                </div>
+                            </div>
+                            <Button 
+                                className="flex-shrink-0"
+                                variant={'ghost'}
+                                size={'icon'}
+                                onClick={() => {
+                                    setEditMode(true)
+                                    setEditedVersion(annotation.text)
+                                }}
+                            >
+                                <Edit3Icon className="w-4 h-4" />
+                            </Button>
                         </div>
-                    </div>
+                        :
+                        <div className="flex items-center gap-4">
+                            <Avatar>
+                                <AvatarImage src={author?.avatar} alt={author?.name} />
+                                <AvatarFallback>{getInitials(author?.name)}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                                <CardTitle className="text-base">{annotation.userName}</CardTitle>
+                                <CardDescription>
+                                    {
+                                        !annotation.unboundAnnotation ?
+                                        <>on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • </> 
+                                        : null
+                                    }
+                                    {getPostDate(new Date(annotation.createdAt))}
+                                </CardDescription>
+                            </div>
+                        </div>
+                    }
                 </CardHeader>
                 <CardContent>
                     {
-                        !annotation.unboundAnnotation ?
-                        <div className="flex items-center space-x-4 rounded-md border p-4">
-                            <div className="flex-1 space-y-1">
-                                <span className={cn(getBackgroundColor(), 'rounded p-1 text-sm font-medium leading-none')}>
-                                    {annotation.highlightedText}
-                                </span>
+                        !annotation.unboundAnnotation && (
+                            <div className="flex items-center space-x-4 rounded-md border p-4">
+                                <div className="flex-1 space-y-1">
+                                    <span className={cn(getBackgroundColor(), 'rounded p-1 text-sm font-medium leading-none')}>
+                                        {annotation.highlightedText}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                        :
-                        null
+                        )
                     }
-                    <p className="text-foreground whitespace-pre-wrap">{annotation.text}</p>
+                    {
+                        editMode && author.id == currentUserId ?
+                            <>
+                                <AutoResizeTextarea
+                                    value={editedVersion}
+                                    onChange={(e) => setEditedVersion(e.target.value)}
+                                />
+                                <div className="justify-end space-x-2 mt-2">
+                                    {
+                                        editSaving ?
+                                        <LoaderCircleIcon className="animate-spin w-4 h-4" />
+                                        :
+                                        <>
+                                        <Button 
+                                            variant={'secondary'}
+                                            className="justify-self-end"
+                                            onClick={() => setEditMode(false)}
+                                        >Cancel</Button>
+                                        <Button 
+                                            className="justify-self-end"
+                                            onClick={() => saveEditOfAnnotation()}
+                                        >Update</Button>
+                                        </>
+                                    }
+                                </div>
+                            </>
+                        :
+                        <p className="text-foreground whitespace-pre-wrap">{annotation.text}</p>
+                    }
                 </CardContent>
                 <CardFooter className="flex items-center gap-4 pt-4 border-t-4 border-b">
                     {

@@ -102,7 +102,7 @@ export async function saveAnnotation(annotation: Annotation) {
                 await sendNotificationToOfflineUsers(annotationData.text, `New annotation from ${annotationData.userName} `, userId)
 
                 return {
-                    message: 'Sucess',
+                    message: 'Success',
                     insertedId: result.insertedId.toString(),
                     annotation: newAnnotation
                 }
@@ -125,6 +125,57 @@ export async function saveAnnotation(annotation: Annotation) {
     } catch(error) {
         console.error(error)
         sendErrorMessageToMe(annotation)
+        return {
+            message: error
+        }
+    }
+}
+
+export async function updateAnnotation(annotationId: string, editedText: string) {
+
+    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
+    if (!authToken) {
+        redirect('/sign-in')
+    }
+    const { userId } = validateToken(authToken);
+
+    if (!userId) {
+        return {
+            message: "Unauthorized. This app is just for my family for now"
+        }
+    }
+    const user = fetchAccountById(userId)
+
+    if (!user) {
+        return {
+            message: "Unauthorized. This app is just for my family for now"
+        }
+    }
+
+    const client = await clientPromise;
+    const db = client.db("main");
+    const collection = db.collection("annotations");
+
+
+    // Save annotation to the database
+    try {
+        const result = await collection.updateOne({_id: new ObjectId(annotationId)}, { $set: {
+            text: editedText
+        }});
+
+        if (result.modifiedCount) {
+            return {
+                message: 'Success',
+            }
+        }
+        else {
+            console.error("Database Error: Could not save edit.")
+            return {
+                message: "Database Error: Could not save annotation"
+            }
+        }
+    } catch(error) {
+        console.error(error)
         return {
             message: error
         }
@@ -204,7 +255,7 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
                 await sendNotificationToOfflineUsers(newComment.content, `New comment from ${newComment.userName} `, userId)
 
                 return {
-                    message: 'Sucess',
+                    message: 'Success',
                     newComment: {
                         ...newComment,
                         _id: newComment._id.toString()
@@ -296,7 +347,7 @@ export async function updateLikeStatusOfComment(currentUserId: number, annotatio
                     await sendNotificationToOfflineUsers('', `${updatedLike.userName} liked ${existingAnnotation?.userName}'s thoughts `, userId)
                 }
                 return {
-                    message: 'Sucess',
+                    message: 'Success',
                     newLike: {
                         ...updatedLike,
                         _id: updatedLike._id.toString()
