@@ -51,6 +51,7 @@ export function AnnotationMenu({ position, selectedText, onClose, onSave }: Anno
       ...(url && { url }),
       ...(photoUrl && { photoUrl })
     })
+    setText('')
     onClose()
   }
 

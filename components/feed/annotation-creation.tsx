@@ -40,6 +40,9 @@ export function AnnotationCreation() {
       if (!results.insertedId) {
         toast.warning("Sharing annotation failed")
       }
+      else {
+        setText('')
+      }
     }
   }
 
