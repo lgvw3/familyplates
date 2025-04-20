@@ -38,62 +38,107 @@ export async function GET(req: NextRequest) {
                         backgroundColor: colors.navy,
                         padding: '40px 60px',
                         fontFamily: 'serif', // More traditional, book-like feel
+                        position: 'relative',
                     }}
                 >
-                    {/* Site name in gold */}
                     <div
                         style={{
-                            fontSize: '24px',
-                            fontWeight: 'bold',
-                            color: colors.gold,
-                            marginBottom: '20px',
-                            letterSpacing: '0.05em',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            width: '100%',
+                            maxWidth: '800px',
                         }}
                     >
-                        Family Plates
-                    </div>
-                    
-                    {/* Author name in white */}
-                    <div
-                        style={{
-                            fontSize: '48px',
-                            fontWeight: 'bold',
-                            color: colors.white,
-                            marginBottom: '20px',
-                            textAlign: 'center',
-                        }}
-                    >
-                        {title}
-                    </div>
-                    
-                    {/* Scripture quote in light gold */}
-                    {hasScripture && (
+                        {/* Site name in gold */}
                         <div
                             style={{
-                                fontSize: '28px',
-                                color: colors.lightGold,
-                                textAlign: 'center',
+                                fontSize: '24px',
+                                fontWeight: 'bold',
+                                color: colors.gold,
                                 marginBottom: '20px',
-                                maxWidth: '800px',
-                                fontStyle: 'italic',
-                                lineHeight: '1.4',
+                                letterSpacing: '0.05em',
                             }}
                         >
-                            {scripture}
+                            Family Plates
                         </div>
-                    )}
-                    
-                    {/* Annotation text in cream */}
-                    <div
-                        style={{
-                            fontSize: '24px',
-                            color: colors.cream,
-                            textAlign: 'center',
-                            maxWidth: '800px',
-                            lineHeight: '1.5',
-                        }}
-                    >
-                        {hasScripture ? annotation : description}
+                        
+                        {/* Author name in white */}
+                        <div
+                            style={{
+                                fontSize: '48px',
+                                fontWeight: 'bold',
+                                color: colors.white,
+                                marginBottom: '20px',
+                                textAlign: 'center',
+                            }}
+                        >
+                            {title}
+                        </div>
+                        
+                        {/* Content container with gradient */}
+                        <div
+                            style={{
+                                position: 'relative',
+                                width: '100%',
+                                maxHeight: '350px',
+                                overflow: 'hidden',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    width: '100%',
+                                }}
+                            >
+                                {/* Scripture quote in light gold */}
+                                {hasScripture && (
+                                    <div
+                                        style={{
+                                            fontSize: '28px',
+                                            color: colors.lightGold,
+                                            textAlign: 'center',
+                                            marginBottom: '20px',
+                                            fontStyle: 'italic',
+                                            lineHeight: '1.4',
+                                            width: '100%',
+                                        }}
+                                    >
+                                        {scripture}
+                                    </div>
+                                )}
+                                
+                                {/* Annotation text in cream */}
+                                <div
+                                    style={{
+                                        fontSize: '24px',
+                                        color: colors.cream,
+                                        textAlign: 'center',
+                                        lineHeight: '1.5',
+                                        width: '100%',
+                                    }}
+                                >
+                                    {hasScripture ? annotation : description}
+                                </div>
+                            </div>
+
+                            {/* Gradient fade overlay */}
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    height: '87px',
+                                    background: `linear-gradient(transparent, ${colors.navy})`,
+                                }}
+                            />
+                        </div>
                     </div>
                 </div>
             ),

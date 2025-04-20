@@ -40,8 +40,8 @@ export async function generateMetadata({ params }: AnnotationPageProps): Promise
     if (!annotationData.unboundAnnotation && annotationData.highlightedText) {
         description = `"${annotationData.highlightedText}" - ${annotationData.bookId.replaceAll('-', ' ')} ${annotationData.chapterNumber}:${annotationData.verseNumber}\n\n`;
     }
-    // Add the annotation text
-    description += annotationData.text.substring(0, 200) + (annotationData.text.length > 200 ? '...' : '');
+    // Add the annotation text without truncation - the OG image will handle the fade
+    description += annotationData.text;
 
     return {
         metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL!),
@@ -71,7 +71,7 @@ export async function generateMetadata({ params }: AnnotationPageProps): Promise
             site: '@familyplates',
             images: [`/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`],
         },
-        themeColor: 'hsl(220 60% 20%)',
+        //themeColor: 'hsl(220 60% 20%)',
     };
 }
 
