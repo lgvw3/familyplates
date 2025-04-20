@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Annotation } from "@/types/scripture"
 import { cn, getInitials, toTitleCase } from "@/lib/utils"
-import { HeartIcon, ExternalLinkIcon, Loader2Icon, MessageCircleIcon, ArrowLeftIcon, Edit3Icon, LoaderCircleIcon } from "lucide-react"
+import { HeartIcon, ExternalLinkIcon, Loader2Icon, MessageCircleIcon, ArrowLeftIcon, Edit3Icon, LoaderCircleIcon, ShareIcon, CheckIcon } from "lucide-react"
 import { Button, buttonVariants } from "../ui/button"
 import { useEffect, useRef, useState } from "react"
 import { AutoResizeTextarea } from "../ui/auto-resize-textarea"
@@ -34,6 +34,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
     const [editMode, setEditMode] = useState(false)
     const [editedVersion, setEditedVersion] = useState('')
     const [editSaving, setEditSaving] = useState(false)
+    const [justCopied, setJustCopied] = useState(false)
 
     if (notification && notification.userId != currentUserId) {
         toast(`New ${notification.type} by ${notification.userName}`, {position: 'top-center'})
@@ -150,6 +151,35 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
         }
         else {
             return `${hourDiff}h`
+        }
+    }
+
+    const handleShare = async () => {
+        const url = window.location.href;
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    url: url,
+                });
+            } else {
+                // Fallback to copying to clipboard with enhanced text
+                await navigator.clipboard.writeText(url);
+                setJustCopied(true);
+                toast.success('Link and details copied to clipboard!');
+                
+                setTimeout(() => {
+                    setJustCopied(false);
+                }, 2000);
+            }
+        } catch (error) {
+            console.error('Sharing error:', error);
+            toast.error('Sharing failed, but the link was copied to your clipboard as a fallback.');
+            // Fallback copy even on error
+            try {
+                await navigator.clipboard.writeText(url);
+            } catch (clipboardError) {
+                console.error('Clipboard fallback error:', clipboardError);
+            }
         }
     }
 
@@ -333,6 +363,24 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                 :
                                 null
                             }
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="gap-2"
+                                onClick={handleShare}
+                            >
+                                {justCopied ? (
+                                    <>
+                                        <CheckIcon className="h-4 w-4" />
+                                        <span>Copied!</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <ShareIcon className="h-4 w-4" />
+                                        <span>Share</span>
+                                    </>
+                                )}
+                            </Button>
                         </>
                     }
                 </CardFooter>
