@@ -156,32 +156,21 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
 
     const handleShare = async () => {
         const url = window.location.href;
+
+        // Log for debugging
+        console.log('Attempting to share URL:', url);
+
+        //Directly copy to clipboard if Web Share isn't available
         try {
-            if (navigator.share) {
-                await navigator.share({
-                    url: url,
-                });
-            } else {
-                // Fallback to copying to clipboard with enhanced text
-                await navigator.clipboard.writeText(url);
-                setJustCopied(true);
-                toast.success('Link and details copied to clipboard!');
-                
-                setTimeout(() => {
-                    setJustCopied(false);
-                }, 2000);
-            }
+            await navigator.clipboard.writeText(url);
+            setJustCopied(true);
+            toast.success('Link copied to clipboard!');
+            setTimeout(() => setJustCopied(false), 2000);
         } catch (error) {
-            console.error('Sharing error:', error);
-            toast.error('Sharing failed, but the link was copied to your clipboard as a fallback.');
-            // Fallback copy even on error
-            try {
-                await navigator.clipboard.writeText(url);
-            } catch (clipboardError) {
-                console.error('Clipboard fallback error:', clipboardError);
-            }
+            console.error('Error copying to clipboard:', error);
+            toast.error('Failed to copy the link');
         }
-    }
+    };
 
     return (
         <div className="md:mx-4 min-h-lvh mt-4">
@@ -290,7 +279,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                         <p className="text-foreground whitespace-pre-wrap">{annotation.text}</p>
                     }
                 </CardContent>
-                <CardFooter className="flex items-center gap-4 pt-4 border-t-4 border-b">
+                <CardFooter className="flex items-center gap-2 pt-4 border-t-4 border-b">
                     {
                         addCommentOpen ?
                             <div className="flex flex-col w-full">
@@ -372,12 +361,10 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                 {justCopied ? (
                                     <>
                                         <CheckIcon className="h-4 w-4" />
-                                        <span>Copied!</span>
                                     </>
                                 ) : (
                                     <>
                                         <ShareIcon className="h-4 w-4" />
-                                        <span>Share</span>
                                     </>
                                 )}
                             </Button>

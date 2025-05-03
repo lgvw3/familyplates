@@ -5,17 +5,20 @@ export const runtime = 'edge';
 
 export async function GET(req: NextRequest) {
     try {
+        console.log('Generating OG image...');
         const { searchParams } = new URL(req.url);
         
-        // Get title and description from query params
-        const title = searchParams.get('title') ?? 'Family Plates';
-        const description = searchParams.get('description') ?? '';
-
-        // Parse description to separate scripture and annotation if present
+        const title = searchParams.get('title') ?? 'Family Plates';  // Default to a fallback title
+        const rawDescription = searchParams.get('description') ?? '';  // Get raw description
+        
+        // Truncate description to 400 characters to prevent issues with long text
+        const description = rawDescription.slice(0, 400);  // Limit to avoid overflow in OG image
+        
+        // Simple parsing for scripture and annotation, with fallback
         const [scripture, ...annotationParts] = description.split('\n\n');
         const annotation = annotationParts.join('\n\n');
-        const hasScripture = description.includes(' - '); // Check if there's a scripture reference
-
+        const hasScripture = description.includes(' - ');  // Check for scripture reference
+        
         // Book of Mormon inspired colors
         const colors = {
             navy: 'hsl(220, 60%, 20%)',      // Deep navy background
@@ -148,9 +151,10 @@ export async function GET(req: NextRequest) {
             },
         );
     } catch (e) {
-        console.error(e);
-        return new Response(`Failed to generate the image`, {
+        console.error('Error generating OG image:', e);  // More detailed logging
+        return new Response('Failed to generate the image. Please check parameters.', {
             status: 500,
+            headers: { 'Content-Type': 'text/plain' },  // Plain text for easier debugging
         });
     }
 } 

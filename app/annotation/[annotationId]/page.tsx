@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: AnnotationPageProps): Promise
 
     const userMap = fetchUsersAsMap();
     const author = userMap.get(annotationData.userId);
-    
+
     if (!author) {
         return {
             title: 'Annotation Not Found',
@@ -35,16 +35,18 @@ export async function generateMetadata({ params }: AnnotationPageProps): Promise
 
     const title = author.name;
     
-    // Create a rich description that includes both scripture and annotation when available
+    // Create a rich description
     let description = '';
     if (!annotationData.unboundAnnotation && annotationData.highlightedText) {
         description = `"${annotationData.highlightedText}" - ${annotationData.bookId.replaceAll('-', ' ')} ${annotationData.chapterNumber}:${annotationData.verseNumber}\n\n`;
     }
-    // Add the annotation text without truncation - the OG image will handle the fade
-    description += annotationData.text;
+    description += annotationData.text.substring(0, 200) + (annotationData.text.length > 200 ? '...' : '');
 
-    return {
-        metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL!),
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';  // Fallback for local testing
+    //const ogImageUrl = `${baseUrl}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`;
+
+    const metadata = {
+        metadataBase: new URL(baseUrl),  // Ensure absolute URLs
         title,
         description,
         openGraph: {
@@ -53,10 +55,10 @@ export async function generateMetadata({ params }: AnnotationPageProps): Promise
             type: 'article',
             authors: [author.name],
             siteName: 'Family Plates',
-            url: `/annotation/${annotationId}`,
+            url: `${baseUrl}/annotation/${annotationId}`,
             images: [
                 {
-                    url: `/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`,
+                    url: `${baseUrl}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`,
                     width: 1200,
                     height: 630,
                     alt: `Annotation by ${author.name}`
@@ -69,10 +71,12 @@ export async function generateMetadata({ params }: AnnotationPageProps): Promise
             description,
             creator: author.name,
             site: '@familyplates',
-            images: [`/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`],
+            images: [`${baseUrl}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`],
         },
-        //themeColor: 'hsl(220 60% 20%)',
     };
+
+    console.log(metadata);
+    return metadata;
 }
 
 export default async function Page({ params }: AnnotationPageProps) {

@@ -4,8 +4,14 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Skip middleware for the /api/auth route
-    if (pathname.startsWith('/api/auth')) {
+    // Allow public access to these routes:
+    if (
+        pathname.startsWith('/api/og') ||
+        pathname.startsWith('/api/auth') ||
+        pathname.startsWith('/_next') || // Next.js assets
+        pathname.startsWith('/favicon') ||
+        pathname.startsWith('/annotation') // <-- Make annotation pages public for OG previews!
+    ) {
         return NextResponse.next();
     }
 
