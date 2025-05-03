@@ -3,6 +3,7 @@ import { fetchAnnotationById } from "@/lib/annotations/data";
 import { fetchUsersAsMap } from "@/lib/auth/accounts";
 import { fetchCurrentUserId } from "@/lib/auth/data";
 import { Metadata } from "next";
+import { headers } from "next/headers";
 
 export interface AnnotationPageProps {
     params: Promise<{
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: AnnotationPageProps): Promise
     if (!annotationData.unboundAnnotation && annotationData.highlightedText) {
         description = `"${annotationData.highlightedText}" - ${annotationData.bookId.replaceAll('-', ' ')} ${annotationData.chapterNumber}:${annotationData.verseNumber}\n\n`;
     }
-    description += annotationData.text.substring(0, 200) + (annotationData.text.length > 200 ? '...' : '');
+    description += annotationData.text
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';  // Fallback for local testing
     //const ogImageUrl = `${baseUrl}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`;
@@ -75,11 +76,19 @@ export async function generateMetadata({ params }: AnnotationPageProps): Promise
         },
     };
 
-    console.log(metadata);
+    //console.log(metadata);
     return metadata;
 }
 
 export default async function Page({ params }: AnnotationPageProps) {
+    const userAgent = (await headers()).get('user-agent') || '';
+    const isBot = /bot|crawl|spider|slurp|facebook|twitter|discord|whatsapp|telegram|linkedin/i.test(userAgent);
+
+    if (isBot) {
+        console.log('Bot detected');
+        return <div>Please share an og image for this annotation.</div>
+    }
+
     const finalParams = await params;
     const annotationId = decodeURIComponent(finalParams.annotationId)
 

@@ -160,15 +160,40 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
         // Log for debugging
         console.log('Attempting to share URL:', url);
 
-        //Directly copy to clipboard if Web Share isn't available
-        try {
-            await navigator.clipboard.writeText(url);
-            setJustCopied(true);
-            toast.success('Link copied to clipboard!');
-            setTimeout(() => setJustCopied(false), 2000);
-        } catch (error) {
-            console.error('Error copying to clipboard:', error);
-            toast.error('Failed to copy the link');
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: `Annotation by ${author.name}`,  // Descriptive title
+                    text: !annotation.unboundAnnotation 
+                        ? `"${annotation.highlightedText}" - ${annotation.bookId.replaceAll('-', ' ')} ${annotation.chapterNumber}:${annotation.verseNumber}`
+                        : annotation.text,  // Descriptive text
+                    url: url,  // Only share the URL
+                });
+                toast.success('Link shared—check your sharing app for the preview!');
+            } catch (error: unknown) {
+                console.error('Error during Web Share:', error);  // Detailed error logging
+                // Fallback to clipboard
+                try {
+                    await navigator.clipboard.writeText(url);
+                    setJustCopied(true);
+                    toast.success('Link copied to clipboard!');
+                    setTimeout(() => setJustCopied(false), 2000);
+                } catch (clipboardError) {
+                    console.error('Error copying to clipboard:', clipboardError);
+                    toast.error('Failed to share or copy the link');
+                }
+            }
+        } else {
+            //Directly copy to clipboard if Web Share isn't available
+            try {
+                await navigator.clipboard.writeText(url);
+                setJustCopied(true);
+                toast.success('Link copied to clipboard!');
+                setTimeout(() => setJustCopied(false), 2000);
+            } catch (error) {
+                console.error('Error copying to clipboard:', error);
+                toast.error('Failed to copy the link');
+            }
         }
     };
 
