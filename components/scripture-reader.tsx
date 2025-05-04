@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { ChevronLeftIcon, ChevronRightIcon, ImageIcon, BookOpen, LinkIcon, StickyNoteIcon, MessageSquareIcon, MessageCircleIcon } from 'lucide-react'
 import { Annotation, AnnotationType, Book, Chapter } from '@/types/scripture'
 import Image from 'next/image'
@@ -538,12 +538,14 @@ export default function ScriptureReader({chapter, book, initialAnnotations, curr
             </div>
 
           {/* Annotations Panel */}
-          <Sheet open={annotationsOpen} onOpenChange={(b) => setAnnotationsOpen(b)}>
-            <SheetTrigger asChild>
-              <Button variant="outline" className="w-full md:hidden mb-4" onClick={() => setAnnotationsOpen(true)}>
-                View Annotations
-              </Button>
-            </SheetTrigger>
+          <Sheet open={annotationsOpen} onOpenChange={setAnnotationsOpen}>
+            <Button
+              variant="outline"
+              className="w-full md:hidden mb-4"
+              onClick={() => setAnnotationsOpen(true)}
+            >
+              View Annotations
+            </Button>
             <SheetContent className='overflow-y-auto'>
               <SheetHeader>
                 <SheetTitle>Annotations</SheetTitle>
