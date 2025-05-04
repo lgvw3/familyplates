@@ -256,29 +256,25 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
                                     {verseAnnotations.length > 0 && (
                                         <div className={`absolute ${isMobile ? "-right-3" : "-right-8"} top-1 flex flex-col gap-1`}>
                                             {verseAnnotations.map((annotation) => (
-                                            <Button
-                                                key={annotation._id?.toString()}
-                                                variant="ghost"
-                                                size="icon"
-                                                className={`h-10 w-10 p-2 text-${annotation.color}-600`}
-                                                onClick={() => {
-                                                    if (isMobile) {
-                                                    //open annotations
-                                                        setAnnotationsOpen(true)
-                                                    }
-                                                    else {
-                                                    const element = document.getElementById('annotations-panel');
-                                                    if (element) {
-                                                        element.scrollIntoView({
-                                                        behavior: 'smooth', // Smooth scroll animation
-                                                        block: 'start',     // Align to the top of the viewport
-                                                        });
-                                                    }
-                                                    }
-                                                }}
+                                                <Button
+                                                    key={annotation._id?.toString()}
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className={`h-10 w-10 p-2 text-${annotation.color}-600`}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (!('ontouchstart' in window)) {
+                                                            setAnnotationsOpen(true);
+                                                        }
+                                                    }}
+                                                    onTouchStart={(e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        setAnnotationsOpen(true);
+                                                    }}
                                                 >
-                                                {getAnnotationIcon(annotation.type)}
-                                            </Button>
+                                                    {getAnnotationIcon(annotation.type)}
+                                                </Button>
                                             ))}
                                         </div>
                                     )}

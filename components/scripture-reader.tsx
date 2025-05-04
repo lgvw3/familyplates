@@ -405,20 +405,16 @@ export default function ScriptureReader({chapter, book, initialAnnotations, curr
                             variant="ghost"
                             size="icon"
                             className={`h-10 w-10 p-2 text-${annotation.color}-600`}
-                            onClick={() => {
-                              if (isMobile) {
-                                //open annotations
-                                setAnnotationsOpen(true)
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!('ontouchstart' in window)) {
+                                setAnnotationsOpen(true);
                               }
-                              else {
-                                const element = document.getElementById('annotations-panel');
-                                if (element) {
-                                  element.scrollIntoView({
-                                    behavior: 'smooth', // Smooth scroll animation
-                                    block: 'start',     // Align to the top of the viewport
-                                  });
-                                }
-                              }
+                            }}
+                            onTouchEnd={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              setAnnotationsOpen(true);
                             }}
                           >
                             {getAnnotationIcon(annotation.type)}
