@@ -7,6 +7,7 @@ self.addEventListener('push', function (event) {
             //badge: '/badge.png',
             vibrate: [100, 50, 100],
             data: {
+                url: data.url,
                 dateOfArrival: Date.now(),
                 primaryKey: '2',
             },
@@ -16,7 +17,7 @@ self.addEventListener('push', function (event) {
 })
    
 self.addEventListener('notificationclick', function (event) {
-    console.log('Notification click received.')
-    event.notification.close()
-    event.waitUntil(clients.openWindow('https://familyplates.vercel.app'))
+    event.notification.close();
+    const url = event.notification.data?.url || 'https://familyplates.vercel.app';
+    event.waitUntil(clients.openWindow(url));
 })

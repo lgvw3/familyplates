@@ -46,6 +46,9 @@ export async function saveAnnotation(annotation: Annotation) {
         }
     }
 
+    // Extract first name
+    const firstName = user.name.split(' ')[0]
+
     const validatedFields = zAnnotation.safeParse(annotation)
 
     if (!validatedFields.success) {
@@ -99,7 +102,7 @@ export async function saveAnnotation(annotation: Annotation) {
                 }));
 
                 // subscribers offline
-                await sendNotificationToOfflineUsers(annotationData.text, `New annotation from ${annotationData.userName} `, userId)
+                await sendNotificationToOfflineUsers(annotationData.text, `New annotation from ${firstName} `, userId, result.insertedId.toString())
 
                 return {
                     message: 'Success',
@@ -252,7 +255,8 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
                 }));
 
                 //offline
-                await sendNotificationToOfflineUsers(newComment.content, `New comment from ${newComment.userName} `, userId)
+                const firstName = newComment.userName.split(' ')[0]
+                await sendNotificationToOfflineUsers(newComment.content, `New comment from ${firstName} `, userId, annotationId)
 
                 return {
                     message: 'Success',
@@ -344,7 +348,9 @@ export async function updateLikeStatusOfComment(currentUserId: number, annotatio
                 // offline
                 if (!userLike) {
                     // liking it
-                    await sendNotificationToOfflineUsers('', `${updatedLike.userName} liked ${existingAnnotation?.userName}'s thoughts `, userId)
+                    const firstName = updatedLike.userName.split(' ')[0]
+                    const annotationAuthorFirstName = existingAnnotation?.userName.split(' ')[0]
+                    await sendNotificationToOfflineUsers('', `${firstName} liked ${annotationAuthorFirstName}'s thoughts `, userId, annotationId)
                 }
                 return {
                     message: 'Success',

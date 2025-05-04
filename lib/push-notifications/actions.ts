@@ -118,7 +118,7 @@ export async function sendNotification(message: string, title: string) {
     }
 }
 
-export async function sendNotificationToOfflineUsers(message: string, title: string, authorId: number) {
+export async function sendNotificationToOfflineUsers(message: string, title: string, authorId: number, annotationId: string) {
     const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
     if (!authToken) {
         return
@@ -155,6 +155,7 @@ export async function sendNotificationToOfflineUsers(message: string, title: str
                         JSON.stringify({
                             title: title,
                             body: message,
+                            url: `https://familyplates.vercel.app/annotation/${annotationId}`
                         })
                     ))
                 }
