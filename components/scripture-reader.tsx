@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { useWebSocket } from '@/hooks/use-websockets'
 import { debounce } from 'lodash';
 import { saveBookmark } from '@/lib/reading/action'
+import { useHeader } from './header-context'
 
 
 interface SelectionInfo {
@@ -74,6 +75,10 @@ export default function ScriptureReader({chapter, book, initialAnnotations, curr
   const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isMobile = useIsMobile()
   const [annotationsOpen, setAnnotationsOpen] = useState(false)
+  const { setHeader } = useHeader();
+  const [showStickyHeader, setShowStickyHeader] = useState(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
   if (notification && notification.userId != currentUserId) {
       toast(`New ${notification.type} by ${notification.userName}`, {position: 'top-center'})
       setNotification(null)
@@ -299,6 +304,27 @@ export default function ScriptureReader({chapter, book, initialAnnotations, curr
     };
   }, [currentVisibleVerse, debouncedSavePlace]);
 
+  useEffect(() => {
+    const heading = headingRef.current;
+    if (!heading) return;
+
+    const observer = new window.IntersectionObserver(
+      ([entry]) => {
+        setShowStickyHeader(!entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+    observer.observe(heading);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (showStickyHeader) {
+      setHeader(chapter.chapter_title, book.title);
+    } else {
+      setHeader(undefined, undefined);
+    }
+  }, [showStickyHeader, chapter.chapter_title, book.title, setHeader]);
 
   return (
     <div>
@@ -337,11 +363,15 @@ export default function ScriptureReader({chapter, book, initialAnnotations, curr
                   </>
               )}
               {
-                chapter.chapter_heading ?
-                <p className='font-serif'>{chapter.chapter_heading}</p>
-                : null
+                chapter.chapter_heading && (
+                  <p className='font-serif'>{chapter.chapter_heading}</p>
+                )
               }
-              <h4 className='text-muted-foreground text-center font-serif'>{chapter.chapter_title}</h4>
+
+              <h4 
+                ref={headingRef}
+                className='text-muted-foreground text-center font-serif'
+              >{chapter.chapter_title}</h4>
               <p className="text-muted-foreground font-serif">{chapter.summary}</p>
             </div>
 

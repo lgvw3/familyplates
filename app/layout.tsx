@@ -8,6 +8,7 @@ import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
 import { Navigation } from '@/components/navigation';
 import { Toaster } from '@/components/ui/sonner';
+import { HeaderProvider } from '@/components/header-context';
 
 const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
@@ -29,13 +30,15 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Header />
-          <Navigation />
-          <main>
-            {children}
-          </main>
-          <Toaster richColors />
-          <Footer />
+          <HeaderProvider>
+            <Header />
+            <Navigation />
+            <main>
+              {children}
+            </main>
+            <Toaster richColors />
+            <Footer />
+          </HeaderProvider>
         </ThemeProvider>
       </body>
     </html>
