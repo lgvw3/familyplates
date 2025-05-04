@@ -411,7 +411,7 @@ export default function ScriptureReader({chapter, book, initialAnnotations, curr
                                 setAnnotationsOpen(true);
                               }
                             }}
-                            onTouchEnd={(e) => {
+                            onTouchStart={(e) => {
                               e.stopPropagation();
                               e.preventDefault();
                               setAnnotationsOpen(true);
