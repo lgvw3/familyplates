@@ -570,9 +570,9 @@ export default function ScriptureReader({chapter, book, initialAnnotations, curr
                           </p>
                           <p className="text-sm whitespace-pre-wrap">{annotation.text}</p>
                           <p className="text-sm flex gap-2">
-                            <div className="flex-grow">
+                            <span className="flex-grow">
                               {annotation.userName}
-                            </div>
+                            </span>
                             {annotation.comments.length > 0 && (
                               <span className="flex items-center gap-1 mx-2">
                                 <MessageCircleIcon className="h-4 w-4" /> {annotation.comments.length}
