@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { ChevronLeftIcon, ChevronRightIcon, ImageIcon, BookOpen, LinkIcon, StickyNoteIcon, MessageSquareIcon } from 'lucide-react'
+import { ChevronLeftIcon, ChevronRightIcon, ImageIcon, BookOpen, LinkIcon, StickyNoteIcon, MessageSquareIcon, MessageCircleIcon } from 'lucide-react'
 import { Annotation, AnnotationType, Book, Chapter } from '@/types/scripture'
 import Image from 'next/image'
 import { AnnotationMenu } from './annotation-menu'
@@ -569,7 +569,16 @@ export default function ScriptureReader({chapter, book, initialAnnotations, curr
                             &ldquo;{annotation.highlightedText}&rdquo;
                           </p>
                           <p className="text-sm whitespace-pre-wrap">{annotation.text}</p>
-                          <p className="text-sm">{annotation.userName}</p>
+                          <p className="text-sm flex gap-2">
+                            <div className="flex-grow">
+                              {annotation.userName}
+                            </div>
+                            {annotation.comments.length > 0 && (
+                              <span className="flex items-center gap-1 mx-2">
+                                <MessageCircleIcon className="h-4 w-4" /> {annotation.comments.length}
+                              </span>
+                            )}
+                          </p>
                           {annotation.url && (
                             <a
                               href={annotation.url}
