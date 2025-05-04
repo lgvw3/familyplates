@@ -260,7 +260,7 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
                                                 key={annotation._id?.toString()}
                                                 variant="ghost"
                                                 size="icon"
-                                                className={`h-6 w-6 p-1 text-${annotation.color}-600`}
+                                                className={`h-10 w-10 p-2 text-${annotation.color}-600`}
                                                 onClick={() => {
                                                     if (isMobile) {
                                                     //open annotations
