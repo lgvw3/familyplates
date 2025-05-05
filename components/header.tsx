@@ -42,7 +42,11 @@ export function Header() {
                     <Link href="/chat" title="Family Chat" className="hover:text-primary transition-colors">
                         <MessageCircle className="h-5 w-5" />
                     </Link>
-                    <ThemeToggle />
+                    {
+                        (!title || title.length === 0) && (
+                            <ThemeToggle />
+                        )
+                    }
                     <CommandMenu />
                 </div>
             </div>
