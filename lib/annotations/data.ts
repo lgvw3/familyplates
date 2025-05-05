@@ -7,6 +7,48 @@ import { validateToken } from "../auth/utils";
 import { redirect } from "next/navigation";
 import { ObjectId } from "mongodb";
 
+export async function fetchAllAnnotations(skipAuth: boolean = false) {
+    if (!skipAuth) {
+        const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
+        if (!authToken) {
+            redirect('/sign-in')
+        }
+        const { userId } = validateToken(authToken);
+
+        if (!userId) {
+            return null
+        }
+    }
+
+    const client = await clientPromise;
+    const db = client.db("main");
+    const collection = db.collection("annotations");
+
+    try {
+        const results = await collection.find<Annotation>({}).toArray();
+        if (results) {
+            results.map(a => {
+                a._id = a._id ? a._id.toString() : null
+                a.comments = a.comments?.map(comment => {
+                    comment._id = comment._id.toString()
+                    return comment
+                })
+                a.likes?.map(like => {
+                    like._id = like._id.toString()
+                    return like
+                })
+            })
+            return results
+        }
+        else {
+            return null
+        }
+    } catch(error) {
+        console.error(error)
+        return null
+    }
+}
+
 export async function fetchRecentAnnotations() {
     const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
     if (!authToken) {
@@ -180,3 +222,40 @@ export async function fetchAnnotationById(annotationId: string, skipAuth: boolea
         return null
     }
 }
+
+export async function fetchAnnotationsByUser(userId: number, skipAuth: boolean = false) {
+    if (!skipAuth) {
+        const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
+        if (!authToken) {
+            redirect('/sign-in')
+        }
+        const { userId } = validateToken(authToken);
+
+        if (!userId) {
+            return null
+        }
+    }
+
+    const client = await clientPromise;
+    const db = client.db("main");
+    const collection = db.collection("annotations");
+
+    try {
+        const results = await collection.find<Annotation>({ userId: userId }).toArray();
+
+        if (results) {
+            results.map(a => {
+                a._id = a._id?.toString() ? a._id.toString() : ''
+                a.comments?.map(c => c._id = c._id.toString())
+                a.likes?.map(l => l._id = l._id.toString())
+            })
+            return results
+        }
+        else {
+            return null
+        }
+    } catch(error) {
+        console.error(error)
+        return null
+    }
+}   
