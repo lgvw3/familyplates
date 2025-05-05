@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 export default function Chat() {
   const [selectedModel, setSelectedModel] = useState<modelID>(defaultModel);
-  const { messages, input, handleInputChange, handleSubmit, status, stop } =
+  const { messages, input, setInput, handleInputChange, handleSubmit, status, stop } =
     useChat({
       maxSteps: 5,
       body: {
@@ -32,7 +32,7 @@ export default function Chat() {
     <div className="h-[calc(100vh-50px)] flex flex-col justify-center w-full stretch">
       {messages.length === 0 ? (
         <div className="max-w-xl mx-auto w-full">
-          <ChatStarter />
+          <ChatStarter setInput={setInput} />
         </div>
       ) : (
         <Messages messages={messages} isLoading={isLoading} status={status} />

@@ -11,21 +11,21 @@ interface SuggestedPromptsProps {
 function PureSuggestedPrompts({ sendMessage }: SuggestedPromptsProps) {
   const suggestedActions = [
     {
-      title: "What are the advantages",
-      label: "of using Next.js?",
-      action: "What are the advantages of using Next.js?",
+      title: "What insights on faith",
+      label: "in Jesus Christ have been shared?",
+      action: "What insights on faith in Jesus Christ have been shared?",
     },
     {
-      title: "What is the weather",
-      label: "in San Francisco?",
-      action: "What is the weather in San Francisco?",
+      title: "Help me plan a family home evening",
+      label: "based on ideas about repentance shared by family members",
+      action: "Help me plan a family home evening based on ideas about repentance shared by family members",
     },
   ];
 
   return (
     <div
       data-testid="suggested-actions"
-      className="grid sm:grid-cols-2 gap-2 w-full"
+      className="grid sm:grid-cols-2 gap-2 w-full mx-2 pb-2"
     >
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div
@@ -41,7 +41,7 @@ function PureSuggestedPrompts({ sendMessage }: SuggestedPromptsProps) {
             onClick={async () => {
               sendMessage(suggestedAction.action);
             }}
-            className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
+            className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 w-full h-auto justify-start items-start flex-col text-wrap"
           >
             <span className="font-medium">{suggestedAction.title}</span>
             <span className="text-muted-foreground">
