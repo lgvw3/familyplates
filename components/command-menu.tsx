@@ -20,6 +20,7 @@ const books = {
     "The First Book Of Nephi": Array.from({ length: 22 }, (_, i) => `Chapter ${i + 1}`),
     "The Second Book Of Nephi": Array.from({ length: 33 }, (_, i) => `Chapter ${i + 1}`),
     "The Book Of Jacob": Array.from({ length: 7 }, (_, i) => `Chapter ${i + 1}`),
+    "The Book Of Enos": Array.from({ length: 1 }, (_, i) => `Chapter ${i + 1}`),
     "The Book Of Jarom": Array.from({ length: 1 }, (_, i) => `Chapter ${i + 1}`),
     "The Book Of Omni": Array.from({ length: 1 }, (_, i) => `Chapter ${i + 1}`),
     "The Words Of Mormon": Array.from({ length: 1 }, (_, i) => `Chapter ${i + 1}`),

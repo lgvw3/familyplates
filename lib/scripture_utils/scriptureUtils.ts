@@ -51,6 +51,7 @@ const BooksInTheBookOfMormon = [
   "The First Book of Nephi",
   "The Second Book of Nephi",
   "The Book of Jacob",
+  "The Book of Enos",
   "The Book of Jarom",
   "The Book of Omni",
   "The Words of Mormon",
