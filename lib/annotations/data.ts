@@ -201,7 +201,10 @@ export async function fetchAnnotationById(annotationId: string, skipAuth: boolea
                     verseNumber: 1,
                     highlightedText: 1,
                     text: 1,
-                    unboundAnnotation: 1
+                    unboundAnnotation: 1,
+                    startIndex: 1,
+                    endIndex: 1,
+                    verseNumbers: 1,
                 }
             } : {}
         );
