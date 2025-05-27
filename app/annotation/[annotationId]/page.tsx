@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: AnnotationPageProps): Promise
     // Create a rich description
     let description = '';
     if (!annotationData.unboundAnnotation && annotationData.highlightedText) {
-        description = `"${annotationData.highlightedText}" - ${annotationData.bookId.replaceAll('-', ' ')} ${annotationData.chapterNumber}:${annotationData.verseNumber}\n\n`;
+        description = `"${annotationData.highlightedText}" - ${annotationData.bookId.replaceAll('-', ' ')} ${annotationData.chapterNumber}:${annotationData.verseNumbers[0]}${(annotationData.verseNumbers.length > 1 ? `-${annotationData.verseNumbers[annotationData.verseNumbers.length - 1]}` : '')}\n\n`;
     }
     description += annotationData.text
 

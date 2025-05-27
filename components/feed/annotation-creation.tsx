@@ -23,7 +23,7 @@ export function AnnotationCreation() {
     if (user) {
       const results = await saveAnnotation({
         _id: null,
-        verseNumber: 0,
+        verseNumbers: [],
         chapterNumber: 0,
         bookId: '',
         text: text,
@@ -35,7 +35,9 @@ export function AnnotationCreation() {
         userName: user.name,
         unboundAnnotation: true,
         comments: [],
-        likes: []
+        likes: [],
+        startIndex: 0,
+        endIndex: 0
       })
       if (!results.insertedId) {
         toast.warning("Sharing annotation failed")

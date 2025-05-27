@@ -1,22 +1,23 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, JSX } from 'react'
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { ChevronLeftIcon, ChevronRightIcon, ImageIcon, LinkIcon, StickyNoteIcon, MessageSquareIcon } from 'lucide-react'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { ChevronLeftIcon, ChevronRightIcon, ImageIcon, LinkIcon, StickyNoteIcon, MessageSquareIcon, MessageCircleIcon } from 'lucide-react'
 import { Annotation, AnnotationType, Intro } from '@/types/scripture'
 import Image from 'next/image'
 import { AnnotationMenu } from './annotation-menu'
 import Link from 'next/link'
 import { introMaterialOrder } from './navigation'
-import { useIsMobile } from '@/hooks/use-mobile'
 import { saveAnnotation } from '@/lib/annotations/actions'
 import { toast } from 'sonner'
 import { useWebSocket } from '@/hooks/use-websockets'
+import { debounce } from 'lodash'
 
 interface SelectionInfo {
     text: string;
-    range: Range;
+    startIndex: number;
+    endIndex: number;
 }
 
 const getAnnotationIcon = (type: AnnotationType) => {
@@ -49,11 +50,10 @@ const getHighlightStyle = (color: 'yellow' | 'green' | 'blue' | 'purple' | 'pink
 export default function IntroReader({intro, initialAnnotations, currentUserId}: {intro: Intro, initialAnnotations: Annotation[], currentUserId: number}) {
     const [menuPosition, setMenuPosition] = useState<{ x: number; y: number; width: number } | null>(null)
     const [currentSelection, setCurrentSelection] = useState<SelectionInfo | null>(null)
-    const [currentVerseNumber, setCurrentVerseNumber] = useState<number | null>(null)
+    //const [currentVerseNumber, setCurrentVerseNumber] = useState<number | null>(null)
     const { annotations, addAnnotation, notification, setNotification } = useWebSocket(initialAnnotations, false, intro.title.replace(' ', '-').toLowerCase(), 1)
     const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const [annotationsOpen, setAnnotationsOpen] = useState(false)
-    const isMobile = useIsMobile()
     const isTitlePage = intro.title == 'Title Page'
     const introIndex = introMaterialOrder.indexOf(intro.title)
     let lastBook = ''
@@ -76,6 +76,11 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
         nextBook = 'the-firt-book-of-nephi'
     }
 
+    const [buttonPositions, setButtonPositions] = useState<{[key: string]: number}>({})
+    const positionsRef = useRef<{[key: string]: number}>({})
+    const containerRef = useRef<HTMLDivElement>(null)
+    const sortedAnnotations = [...annotations].sort((a, b) => a.startIndex - b.startIndex)
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent | TouchEvent) => {
         const menu = document.getElementById('annotation-menu')
@@ -92,45 +97,68 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
         }
     }, [])
 
-    const handleTextSelection = (verseNumber: number) => {
+    const handleTextSelection = () => {
         if (selectionTimeoutRef.current) {
             clearTimeout(selectionTimeoutRef.current)
         }
-        // Set a small timeout to allow the selection to complete
+        
         selectionTimeoutRef.current = setTimeout(() => {
             const selection = window.getSelection()
             if (selection && selection.toString().length > 0) {
+                const selectedText = selection.toString()
+                
+                // Get the range of the selection
                 const range = selection.getRangeAt(0)
-                const rect = range.getBoundingClientRect()
                 
-                // Calculate position considering mobile viewport
-                const x = Math.max(16, rect.left + window.scrollX)
-                let y = rect.bottom + 8;
-                const windowHeight = window.innerHeight;
+                // Calculate the absolute position in the text
+                let startIndex = 0
+                let endIndex = 0
                 
-                // Calculate the distance from the bottom of the element to the viewport bottom
-                const distanceToBottom = windowHeight - rect.bottom;
-                // If the space available is less than the height of your annotation window plus the offset
-                if (distanceToBottom < 300) {
-                  y -= Math.max(450, distanceToBottom + 100)
+                // Walk through the DOM to find the absolute position
+                const walker = document.createTreeWalker(
+                    document.querySelector('.text-lg') as Node,
+                    NodeFilter.SHOW_TEXT,
+                    null
+                )
+                
+                let node: Text | null
+                let currentIndex = 0
+                
+                while ((node = walker.nextNode() as Text)) {
+                    const nodeLength = node.length
+                    
+                    if (node === range.startContainer) {
+                        startIndex = currentIndex + range.startOffset
+                    }
+                    if (node === range.endContainer) {
+                        endIndex = currentIndex + range.endOffset
+                        break
+                    }
+                    
+                    currentIndex += nodeLength
                 }
-                const width = Math.min(320, window.innerWidth - 32)
-        
+
                 setCurrentSelection({
-                  text: selection.toString(),
-                  range: range.cloneRange() // Store a copy of the range
+                    text: selectedText,
+                    startIndex: Math.min(startIndex, endIndex),
+                    endIndex: Math.max(startIndex, endIndex)
                 })
-                setCurrentVerseNumber(verseNumber)
-                setMenuPosition({ x, y, width })
-              }
+                
+                setMenuPosition({ 
+                    x: 0, 
+                    y: 0,
+                    width: window.innerWidth 
+                })
+            }
         }, 10)
     }
 
-    const handleAddAnnotation = async (annotationData: Omit<Annotation, '_id' | 'verseNumber' | 'createdAt' | 'highlightedText' | 'userId' | 'userName' | 'bookId' | 'chapterNumber' | 'comments' | 'likes'>) => {
-        if (currentSelection && currentVerseNumber) {
+    const handleAddAnnotation = async (annotationData: Omit<Annotation, '_id' | 'startIndex' | 'endIndex' | 'verseNumbers' | 'chapterNumber' | 'createdAt' | 'highlightedText' | 'userId' | 'userName' | 'bookId' | 'comments' | 'likes'>) => {
+        if (currentSelection) {
             const results = await saveAnnotation({
                 _id: null,
-                verseNumber: currentVerseNumber,
+                startIndex: currentSelection.startIndex,
+                endIndex: currentSelection.endIndex,
                 text: annotationData.text,
                 highlightedText: currentSelection.text,
                 type: annotationData.type,
@@ -138,11 +166,15 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
                 createdAt: new Date(),
                 userId: 0,
                 userName: '',
-                chapterNumber: 1,
                 bookId: intro.title.toLowerCase().replaceAll(' ', '-'),
                 comments: [],
-                likes: []
+                likes: [],
+                ...(annotationData.url && { url: annotationData.url }),
+                ...(annotationData.photoUrl && { photoUrl: annotationData.photoUrl }),
+                verseNumbers: [],
+                chapterNumber: 0
             })
+            
             if (results.insertedId) {
                 toast.success('Note shared with the family!')
                 addAnnotation({
@@ -150,12 +182,10 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
                     _id: results.insertedId,
                 })
                 setMenuPosition(null)
-                setCurrentVerseNumber(null)
                 setCurrentSelection(null)
                 window.getSelection()?.removeAllRanges()
-            }
-            else {
-                toast.success(`Shoot! ${results.message}`)
+            } else {
+                toast.error(`Shoot! ${results.message}`)
             }
         }
     }
@@ -166,28 +196,175 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
         window.getSelection()?.removeAllRanges()
     }
 
-    const renderIntroText = (index: number, text: string) => {
-        const verseAnnotations = annotations.filter(a => a.verseNumber === index)
+    const renderIntroText = () => {
+        // Combine all paragraphs into one text with proper spacing
+        const fullText = intro.paragraphs.join('\n\n')
         
-        verseAnnotations.forEach(annotation => {
+        // Create a map of character positions to their annotation classes
+        const annotationMap = new Map<number, { class: string; id: string }>()
+        
+        // Mark the start and end of each annotation
+        sortedAnnotations.forEach(annotation => {
             const highlightClass = getHighlightStyle(annotation.color)
-            text = text.replace(
-                annotation.highlightedText,
-                `<span class="${highlightClass}">${annotation.highlightedText}</span>`
-            )
+            annotationMap.set(annotation.startIndex, { 
+                class: highlightClass, 
+                id: annotation._id?.toString() || 'temp'
+            })
+            annotationMap.set(annotation.endIndex, { class: 'end', id: 'end' })
         })
 
-        // If there's a current selection for this verse, add a temporary highlight
-        if (currentSelection && currentVerseNumber === index) {
-            const tempHighlightClass = 'bg-blue-100 dark:bg-blue-900'
-            text = text.replace(
-                currentSelection.text,
-                `<span class="${tempHighlightClass}">${currentSelection.text}</span>`
+        // Build the text with annotations
+        const elements: JSX.Element[] = []
+        let currentText = ''
+        const stack: Array<{ class: string; id: string }> = []
+        let elementKey = 0
+
+        for (let i = 0; i < fullText.length; i++) {
+            const annotationInfo = annotationMap.get(i)
+            
+            if (annotationInfo) {
+                if (currentText) {
+                    elements.push(
+                        <span 
+                            key={`text-${elementKey++}`} 
+                            className={stack[stack.length - 1]?.class || ''}
+                            data-annotation-id={stack[stack.length - 1]?.id}
+                        >
+                            {currentText}
+                        </span>
+                    )
+                    currentText = ''
+                }
+
+                if (annotationInfo.class === 'end') {
+                    stack.pop()
+                } else {
+                    stack.push(annotationInfo)
+                }
+            }
+
+            currentText += fullText[i]
+        }
+
+        // Add any remaining text
+        if (currentText) {
+            elements.push(
+                <span 
+                    key={`text-${elementKey++}`} 
+                    className={stack[stack.length - 1]?.class || ''}
+                    data-annotation-id={stack[stack.length - 1]?.id}
+                >
+                    {currentText}
+                </span>
             )
         }
 
-        return <p className="text-lg leading-relaxed font-serif mr-4" dangerouslySetInnerHTML={{ __html: text }} />
+        return (
+            <div className="relative text-container">
+                <div 
+                    className="text-lg leading-relaxed font-serif pr-4 whitespace-pre-line"
+                    onMouseUp={handleTextSelection}
+                    onTouchEnd={(e) => {
+                        e.preventDefault()
+                        handleTextSelection()
+                    }}
+                >
+                    {elements}
+                </div>
+                {/* Annotation Icons Column */}
+                <div className="absolute right-4 top-0 h-full">
+                    {sortedAnnotations.map((annotation) => {
+                        const top = buttonPositions[annotation._id?.toString() || '']
+                        if (typeof top === 'undefined') return null
+
+                        return (
+                            <Button
+                                key={annotation._id?.toString()}
+                                variant="ghost"
+                                size="icon"
+                                className={`h-6 w-6 p-1 text-${annotation.color}-600 absolute`}
+                                style={{ 
+                                    top: `${top}px`,
+                                    transform: 'translateY(-50%)'
+                                }}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (!('ontouchstart' in window)) {
+                                        setAnnotationsOpen(true)
+                                    }
+                                }}
+                                onTouchStart={(e) => {
+                                    e.stopPropagation()
+                                    e.preventDefault()
+                                    setAnnotationsOpen(true)
+                                }}
+                            >
+                                {getAnnotationIcon(annotation.type)}
+                            </Button>
+                        )
+                    })}
+                </div>
+            </div>
+        )
     }
+
+    const renderAnnotationPanel = () => {
+        if (annotations.length === 0) {
+            return (
+                <p className="text-muted-foreground text-sm">
+                    Select text to add annotations.
+                </p>
+            );
+        }
+
+        return (
+            <div className="space-y-4">
+                {sortedAnnotations.map((annotation) => (
+                    <Link
+                        key={annotation._id?.toString()}
+                        href={`/annotation/${annotation._id?.toString()}`}
+                    >
+                        <div className="space-y-2 rounded border p-3 hover:bg-accent/50 transition-colors">
+                            <p className={`text-sm p-2 rounded ${getHighlightStyle(annotation.color)}`}>
+                                &ldquo;{annotation.highlightedText}&rdquo;
+                            </p>
+                            {annotation.text && (
+                                <p className="text-sm whitespace-pre-wrap">{annotation.text}</p>
+                            )}
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                <span>{annotation.userName}</span>
+                                <span>{new Date(annotation.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-sm flex gap-2">
+                                {annotation.comments.length > 0 && (
+                                    <span className="flex items-center gap-1 mx-2">
+                                        <MessageCircleIcon className="h-4 w-4" /> {annotation.comments.length}
+                                    </span>
+                                )}
+                            </p>
+                            {annotation.url && (
+                                <a
+                                    href={annotation.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-blue-600 hover:underline"
+                                >
+                                    View Reference
+                                </a>
+                            )}
+                            {annotation.photoUrl && (
+                                <Image
+                                    src={annotation.photoUrl}
+                                    alt="Annotation"
+                                    className="w-full h-32 object-cover rounded"
+                                />
+                            )}
+                        </div>
+                    </Link>
+                ))}
+            </div>
+        );
+    };
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -224,6 +401,52 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
         }
     }, []);
 
+    useEffect(() => {
+        if (typeof window === 'undefined' || !containerRef.current) return;
+
+        const updateButtonPositions = () => {
+            const newPositions: {[key: string]: number} = {};
+            let hasChanges = false;
+            
+            sortedAnnotations.forEach(annotation => {
+                const textElement = document.querySelector(`[data-annotation-id="${annotation._id}"]`);
+                if (textElement && containerRef.current) {
+                    const rect = textElement.getBoundingClientRect();
+                    const containerRect = containerRef.current.getBoundingClientRect();
+                    const newTop = rect.top - containerRect.top;
+                    
+                    if (Math.abs((positionsRef.current[annotation._id?.toString() || ''] || 0) - newTop) > 1) {
+                        newPositions[annotation._id?.toString() || ''] = newTop;
+                        hasChanges = true;
+                    }
+                }
+            });
+
+            if (hasChanges) {
+                positionsRef.current = newPositions;
+                requestAnimationFrame(() => {
+                    setButtonPositions(newPositions);
+                });
+            }
+        };
+
+        updateButtonPositions();
+
+        const debouncedUpdate = debounce(updateButtonPositions, 100);
+        const resizeObserver = new ResizeObserver(debouncedUpdate);
+        if (containerRef.current) {
+            resizeObserver.observe(containerRef.current);
+        }
+
+        window.addEventListener('scroll', debouncedUpdate);
+
+        return () => {
+            resizeObserver.disconnect();
+            window.removeEventListener('scroll', debouncedUpdate);
+            debouncedUpdate.cancel();
+        };
+    }, [sortedAnnotations]);
+
     return (
     <div>
         <div className="container mx-auto p-4 space-y-6 bg-background text-foreground">
@@ -237,50 +460,7 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
                     </div>
 
                     <div className="space-y-4">
-                        {intro.paragraphs.map((text, index) => {
-                            const verseAnnotations = annotations.filter(a => a.verseNumber === index)
-                            return (
-                                <div
-                                    id={`index-${index}`}
-                                    key={index}
-                                    className="group relative"
-                                    onMouseUp={() => handleTextSelection(index)}
-                                    onTouchEnd={(e) => {
-                                        e.preventDefault() // Prevent default touch behavior
-                                        handleTextSelection(index)
-                                    }}
-                                >
-                                    <div className="flex gap-2">
-                                        {renderIntroText(index, text)}
-                                    </div>
-                                    {verseAnnotations.length > 0 && (
-                                        <div className={`absolute ${isMobile ? "-right-3" : "-right-8"} top-1 flex flex-col gap-1`}>
-                                            {verseAnnotations.map((annotation) => (
-                                                <Button
-                                                    key={annotation._id?.toString()}
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className={`h-10 w-10 p-2 text-${annotation.color}-600`}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (!('ontouchstart' in window)) {
-                                                            setAnnotationsOpen(true);
-                                                        }
-                                                    }}
-                                                    onTouchStart={(e) => {
-                                                        e.stopPropagation();
-                                                        e.preventDefault();
-                                                        setAnnotationsOpen(true);
-                                                    }}
-                                                >
-                                                    {getAnnotationIcon(annotation.type)}
-                                                </Button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )
-                        })}
+                        {renderIntroText()}
                     </div>
 
                     {/* Chapter Navigation */}
@@ -319,116 +499,26 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
                 </div>
 
                 <div className="hidden md:block" id='annotations-panel'>
-                        <div className="border rounded-lg p-4 space-y-4">
-                            <h2 className="font-semibold">Annotations</h2>
-                            {annotations.length === 0 ? (
-                                <p className="text-muted-foreground text-sm">
-                                    Select text to add annotations.
-                                </p>
-                            ) : (
-                                <div className="space-y-4">
-                                    {annotations.sort((a, b) => {
-                                        if (a.verseNumber > b.verseNumber) {
-                                            return 1
-                                        }
-                                        else {
-                                            return -1
-                                        }
-                                    }).map((annotation) => (
-                                        <Link key={annotation._id?.toString()} href={`/annotation/${annotation._id?.toString()}`}>
-                                        <div className="space-y-2 rounded border">
-                                            <div className="flex justify-between items-start">
-                                                <span className="text-sm font-medium">Verse {annotation.verseNumber}</span>
-                                            </div>
-                                            <p className={`text-sm p-2 rounded ${getHighlightStyle(annotation.color)}`}>
-                                                &ldquo;{annotation.highlightedText}&rdquo;
-                                            </p>
-                                            <p className="text-sm whitespace-pre-wrap">{annotation.text}</p>
-                                            <p className="text-sm">{annotation.userName}</p>
-                                            {annotation.url && (
-                                                <a
-                                                    href={annotation.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-sm text-blue-600 hover:underline"
-                                                >
-                                                    View Reference
-                                                </a>
-                                            )}
-                                            {annotation.photoUrl && (
-                                                <Image
-                                                    src={annotation.photoUrl}
-                                                    alt="Annotation"
-                                                    className="w-full h-32 object-cover rounded"
-                                                />
-                                            )}
-                                        </div>
-                                        </Link>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                    <div className="border rounded-lg p-4 space-y-4">
+                        <h2 className="font-semibold">Annotations</h2>
+                        {renderAnnotationPanel()}
                     </div>
+                </div>
 
                 {/* Annotations Panel */}
-                <Sheet open={annotationsOpen} onOpenChange={(b) => setAnnotationsOpen(b)}>
-                    <SheetTrigger asChild>
-                        <Button variant="outline" className="w-full md:hidden mb-4" onClick={() => setAnnotationsOpen(true)}>
-                            View Annotations
-                        </Button>
-                    </SheetTrigger>
+                <Sheet open={annotationsOpen} onOpenChange={setAnnotationsOpen}>
+                    <Button
+                        variant="outline"
+                        className="w-full md:hidden mb-4"
+                        onClick={() => setAnnotationsOpen(true)}
+                    >
+                        View Annotations
+                    </Button>
                     <SheetContent className='overflow-y-auto'>
                         <SheetHeader>
                             <SheetTitle>Annotations</SheetTitle>
                         </SheetHeader>
-                        <div className="mt-4 space-y-4">
-                            {annotations.length === 0 ? (
-                                <p className="text-muted-foreground text-sm">
-                                    Select text to add annotations.
-                                </p>
-                            ) : (
-                            <div className="space-y-4">
-                                {annotations.sort((a, b) => {
-                                    if (a.verseNumber > b.verseNumber) {
-                                        return 1
-                                    }
-                                    else {
-                                        return -1
-                                    }
-                                }).map((annotation) => (
-                                    <Link key={annotation._id?.toString()} href={`/annotation/${annotation._id?.toString()}`}>
-                                        <div className="space-y-2 rounded border">
-                                            <div className="flex justify-between items-start">
-                                                <span className="text-sm font-medium">Verse {annotation.verseNumber}</span>
-                                            </div>
-                                            <p className={`text-sm p-2 rounded ${getHighlightStyle(annotation.color)}`}>
-                                                &ldquo;{annotation.highlightedText}&rdquo;
-                                            </p>
-                                            <p className="text-sm whitespace-pre-wrap">{annotation.text}</p>
-                                            <p className="text-sm">{annotation.userName}</p>
-                                            {annotation.url && (
-                                                <a
-                                                    href={annotation.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-sm text-blue-600 hover:underline"
-                                                >
-                                                    View Reference
-                                                </a>
-                                            )}
-                                            {annotation.photoUrl && (
-                                                <Image
-                                                    src={annotation.photoUrl}
-                                                    alt="Annotation"
-                                                    className="w-full h-32 object-cover rounded"
-                                                />
-                                            )}
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                            )}
-                        </div>
+                        {renderAnnotationPanel()}
                     </SheetContent>
                 </Sheet>
             </div>
@@ -438,7 +528,6 @@ export default function IntroReader({intro, initialAnnotations, currentUserId}: 
                 <AnnotationMenu
                     position={menuPosition}
                     onSave={handleAddAnnotation}
-                    selectedText={currentSelection?.text || ''}
                     onClose={handleCloseMenu}
                 />
             </div>
