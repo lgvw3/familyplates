@@ -22,7 +22,7 @@ export async function fetchAllAnnotations(skipAuth: boolean = false) {
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection("annotations");
+    const collection = db.collection("annotations_new");
 
     try {
         const results = await collection.find<Annotation>({}).toArray();
@@ -62,7 +62,7 @@ export async function fetchRecentAnnotations() {
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection("annotations");
+    const collection = db.collection("annotations_new");
 
     try {
         const results = await collection.find<Annotation>({}).sort({ createdAt: -1}).limit(10).toArray();
@@ -102,7 +102,7 @@ export async function fetchMoreAnnotations(lastAnnotation: Annotation, limit: nu
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection("annotations");
+    const collection = db.collection("annotations_new");
 
     try {
         const results = await collection.find<Annotation>({ createdAt: { $lt: lastAnnotation.createdAt } })
@@ -149,7 +149,7 @@ export async function fetchAnnotationsByChapter(book: string, chapter: number) {
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection("annotations");
+    const collection = db.collection("annotations_new");
 
     try {
         const results = await collection.find<Annotation>({bookId: book, chapterNumber: chapter}).toArray();
@@ -186,7 +186,7 @@ export async function fetchAnnotationById(annotationId: string, skipAuth: boolea
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection("annotations");
+    const collection = db.collection("annotations_new");
 
     try {
         const results = await collection.findOne<Annotation>(
@@ -238,7 +238,7 @@ export async function fetchAnnotationsByUser(userId: number, skipAuth: boolean =
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection("annotations");
+    const collection = db.collection("annotations_new");
 
     try {
         const results = await collection.find<Annotation>({ userId: userId }).toArray();

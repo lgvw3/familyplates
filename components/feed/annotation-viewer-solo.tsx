@@ -165,7 +165,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                 await navigator.share({
                     title: `Annotation by ${author.name}`,  // Descriptive title
                     text: !annotation.unboundAnnotation 
-                        ? `"${annotation.highlightedText}" - ${annotation.bookId.replaceAll('-', ' ')} ${annotation.chapterNumber}:${annotation.verseNumber}`
+                        ? `"${annotation.highlightedText}" - ${annotation.bookId.replaceAll('-', ' ')} ${annotation.chapterNumber}:${annotation.verseNumbers[0]}${(annotation.verseNumbers.length > 1 ? `-${annotation.verseNumbers[annotation.verseNumbers.length - 1]}` : '')}`
                         : annotation.text,  // Descriptive text
                     url: url,  // Only share the URL
                 });
@@ -223,7 +223,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                     <CardDescription>
                                         {
                                             !annotation.unboundAnnotation ?
-                                            <>on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • </> 
+                                            <>on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumbers[0]}${(annotation.verseNumbers.length > 1 ? `-${annotation.verseNumbers[annotation.verseNumbers.length - 1]}` : '')}`} • </> 
                                             : null
                                         }
                                         {getPostDate(new Date(annotation.createdAt))}
@@ -253,7 +253,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                 <CardDescription>
                                     {
                                         !annotation.unboundAnnotation ?
-                                        <>on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • </> 
+                                        <>on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumbers[0]}${(annotation.verseNumbers.length > 1 ? `-${annotation.verseNumbers[annotation.verseNumbers.length - 1]}` : '')}`} • </> 
                                         : null
                                     }
                                     {getPostDate(new Date(annotation.createdAt))}
@@ -369,7 +369,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                 !annotation.unboundAnnotation ?
                                 <Link 
                                     className={cn(buttonVariants({variant: 'ghost', size: 'sm'}), "gap-2")}
-                                    href={`/book/${encodeURIComponent(annotation.bookId)}/chapter/chapter_${annotation.chapterNumber}/#verse-${annotation.verseNumber}`}
+                                    href={`/book/${encodeURIComponent(annotation.bookId)}/chapter/chapter_${annotation.chapterNumber}/#verse-${annotation.verseNumbers[0]}`}
                                 >
                                         <ExternalLinkIcon className="h-4 w-4" />
                                         <span>View in Context</span>

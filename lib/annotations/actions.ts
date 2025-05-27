@@ -13,7 +13,8 @@ import { ObjectId, UpdateResult } from "mongodb";
 import { sendNotificationToOfflineUsers } from "../push-notifications/actions";
 
 const zAnnotation = z.object({
-    verseNumber: z.number(),
+    startIndex: z.number(),
+    endIndex: z.number(),
     bookId: z.string(),
     chapterNumber: z.number(),
     text: z.string(),
@@ -22,7 +23,8 @@ const zAnnotation = z.object({
     color: z.enum(['yellow', 'green', 'blue', 'purple', 'pink']),
     url: z.string().optional(),
     photoUrl: z.string().optional(),
-    unboundAnnotation: z.boolean().optional()
+    unboundAnnotation: z.boolean().optional(),
+    verseNumbers: z.array(z.number())
 })
 
 export async function saveAnnotation(annotation: Annotation) {
@@ -58,17 +60,19 @@ export async function saveAnnotation(annotation: Annotation) {
         };
     }
 
-    const {verseNumber, chapterNumber, bookId, text, highlightedText, type, color, url, photoUrl, unboundAnnotation} = validatedFields.data
+    const {startIndex, endIndex, verseNumbers, bookId, chapterNumber, text, highlightedText, type, color, url, photoUrl, unboundAnnotation} = validatedFields.data
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection("annotations");
+    const collection = db.collection("annotations_new");
 
     const newAnnotation: Annotation = {
         _id: null,
-        verseNumber: verseNumber,
-        chapterNumber: chapterNumber,
+        startIndex: startIndex,
+        endIndex: endIndex,
         bookId: bookId,
+        verseNumbers: verseNumbers,
+        chapterNumber: chapterNumber,
         text: text,
         highlightedText: highlightedText,
         type: type,
@@ -96,7 +100,7 @@ export async function saveAnnotation(annotation: Annotation) {
             try {
                 //real time
                 const redisPub = new redis(process.env.KV_URL ?? '');
-                await redisPub.publish("annotations", JSON.stringify({
+                await redisPub.publish("annotations_new", JSON.stringify({
                     ...annotationData, 
                     _id: result.insertedId.toString()
                 }));
@@ -157,7 +161,7 @@ export async function updateAnnotation(annotationId: string, editedText: string)
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection("annotations");
+    const collection = db.collection("annotations_new");
 
 
     // Save annotation to the database
@@ -223,7 +227,7 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection<Annotation>("annotations");
+    const collection = db.collection<Annotation>("annotations_new");
 
     const newComment: AnnotationComment = {
         _id: new ObjectId(),
@@ -309,7 +313,7 @@ export async function updateLikeStatusOfComment(currentUserId: number, annotatio
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection<Annotation>("annotations");
+    const collection = db.collection<Annotation>("annotations_new");
 
     const updatedLike: AnnotationLike = {
         _id: new ObjectId(),

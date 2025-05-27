@@ -116,7 +116,7 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                             <CardDescription>
                                 {
                                     !annotation.unboundAnnotation ?
-                                    <>on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumber}`} • </> 
+                                    <>on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumbers[0]}${(annotation.verseNumbers.length > 1 ? `-${annotation.verseNumbers[annotation.verseNumbers.length - 1]}` : '')}`} • </> 
                                     : null
                                 }
                                 {getPostDate()}
@@ -171,7 +171,7 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                                 onClick={(e) => {
                                     e.preventDefault()
                                     e.stopPropagation()
-                                    router.push(`/book/${encodeURIComponent(annotation.bookId)}/chapter/chapter_${annotation.chapterNumber}/#verse-${annotation.verseNumber}`)
+                                    router.push(`/book/${encodeURIComponent(annotation.bookId)}/chapter/chapter_${annotation.chapterNumber}/#verse-${annotation.verseNumbers[0]}`)
                                 }}
                             >
                                     <ExternalLinkIcon className="h-4 w-4" />

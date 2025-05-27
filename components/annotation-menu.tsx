@@ -21,19 +21,17 @@ import { LinkIcon, StickyNoteIcon, XIcon, ImageIcon } from 'lucide-react'
 
 interface AnnotationMenuProps {
   position: { x: number; y: number; width?: number } | null;
-  selectedText: string;
   onClose: () => void;
   onSave: (annotation: {
-    selectedText: string,
+    text: string;
     type: AnnotationType;
     color: HighlightColor;
-    text: string;
     url?: string;
     photoUrl?: string;
   }) => void;
 }
 
-export function AnnotationMenu({ position, selectedText, onClose, onSave }: AnnotationMenuProps) {
+export function AnnotationMenu({ position, onClose, onSave }: AnnotationMenuProps) {
   const [type, setType] = useState<AnnotationType>('note')
   const [color, setColor] = useState<HighlightColor>('yellow')
   const [text, setText] = useState('')
@@ -44,7 +42,6 @@ export function AnnotationMenu({ position, selectedText, onClose, onSave }: Anno
 
   const handleSave = () => {
     onSave({
-      selectedText,
       type,
       color,
       text,
@@ -57,15 +54,17 @@ export function AnnotationMenu({ position, selectedText, onClose, onSave }: Anno
 
   return (
     <Card
-      className="fixed z-50 w-[calc(100vw-6rem)] md:w-80 overflow-auto"
+      className="fixed bottom-0 left-0 right-0 z-50 w-full md:w-80 md:left-1/2 md:-translate-x-1/2 overflow-auto"
       style={{
-        top: `${position.y}px`,
-        left: position.width ? 
-          `${Math.min(position.x, window.innerWidth - (position.width + 32))}px` : 
-          `${Math.min(position.x, window.innerWidth - 320)}px`,
+        maxHeight: '80vh',
+        boxShadow: '0 -4px 6px -1px rgb(0 0 0 / 0.1)',
+        transform: `translateY(${position ? '0' : '100%'})`,
+        transition: 'transform 300ms ease-in-out'
       }}
     >
       <CardContent className="p-3 space-y-4">
+        <div className="w-12 h-1 bg-gray-200 rounded-full mx-auto mb-2 md:hidden" />
+
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
             <Button

@@ -49,7 +49,9 @@ export type TextStyle = 'underline' | 'bold' | 'italic' | 'none';
 
 export interface Annotation {
   _id: ObjectId | string | null;
-  verseNumber: number,
+  startIndex: number;
+  endIndex: number;
+  verseNumbers: number[],
   chapterNumber: number,
   bookId: string,
   text: string;
