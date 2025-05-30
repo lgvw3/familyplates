@@ -7,10 +7,11 @@ import { Textarea } from "@/components/chat/textarea";
 import ChatStarter from "@/components/chat/chat-starter";
 import { Messages } from "@/components/chat/messages";
 import { toast } from "sonner";
+import { saveChatMessages } from "@/lib/chat/actions";
 
 export default function Chat() {
   const [selectedModel, setSelectedModel] = useState<modelID>(defaultModel);
-  const { messages, input, setInput, handleInputChange, handleSubmit, status, stop } =
+  const { messages, input, setInput, handleInputChange, handleSubmit, status, stop, id } =
     useChat({
       maxSteps: 5,
       body: {
@@ -23,6 +24,9 @@ export default function Chat() {
             : "An error occured, please try again later.",
           { position: "top-center", richColors: true },
         );
+      },
+      onFinish: async () => {
+        await saveChatMessages(messages, id);
       },
     });
 
