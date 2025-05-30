@@ -193,7 +193,7 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
         
         // Walk through the DOM to find the absolute position
         const walker = document.createTreeWalker(
-          document.querySelector('.text-lg') as Node,
+          document.querySelector('.chapter-text') as Node,
           NodeFilter.SHOW_TEXT,
           null
         );
@@ -284,6 +284,11 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
     window.getSelection()?.removeAllRanges();
   };
 
+  const isNumber = (char: string) => {
+    const code = char.charCodeAt(0);
+    return code >= 48 && code <= 57; // ASCII codes for '0' to '9'
+  };
+
   const renderChapterText = () => {
     // Combine all verses into one text, including verse numbers and proper spacing
     const fullText = chapter.verses.map(verse => 
@@ -297,12 +302,10 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
     // Mark the start and end of each annotation
     sortedAnnotations.forEach(annotation => {
       const highlightClass = getHighlightStyle(annotation.color);
-      // Mark the start of the annotation
       annotationMap.set(annotation.startIndex, { 
         class: highlightClass, 
         id: annotation._id?.toString() || 'temp'
       });
-      // Mark the end of the annotation with a special marker
       annotationMap.set(annotation.endIndex, { class: 'end', id: 'end' });
     });
 
@@ -314,9 +317,48 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
 
     for (let i = 0; i < fullText.length; i++) {
       const annotationInfo = annotationMap.get(i);
-      
+
+      // Handle verse numbers
+      if (isNumber(fullText[i])) {
+        // If we have accumulated text, add it to elements first
+        if (currentText) {
+          elements.push(
+            <span 
+              key={`text-${elementKey++}`} 
+              className={stack[stack.length - 1]?.class || ''}
+              data-annotation-id={stack[stack.length - 1]?.id}
+            >
+              {currentText}
+            </span>
+          );
+          currentText = '';
+        }
+
+        // Collect the verse number
+        let verseNumber = fullText[i];
+        while (i + 1 < fullText.length && isNumber(fullText[i + 1])) {
+          verseNumber += fullText[i + 1];
+          i++;
+        }
+
+        // Add the verse number span with current annotation class
+        elements.push(
+          <span 
+            key={`verse-number-${elementKey++}`} 
+            className={`verse ${stack[stack.length - 1]?.class || ''}`}
+            data-verse-id={verseNumber}
+            id={`verse-${verseNumber}`}
+            data-annotation-id={stack[stack.length - 1]?.id}
+          >
+            {verseNumber}&nbsp;
+          </span>
+        );
+        i++; // Move past the space after the verse number
+        continue;
+      }
+
+      // Handle annotations
       if (annotationInfo) {
-        // If we have accumulated text, add it to elements
         if (currentText) {
           elements.push(
             <span 
@@ -331,10 +373,8 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
         }
 
         if (annotationInfo.class === 'end') {
-          // Remove the last annotation from the stack
           stack.pop();
         } else {
-          // Add the new annotation to the stack
           stack.push(annotationInfo);
         }
       }
@@ -363,7 +403,7 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
       return (
         <div className="relative text-container" ref={containerRef}>
           <div 
-            className="text-lg leading-relaxed font-serif pr-4 whitespace-pre-line"
+            className="text-lg leading-relaxed font-serif pr-4 whitespace-pre-line chapter-text"
             onMouseUp={handleTextSelection}
             onTouchEnd={(e) => {
               e.preventDefault();
@@ -428,7 +468,7 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
     return (
       <div className="relative text-container" ref={containerRef}>
         <div 
-          className="text-lg leading-relaxed font-serif pr-4 whitespace-pre-line"
+          className="text-lg leading-relaxed font-serif pr-4 whitespace-pre-line chapter-text"
           onMouseUp={handleTextSelection}
           onTouchEnd={(e) => {
             e.preventDefault();
@@ -481,8 +521,8 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
         const verseElement = document.querySelector(hash);
         if (verseElement) {
           verseElement.classList.add(
-            "bg-yellow-200",
-            "dark:bg-yellow-800",
+            "bg-yellow-100",
+            "dark:bg-yellow-900",
             "transition-colors",
             "duration-1000",
             "ease-in-out",
@@ -493,7 +533,7 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
           setTimeout(() => {
             verseElement.classList.add("opacity-0");
             setTimeout(() => {
-              verseElement.classList.remove("bg-yellow-200", "dark:bg-yellow-800", "opacity-0");
+              verseElement.classList.remove("bg-yellow-100", "dark:bg-yellow-900", "opacity-0");
             }, 1000); // Wait for fade-out to finish
           }, 2000);
           const offset = 80
