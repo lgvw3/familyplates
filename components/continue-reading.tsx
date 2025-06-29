@@ -33,7 +33,7 @@ export function ContinueReading({bookmark, chapterData, progress}: {
                     {
                         bookmark ?
                         <div className="space-y-2">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
                                 <p className="font-medium">{toTitleCase(bookmark.bookId.replaceAll('-', ' '))} - Chapter {bookmark?.chapterNumber}</p>
                                 <span className="text-sm text-muted-foreground">
                                     Verse {bookmark?.verseNumber} of {chapterData?.verses.length}
