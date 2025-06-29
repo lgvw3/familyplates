@@ -399,7 +399,7 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
     if (currentSelection) {
       const tempHighlightClass = 'bg-blue-100 dark:bg-blue-900';
       const selectedText = fullText.substring(currentSelection.startIndex, currentSelection.endIndex);
-      
+      let currentRenderIndex = 0;
       return (
         <div className="relative text-container" ref={containerRef}>
           <div 
@@ -412,7 +412,7 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
           >
             {elements.map((element) => {
               // If this element contains the selection, split it and add the highlight
-              if (element.props.children.includes(selectedText)) {
+              if (currentRenderIndex >= currentSelection.startIndex && currentRenderIndex <= currentSelection.endIndex && element.props.children.includes(selectedText)) {
                 const text = element.props.children as string;
                 const before = text.substring(0, text.indexOf(selectedText));
                 const after = text.substring(text.indexOf(selectedText) + selectedText.length);
@@ -425,6 +425,7 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
                   </span>
                 );
               }
+              currentRenderIndex += element.props.children.length;
               return element;
             })}
           </div>
