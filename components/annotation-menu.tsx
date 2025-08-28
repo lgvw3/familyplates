@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input"
 import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea"
 import { Label } from "@/components/ui/label"
 import { AnnotationType, HighlightColor } from '../types/scripture'
-import { LinkIcon, StickyNoteIcon, XIcon, ImageIcon } from 'lucide-react'
+import { LinkIcon, StickyNoteIcon, XIcon, ImageIcon, MessageSquareIcon } from 'lucide-react'
 
 interface AnnotationMenuProps {
   position: { x: number; y: number; width?: number } | null;
@@ -29,9 +29,27 @@ interface AnnotationMenuProps {
     url?: string;
     photoUrl?: string;
   }) => void;
+  onAskQuestion?: (selectedText: string, context: {
+    book: string;
+    chapter: number;
+    verseNumbers: number[];
+  }) => void;
+  selectedText?: string;
+  context?: {
+    book: string;
+    chapter: number;
+    verseNumbers: number[];
+  };
 }
 
-export function AnnotationMenu({ position, onClose, onSave }: AnnotationMenuProps) {
+export function AnnotationMenu({ 
+  position, 
+  onClose, 
+  onSave, 
+  onAskQuestion,
+  selectedText,
+  context 
+}: AnnotationMenuProps) {
   const [type, setType] = useState<AnnotationType>('note')
   const [color, setColor] = useState<HighlightColor>('yellow')
   const [text, setText] = useState('')
@@ -50,6 +68,12 @@ export function AnnotationMenu({ position, onClose, onSave }: AnnotationMenuProp
     })
     setText('')
     onClose()
+  }
+
+  const handleAskQuestion = () => {
+    if (onAskQuestion && selectedText && context) {
+      onAskQuestion(selectedText, context)
+    }
   }
 
   return (
@@ -93,6 +117,27 @@ export function AnnotationMenu({ position, onClose, onSave }: AnnotationMenuProp
             <XIcon className="h-4 w-4" />
           </Button>
         </div>
+
+        {/* Ask Question Button - Only show if we have selected text and context */}
+        {selectedText && context && onAskQuestion && (
+          <div className="space-y-2">
+            <Button 
+              onClick={handleAskQuestion} 
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              variant="default"
+            >
+              <MessageSquareIcon className="h-4 w-4 mr-2" />
+              Ask AI about this text
+            </Button>
+            <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950 p-2 rounded">
+              <p className="font-medium">Selected text:</p>
+              <p className="italic">&ldquo;{selectedText}&rdquo;</p>
+              <p className="mt-1">
+                {context.book} {context.chapter}:{context.verseNumbers.join(', ')}
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label>Highlight Color</Label>

@@ -15,6 +15,9 @@ import { useWebSocket } from '@/hooks/use-websockets'
 import { debounce } from 'lodash';
 import { saveBookmark } from '@/lib/reading/action'
 import { useHeader } from './header-context'
+import { SwipeableContainer } from './swipeable-container'
+import ContextualChat from './chat/contextual-chat'
+import { motion, AnimatePresence } from 'motion/react'
 
 interface SelectionInfo {
   text: string;
@@ -94,6 +97,15 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
   const positionsRef = useRef<{[key: string]: number}>({});
   //const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [currentView, setCurrentView] = useState<'reading' | 'chat'>('reading')
+  const [chatContext, setChatContext] = useState<{
+    selectedText: string;
+    context: {
+      book: string;
+      chapter: number;
+      verseNumbers: number[];
+    };
+  } | null>(null)
 
   // Sort annotations by startIndex to ensure proper rendering order
   const sortedAnnotations = [...annotations].sort((a, b) => a.startIndex - b.startIndex);
@@ -713,137 +725,217 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
     return () => document.removeEventListener('click', handleAnnotationClick);
   }, [annotations]);
 
+  const handleAskQuestion = (selectedText: string, context: {
+    book: string;
+    chapter: number;
+    verseNumbers: number[];
+  }) => {
+    setChatContext({
+      selectedText,
+      context
+    });
+    setCurrentView('chat');
+    setMenuPosition(null);
+    setCurrentSelection(null);
+    window.getSelection()?.removeAllRanges();
+  };
+
+  const handleBackToReading = () => {
+    setCurrentView('reading');
+    setChatContext(null);
+  };
+
+  const handleAskAnotherQuestion = () => {
+    if (chatContext) {
+      // Reset the chat context to trigger a new conversation
+      setChatContext({
+        ...chatContext,
+        selectedText: chatContext.selectedText // This will trigger a re-render
+      });
+    }
+  };
+
   return (
-    <div>
-      <div className="relative flex items-center mx-4 mt-4">
-        <Breadcrumb className='flex-grow'>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/book/the-first-book-of-nephi/chapter/chapter_1">Book of Mormon</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink href={`/book/${encodeURIComponent(book.title.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_1`}>{book.title}</BreadcrumbLink>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
+    <SwipeableContainer
+      onSwipeLeft={currentView === 'chat' ? handleBackToReading : undefined}
+      onSwipeRight={currentView === 'reading' && chatContext ? () => setCurrentView('chat') : undefined}
+      currentView={currentView}
+    >
+      <AnimatePresence mode="wait">
+        {currentView === 'reading' ? (
+          <motion.div
+            key="reading"
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="w-full h-full"
+          >
+            <div>
+              <div className="relative flex items-center mx-4 mt-4">
+                <Breadcrumb className='flex-grow'>
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink href="/book/the-first-book-of-nephi/chapter/chapter_1">Book of Mormon</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbLink href={`/book/${encodeURIComponent(book.title.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_1`}>{book.title}</BreadcrumbLink>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
+              </div>
 
 
-      <div className="container mx-auto p-4 space-y-6 bg-background text-foreground">
-        <div className="grid md:grid-cols-[1fr,300px] gap-6">
-          <div className="space-y-6">
-            <div className="space-y-4">
-              {
-                isFirstChapter && (
-                  <>
-                    <h1 className="text-3xl font-bold">{book.title}</h1>
-                    <h2 className="text-xl font-bold">{book.subtitle}</h2>
-                    <h3 className="text-lg font-serif">{book.intro}</h3>
-                  </>
-                )}
-              {
-                chapter.chapter_heading && (
-                  <p className='font-serif'>{chapter.chapter_heading}</p>
-                )
-              }
+              <div className="container mx-auto p-4 space-y-6 bg-background text-foreground">
+                <div className="grid md:grid-cols-[1fr,300px] gap-6">
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      {
+                        isFirstChapter && (
+                          <>
+                            <h1 className="text-3xl font-bold">{book.title}</h1>
+                            <h2 className="text-xl font-bold">{book.subtitle}</h2>
+                            <h3 className="text-lg font-serif">{book.intro}</h3>
+                          </>
+                        )}
+                      {
+                        chapter.chapter_heading && (
+                          <p className='font-serif'>{chapter.chapter_heading}</p>
+                        )
+                      }
 
-              <h4
-                ref={headingRef}
-                className='text-muted-foreground text-center font-serif'
-              >{chapter.chapter_title}</h4>
-              <p className="text-muted-foreground font-serif">{chapter.summary}</p>
-            </div>
+                      <h4
+                        ref={headingRef}
+                        className='text-muted-foreground text-center font-serif'
+                      >{chapter.chapter_title}</h4>
+                      <p className="text-muted-foreground font-serif">{chapter.summary}</p>
+                    </div>
 
-            <div className="space-y-4">
-              {renderChapterText()}
-            </div>
+                    <div className="space-y-4">
+                      {renderChapterText()}
+                    </div>
 
-            {/* Chapter Navigation */}
-            <div className="flex justify-between pt-4">
-              {
-                !isFirstChapter ?
-                  <Link
-                    className={buttonVariants({ 'variant': 'outline' })}
-                    href={`/book/${encodeURIComponent(book.title.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_${chapterNumber - 1}`}
-                  >
-                    <ChevronLeftIcon className="h-4 w-4 mr-2" />
-                    Previous Chapter
-                  </Link>
-                  : previousBook ?
-                    <Link
-                      className={buttonVariants({ 'variant': 'outline' })}
-                      href={`/book/${encodeURIComponent(previousBook.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_${previousBookLastChapter}`}
+                    {/* Chapter Navigation */}
+                    <div className="flex justify-between pt-4">
+                      {
+                        !isFirstChapter ?
+                          <Link
+                            className={buttonVariants({ 'variant': 'outline' })}
+                            href={`/book/${encodeURIComponent(book.title.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_${chapterNumber - 1}`}
+                          >
+                            <ChevronLeftIcon className="h-4 w-4 mr-2" />
+                            Previous Chapter
+                          </Link>
+                          : previousBook ?
+                            <Link
+                              className={buttonVariants({ 'variant': 'outline' })}
+                              href={`/book/${encodeURIComponent(previousBook.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_${previousBookLastChapter}`}
+                            >
+                              <ChevronLeftIcon className="h-4 w-4 ml-2" />
+                              Previous Book
+                            </Link>
+                            :
+                            <Link
+                              className={buttonVariants({ 'variant': 'outline' })}
+                              href={'/intro/brief-explanation-about-the-book-of-mormon'}
+                            >
+                              <ChevronLeftIcon className="h-4 w-4 ml-2" />
+                              Previous
+                            </Link>
+                      }
+                      {
+                        numberOfChaptersInBook > chapterNumber ?
+                          <Link
+                            className={buttonVariants({ 'variant': 'outline' })}
+                            href={`/book/${encodeURIComponent(book.title.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_${chapterNumber + 1}`}
+                          >
+                            Next Chapter
+                            <ChevronRightIcon className="h-4 w-4 ml-2" />
+                          </Link>
+                          : nextBook ?
+                            <Link
+                              className={buttonVariants({ 'variant': 'outline' })}
+                              href={`/book/${encodeURIComponent(nextBook.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_1`}
+                            >
+                              Next Book
+                              <ChevronRightIcon className="h-4 w-4 ml-2" />
+                            </Link>
+                            :
+                            <>The End</>
+                      }
+                    </div>
+                  </div>
+
+                  <div className="hidden md:block" id='annotations-panel'>
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h2 className="font-semibold">Annotations</h2>
+                      {renderAnnotationPanel()}
+                    </div>
+                  </div>
+
+                  {/* Annotations Panel */}
+                  <Sheet open={annotationsOpen} onOpenChange={setAnnotationsOpen}>
+                    <Button
+                      variant="outline"
+                      className="w-full md:hidden mb-4"
+                      onClick={() => setAnnotationsOpen(true)}
                     >
-                      <ChevronLeftIcon className="h-4 w-4 ml-2" />
-                      Previous Book
-                    </Link>
-                    :
-                    <Link
-                      className={buttonVariants({ 'variant': 'outline' })}
-                      href={'/intro/brief-explanation-about-the-book-of-mormon'}
-                    >
-                      <ChevronLeftIcon className="h-4 w-4 ml-2" />
-                      Previous
-                    </Link>
-              }
-              {
-                numberOfChaptersInBook > chapterNumber ?
-                  <Link
-                    className={buttonVariants({ 'variant': 'outline' })}
-                    href={`/book/${encodeURIComponent(book.title.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_${chapterNumber + 1}`}
-                  >
-                    Next Chapter
-                    <ChevronRightIcon className="h-4 w-4 ml-2" />
-                  </Link>
-                  : nextBook ?
-                    <Link
-                      className={buttonVariants({ 'variant': 'outline' })}
-                      href={`/book/${encodeURIComponent(nextBook.toLowerCase().replaceAll(' ', '-'))}/chapter/chapter_1`}
-                    >
-                      Next Book
-                      <ChevronRightIcon className="h-4 w-4 ml-2" />
-                    </Link>
-                    :
-                    <>The End</>
-              }
+                      View Annotations
+                    </Button>
+                    <SheetContent className='overflow-y-auto'>
+                      <SheetHeader>
+                        <SheetTitle>Annotations</SheetTitle>
+                      </SheetHeader>
+                      {renderAnnotationPanel()}
+                    </SheetContent>
+                  </Sheet>
+                </div>
+              </div>
+
+              {/* Annotation Menu */}
+              <div id="annotation-menu">
+                <AnnotationMenu
+                  position={menuPosition}
+                  onSave={handleAddAnnotation}
+                  onClose={handleCloseMenu}
+                  onAskQuestion={handleAskQuestion}
+                  selectedText={currentSelection?.text}
+                  context={currentSelection ? {
+                    book: book.title,
+                    chapter: chapterNumber,
+                    verseNumbers: calculateVersePositions(chapter.verses)
+                      .filter(pos => 
+                        (currentSelection.startIndex >= pos.start && currentSelection.startIndex < pos.end) ||
+                        (currentSelection.endIndex > pos.start && currentSelection.endIndex <= pos.end) ||
+                        (currentSelection.startIndex <= pos.start && currentSelection.endIndex >= pos.end)
+                      )
+                      .map(pos => pos.number)
+                  } : undefined}
+                />
+              </div>
             </div>
-          </div>
-
-          <div className="hidden md:block" id='annotations-panel'>
-            <div className="border rounded-lg p-4 space-y-4">
-              <h2 className="font-semibold">Annotations</h2>
-              {renderAnnotationPanel()}
-            </div>
-          </div>
-
-          {/* Annotations Panel */}
-          <Sheet open={annotationsOpen} onOpenChange={setAnnotationsOpen}>
-            <Button
-              variant="outline"
-              className="w-full md:hidden mb-4"
-              onClick={() => setAnnotationsOpen(true)}
-            >
-              View Annotations
-            </Button>
-            <SheetContent className='overflow-y-auto'>
-              <SheetHeader>
-                <SheetTitle>Annotations</SheetTitle>
-              </SheetHeader>
-              {renderAnnotationPanel()}
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-
-      {/* Annotation Menu */}
-      <div id="annotation-menu">
-        <AnnotationMenu
-          position={menuPosition}
-          onSave={handleAddAnnotation}
-          onClose={handleCloseMenu}
-        />
-      </div>
-    </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="chat"
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="w-full h-full"
+          >
+            {chatContext && (
+              <ContextualChat
+                selectedText={chatContext.selectedText}
+                context={chatContext.context}
+                onBackToReading={handleBackToReading}
+                onAskAnotherQuestion={handleAskAnotherQuestion}
+              />
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </SwipeableContainer>
   )
 }
