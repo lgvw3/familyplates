@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { validateToken } from "../auth/utils";
-import clientPromise from "../mongodb";
+import { getValidatedClient } from "../mongodb";
 import { NotificationSubscription } from "./definitions";
 
 export async function fetchUserNotificationSubscription() {
@@ -17,7 +17,7 @@ export async function fetchUserNotificationSubscription() {
         return null
     }
 
-    const client = await clientPromise;
+    const client = await getValidatedClient();
     const db = client.db("main");
     const collection = db.collection("notificationSubscriptions");
 

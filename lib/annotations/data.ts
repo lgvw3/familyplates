@@ -1,11 +1,11 @@
 'use server'
 
 import { Annotation } from "@/types/scripture";
-import clientPromise from "../mongodb";
 import { cookies } from "next/headers";
 import { validateToken } from "../auth/utils";
 import { redirect } from "next/navigation";
 import { ObjectId } from "mongodb";
+import { getValidatedClient } from "../mongodb";
 
 export async function fetchAllAnnotations(skipAuth: boolean = false) {
     if (!skipAuth) {
@@ -20,7 +20,7 @@ export async function fetchAllAnnotations(skipAuth: boolean = false) {
         }
     }
 
-    const client = await clientPromise;
+    const client = await getValidatedClient();
     const db = client.db("main");
     const collection = db.collection("annotations_new");
 
@@ -60,7 +60,7 @@ export async function fetchRecentAnnotations() {
         return null
     }
 
-    const client = await clientPromise;
+    const client = await getValidatedClient();
     const db = client.db("main");
     const collection = db.collection("annotations_new");
 
@@ -100,7 +100,7 @@ export async function fetchMoreAnnotations(lastAnnotation: Annotation, limit: nu
         return null
     }
 
-    const client = await clientPromise;
+    const client = await getValidatedClient();
     const db = client.db("main");
     const collection = db.collection("annotations_new");
 
@@ -146,12 +146,11 @@ export async function fetchAnnotationsByChapter(book: string, chapter: number) {
         return null
     }
 
-
-    const client = await clientPromise;
-    const db = client.db("main");
-    const collection = db.collection("annotations_new");
-
     try {
+        const client = await getValidatedClient();
+        const db = client.db("main");
+        const collection = db.collection("annotations_new");
+
         const results = await collection.find<Annotation>({bookId: book, chapterNumber: chapter}).toArray();
 
         if (results) {
@@ -166,7 +165,7 @@ export async function fetchAnnotationsByChapter(book: string, chapter: number) {
             return null
         }
     } catch(error) {
-        console.error(error)
+        console.error('Error fetching annotations by chapter:', error)
         return null
     }
 }
@@ -184,7 +183,7 @@ export async function fetchAnnotationById(annotationId: string, skipAuth: boolea
         }
     }
 
-    const client = await clientPromise;
+    const client = await getValidatedClient();
     const db = client.db("main");
     const collection = db.collection("annotations_new");
 
@@ -239,7 +238,7 @@ export async function fetchAnnotationsByUser(userId: number, skipAuth: boolean =
         }
     }
 
-    const client = await clientPromise;
+    const client = await getValidatedClient();
     const db = client.db("main");
     const collection = db.collection("annotations_new");
 

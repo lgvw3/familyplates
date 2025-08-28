@@ -1,6 +1,6 @@
 'use server'
 
-import clientPromise from "../mongodb";
+import { getValidatedClient } from "../mongodb";
 import { cookies } from "next/headers";
 import { validateToken } from "../auth/utils";
 import { redirect } from "next/navigation";
@@ -25,7 +25,7 @@ export async function fetchBookmarkBySignedInUser() {
     }
 
 
-    const client = await clientPromise;
+    const client = await getValidatedClient();
     const db = client.db("main");
     const collection = db.collection("bookmarks");
 
