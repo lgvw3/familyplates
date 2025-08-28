@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "./button";
 import { ExpandIcon, XIcon } from "lucide-react";
@@ -48,7 +49,7 @@ export function AutoResizeTextarea({ maxHeight = 200, canGoFullScreen = true, ..
                         canGoFullScreen ?
                             <Button
                                 variant="ghost"
-                                size="sm"
+                                size="icon"
                                 className="absolute top-2 right-2 z-10"
                                 onClick={() => setIsFullScreen(true)}
                             >
@@ -67,32 +68,36 @@ export function AutoResizeTextarea({ maxHeight = 200, canGoFullScreen = true, ..
                             maxHeight: `${maxHeight}px`,
                             overflowY: "hidden",
                             resize: "none",
+                            paddingRight: canGoFullScreen ? "2.5rem" : undefined, // Add padding to prevent text overlap
                         }}
                     />
                 </div>
             ) : (
-                // Full-Window Mode
-                <div className="fixed inset-0 z-50 flex flex-col bg-white p-6">
-                    {/* Close Button */}
-                    <div className="flex justify-end">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setIsFullScreen(false)}
-                        >
-                            <XIcon size={24} />
-                        </Button>
-                    </div>
+                // Full-Window Mode - Rendered via Portal
+                createPortal(
+                    <div className="fixed inset-0 z-[9999] flex flex-col bg-white p-6">
+                        {/* Close Button */}
+                        <div className="flex justify-end">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsFullScreen(false)}
+                            >
+                                <XIcon size={24} />
+                            </Button>
+                        </div>
 
-                    {/* Full-Screen Textarea */}
-                    <Textarea
-                        {...props}
-                        ref={textareaRef}
-                        autoFocus
-                        className="flex-1 text-lg p-4 w-full h-full"
-                        style={{ resize: "none", overflowY: "auto" }}
-                    />
-                </div>
+                        {/* Full-Screen Textarea */}
+                        <Textarea
+                            {...props}
+                            ref={textareaRef}
+                            autoFocus
+                            className="flex-1 text-lg p-4 w-full h-full"
+                            style={{ resize: "none", overflowY: "auto" }}
+                        />
+                    </div>,
+                    document.body
+                )
             )}
         </>
     );
