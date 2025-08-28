@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, JSX } from 'react'
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { ChevronLeftIcon, ChevronRightIcon, ImageIcon, LinkIcon, StickyNoteIcon, MessageSquareIcon, MessageCircleIcon } from 'lucide-react'
 import { Annotation, AnnotationType, Book, Chapter, Verse } from '@/types/scripture'
 import Image from 'next/image'
@@ -87,6 +87,7 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
   const { annotations, addAnnotation, notification, setNotification } = useWebSocket(initialAnnotations, false, book.title.toLowerCase().replaceAll(' ', '-'), chapterNumber)
   const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [annotationsOpen, setAnnotationsOpen] = useState(false)
+  const [currentAnnotationId, setCurrentAnnotationId] = useState<string | null>(null)
   const { setHeader } = useHeader();
   const [showStickyHeader, setShowStickyHeader] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -448,12 +449,14 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
                   onClick={(e) => {
                     e.stopPropagation();
                     if (!('ontouchstart' in window)) {
+                      setCurrentAnnotationId(annotation._id!.toString())
                       setAnnotationsOpen(true);
                     }
                   }}
                   onTouchStart={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
+                    setCurrentAnnotationId(annotation._id!.toString())
                     setAnnotationsOpen(true);
                   }}
                 >
@@ -497,12 +500,14 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
                 onClick={(e) => {
                   e.stopPropagation();
                   if (!('ontouchstart' in window)) {
+                    setCurrentAnnotationId(annotation._id!.toString())
                     setAnnotationsOpen(true);
                   }
                 }}
                 onTouchStart={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
+                  setCurrentAnnotationId(annotation._id!.toString())
                   setAnnotationsOpen(true);
                 }}
               >
@@ -645,7 +650,7 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
     }
 
     // Sort annotations by their position in the text
-    const sortedAnnotations = [...annotations].sort((a, b) => a.startIndex - b.startIndex);
+    const sortedAnnotations = [...annotations].filter(a => currentAnnotationId ? a._id?.toString() === currentAnnotationId : true).sort((a, b) => a.startIndex - b.startIndex);
 
     return (
       <div className="space-y-4">
@@ -818,7 +823,10 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
           </div>
 
           {/* Annotations Panel */}
-          <Sheet open={annotationsOpen} onOpenChange={setAnnotationsOpen}>
+          <Sheet open={annotationsOpen} onOpenChange={(open) => {
+            setAnnotationsOpen(open)
+            setCurrentAnnotationId(null)
+          }}>
             <Button
               variant="outline"
               className="w-full md:hidden mb-4"
@@ -829,6 +837,9 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
             <SheetContent className='overflow-y-auto'>
               <SheetHeader>
                 <SheetTitle>Annotations</SheetTitle>
+                <SheetDescription className='sr-only'>
+                  Annotations for this chapter
+                </SheetDescription>
               </SheetHeader>
               {renderAnnotationPanel()}
             </SheetContent>
