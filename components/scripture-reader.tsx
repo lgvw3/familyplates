@@ -319,6 +319,28 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
     for (let i = 0; i < fullText.length; i++) {
       const annotationInfo = annotationMap.get(i);
 
+      // Handle annotations
+      if (annotationInfo) {
+        if (currentText) {
+          elements.push(
+            <span 
+              key={`text-${elementKey++}`} 
+              className={stack[stack.length - 1]?.class || ''}
+              data-annotation-id={stack[stack.length - 1]?.id}
+            >
+              {currentText}
+            </span>
+          );
+          currentText = '';
+        }
+
+        if (annotationInfo.class === 'end') {
+          stack.pop();
+        } else {
+          stack.push(annotationInfo);
+        }
+      }
+
       // Handle verse numbers
       if (isNumber(fullText[i])) {
         // If we have accumulated text, add it to elements first
@@ -356,28 +378,6 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
         );
         i++; // Move past the space after the verse number
         continue;
-      }
-
-      // Handle annotations
-      if (annotationInfo) {
-        if (currentText) {
-          elements.push(
-            <span 
-              key={`text-${elementKey++}`} 
-              className={stack[stack.length - 1]?.class || ''}
-              data-annotation-id={stack[stack.length - 1]?.id}
-            >
-              {currentText}
-            </span>
-          );
-          currentText = '';
-        }
-
-        if (annotationInfo.class === 'end') {
-          stack.pop();
-        } else {
-          stack.push(annotationInfo);
-        }
       }
 
       currentText += fullText[i];
