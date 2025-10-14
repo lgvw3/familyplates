@@ -2,7 +2,7 @@ import { Inter } from 'next/font/google'
 import { ThemeProvider } from "@/components/providers"
 
 import "@/app/globals.css"
-import { Metadata } from 'next';
+import { Metadata, Viewport } from 'next';
 import { cn } from '@/lib/utils';
 import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
@@ -15,6 +15,13 @@ export const metadata: Metadata = {
   title: "Family Plates",
   description: "Our own, Van Wagoner, small plates",
 };
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "hsl(0 0% 100%)" },        // :root --background
+    { media: "(prefers-color-scheme: dark)",  color: "hsl(20 14.3% 4.1%)" }     // .dark --background
+  ],
+}
 
 export default function RootLayout({
   children,

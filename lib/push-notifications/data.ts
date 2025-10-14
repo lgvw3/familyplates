@@ -3,8 +3,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { validateToken } from "../auth/utils";
-import { getValidatedClient } from "../mongodb";
 import { NotificationSubscription } from "./definitions";
+import clientPromise from "../mongodb";
 
 export async function fetchUserNotificationSubscription() {
     const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
@@ -17,7 +17,7 @@ export async function fetchUserNotificationSubscription() {
         return null
     }
 
-    const client = await getValidatedClient();
+    const client = await clientPromise;
     const db = client.db("main");
     const collection = db.collection("notificationSubscriptions");
 

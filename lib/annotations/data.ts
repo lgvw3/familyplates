@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { validateToken } from "../auth/utils";
 import { redirect } from "next/navigation";
 import { ObjectId } from "mongodb";
-import { getValidatedClient } from "../mongodb";
+import clientPromise from "../mongodb";
 
 export async function fetchAllAnnotations(skipAuth: boolean = false) {
     if (!skipAuth) {
@@ -20,7 +20,7 @@ export async function fetchAllAnnotations(skipAuth: boolean = false) {
         }
     }
 
-    const client = await getValidatedClient();
+    const client = await clientPromise;
     const db = client.db("main");
     const collection = db.collection("annotations_new");
 
@@ -60,7 +60,7 @@ export async function fetchRecentAnnotations() {
         return null
     }
 
-    const client = await getValidatedClient();
+    const client = await clientPromise;
     const db = client.db("main");
     const collection = db.collection("annotations_new");
 
@@ -100,7 +100,7 @@ export async function fetchMoreAnnotations(lastAnnotation: Annotation, limit: nu
         return null
     }
 
-    const client = await getValidatedClient();
+    const client = await clientPromise;
     const db = client.db("main");
     const collection = db.collection("annotations_new");
 
@@ -147,7 +147,7 @@ export async function fetchAnnotationsByChapter(book: string, chapter: number) {
     }
 
     try {
-        const client = await getValidatedClient();
+        const client = await clientPromise;
         const db = client.db("main");
         const collection = db.collection("annotations_new");
 
@@ -183,7 +183,7 @@ export async function fetchAnnotationById(annotationId: string, skipAuth: boolea
         }
     }
 
-    const client = await getValidatedClient();
+    const client = await clientPromise;
     const db = client.db("main");
     const collection = db.collection("annotations_new");
 
@@ -238,7 +238,7 @@ export async function fetchAnnotationsByUser(userId: number, skipAuth: boolean =
         }
     }
 
-    const client = await getValidatedClient();
+    const client = await clientPromise;
     const db = client.db("main");
     const collection = db.collection("annotations_new");
 
