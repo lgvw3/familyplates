@@ -11,6 +11,7 @@ export interface Chapter {
   chapter_title: string;
   chapter_heading: string;
   summary: string;
+  chapter_notes?: string;
   verses: Verse[];
 }
 

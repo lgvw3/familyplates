@@ -752,10 +752,12 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
                   <p className='font-serif'>{chapter.chapter_heading}</p>
                 )
               }
-
+              {chapter.chapter_notes && (
+                <p className="text-muted-foreground font-serif italic">{chapter.chapter_notes}</p>
+              )}
               <h4
                 ref={headingRef}
-                className='text-muted-foreground text-center font-serif'
+                className='text-center font-serif'
               >{chapter.chapter_title}</h4>
               <p className="text-muted-foreground font-serif">{chapter.summary}</p>
             </div>
