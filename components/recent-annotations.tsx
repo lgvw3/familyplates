@@ -64,15 +64,14 @@ function AnnotationCard({annotation, index, user, userMap, currentUserId, bookma
   }
 
 
-export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, chapterData, progress}: {
-    recentAnnotations: Annotation[],
+export function RecentAnnotations({ currentUserId, bookmark, chapterData, progress }: {
     currentUserId: number,
     bookmark: BookmarkedSpot | null,
     chapterData: Chapter | null | undefined,
     progress: number
 }) {
     const userMap = fetchUsersAsMap()
-    const { checkServerHealth, annotations, setAnnotations, addAnnotationsToBottomOfFeed, notification, setNotification } = useWebSocket(recentAnnotations, true) 
+    const { checkServerHealth, annotations, setAnnotations, addAnnotationsToBottomOfFeed, notification, setNotification } = useWebSocket([], true) 
     if (notification && notification.userId != currentUserId) {
         toast(`New ${notification.type} by ${notification.userName}`, {position: 'top-center'})
         setNotification(null)
@@ -92,19 +91,18 @@ export function RecentAnnotations({recentAnnotations, currentUserId, bookmark, c
           });
         };
 
-        const healthCheck = async() => {
-            const results = await checkServerHealth()
-            if (!results) {
-                const annotationResults = await fetchRecentAnnotations()
-                if (annotationResults) {
-                    setAnnotations(annotationResults)
-                }
+        checkServerHealth()
+
+        const fetchData = async() => {
+            const annotationResults = await fetchRecentAnnotations()
+            if (annotationResults) {
+                setAnnotations(annotationResults)
             }
         }
     
         window.addEventListener('resize', handleResize);
         handleResize()
-        healthCheck()
+        fetchData()
     
         // Cleanup the listener on unmount
         return () => window.removeEventListener('resize', handleResize);
