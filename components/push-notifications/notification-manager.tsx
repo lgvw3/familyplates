@@ -75,30 +75,25 @@ export default function NotificationManager() {
         await unsubscribeUser()
     }
    
-    if (!isSupported) {
+    if (!isSupported && !isLoading && !hideAlert && !subscription) {
         return (
-            hideAlert ?
-                null
-            :
-            (
-                <Alert>
-                    <Terminal className="h-4 w-4" />
-                    <AlertTitle className='flex items-center'>
-                        <div className='flex-grow'>
-                            Hi family!
-                        </div>
-                        <Button variant={'ghost'} size={'icon'} onClick={() => setHideAlert(true)}>
-                            <XIcon className='w-4 h-4' />
-                        </Button>
-                    </AlertTitle>
-                    <AlertDescription>
-                        <p className='pb-4'>
-                            You can download this by clicking the share button<ShareIcon className='w-4 h-4 mx-2 inline'/> and &ldquo;Add to Home Screen&rdquo;
-                        </p>
-                        <p>This will also let you get notifications when family members share insights! <LaughIcon className='w-4 h-4 inline-block' /></p>
-                    </AlertDescription>
-                </Alert>
-            )
+            <Alert>
+                <Terminal className="h-4 w-4" />
+                <AlertTitle className='flex items-center'>
+                    <div className='flex-grow'>
+                        Hi family!
+                    </div>
+                    <Button variant={'ghost'} size={'icon'} onClick={() => setHideAlert(true)}>
+                        <XIcon className='w-4 h-4' />
+                    </Button>
+                </AlertTitle>
+                <AlertDescription>
+                    <p className='pb-4'>
+                        You can download this by clicking the share button<ShareIcon className='w-4 h-4 mx-2 inline'/> and &ldquo;Add to Home Screen&rdquo;
+                    </p>
+                    <p>This will also let you get notifications when family members share insights! <LaughIcon className='w-4 h-4 inline-block' /></p>
+                </AlertDescription>
+            </Alert>
         )
     }
    
