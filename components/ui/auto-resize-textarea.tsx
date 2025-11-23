@@ -75,7 +75,7 @@ export function AutoResizeTextarea({ maxHeight = 200, canGoFullScreen = true, ..
             ) : (
                 // Full-Window Mode - Rendered via Portal
                 createPortal(
-                    <div className="fixed inset-0 z-[9999] flex flex-col bg-white p-6">
+                    <div className="fixed inset-0 z-[9999] flex flex-col p-6 bg-background">
                         {/* Close Button */}
                         <div className="flex justify-end">
                             <Button
