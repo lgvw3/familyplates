@@ -64,14 +64,15 @@ function AnnotationCard({annotation, index, user, userMap, currentUserId, bookma
   }
 
 
-export function RecentAnnotations({ currentUserId, bookmark, chapterData, progress }: {
+export function RecentAnnotations({ currentUserId, bookmark, chapterData, progress, recentAnnotations }: {
     currentUserId: number,
     bookmark: BookmarkedSpot | null,
     chapterData: Chapter | null | undefined,
-    progress: number
+    progress: number,
+    recentAnnotations: Annotation[] | null,
 }) {
     const userMap = fetchUsersAsMap()
-    const { checkServerHealth, annotations, setAnnotations, addAnnotationsToBottomOfFeed, notification, setNotification } = useWebSocket([], true) 
+    const { checkServerHealth, annotations, setAnnotations, addAnnotationsToBottomOfFeed, notification, setNotification } = useWebSocket(recentAnnotations ?? [], true) 
     if (notification && notification.userId != currentUserId) {
         toast(`New ${notification.type} by ${notification.userName}`, {position: 'top-center'})
         setNotification(null)
@@ -91,18 +92,25 @@ export function RecentAnnotations({ currentUserId, bookmark, chapterData, progre
           });
         };
 
-        checkServerHealth()
-
-        const fetchData = async() => {
-            const annotationResults = await fetchRecentAnnotations()
-            if (annotationResults) {
-                setAnnotations(annotationResults)
+        const dataCheck = async() => {
+            const serverHealth = await checkServerHealth()
+            if (!serverHealth) {
+                toast('Server health check failed', {position: 'top-center'})
+            }
+            else {
+                const fetchData = async() => {
+                    const annotationResults = await fetchRecentAnnotations()
+                    if (annotationResults) {
+                        setAnnotations(annotationResults)
+                    }
+                }
+                fetchData()
             }
         }
     
         window.addEventListener('resize', handleResize);
         handleResize()
-        fetchData()
+        dataCheck()
     
         // Cleanup the listener on unmount
         return () => window.removeEventListener('resize', handleResize);

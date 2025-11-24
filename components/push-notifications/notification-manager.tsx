@@ -103,7 +103,7 @@ export default function NotificationManager() {
                 <Button onClick={unsubscribeFromPush}>Unsubscribe</Button>
             )}
             
-            { !isLoading && !hideAlert && (
+            { !isLoading && !hideAlert && !subscription && (
                 <Alert>
                     <Terminal className="h-4 w-4" />
                     <AlertTitle className='flex items-center'>
@@ -116,8 +116,9 @@ export default function NotificationManager() {
                     </AlertTitle>
                     <AlertDescription>
                         <p className='flex'>
-                            You can &ldquo;download&rdquo; this by clicking share <ShareIcon className='w-4 h-4 mx-2'/> and &ldquo;Add to Home Screen&rdquo;
+                            You can &ldquo;download&rdquo; this by clicking share <ShareIcon className='w-4 h-4 mx-2'/>
                         </p>
+                        <p>and &ldquo;Add to Home Screen&rdquo;</p>
                         <Button onClick={subscribeToPush}>Enable Push Notifications to Get Family Updates! <LaughIcon className='w-2 h-2' /></Button>
                     </AlertDescription>
                 </Alert>
