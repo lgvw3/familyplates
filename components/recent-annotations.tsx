@@ -13,6 +13,7 @@ import Link from "next/link"
 import { toast } from "sonner"
 import { AnnotationCreation } from "./feed/annotation-creation"
 import { Virtuoso } from 'react-virtuoso';
+import { HomeFeedSkeleton } from "./skeletons/home-feed-skeleton"
 
 
 function AnnotationCard({annotation, index, user, userMap, currentUserId, bookmark, chapterData, progress}: {
@@ -71,6 +72,7 @@ export function RecentAnnotations({ currentUserId, bookmark, chapterData, progre
     progress: number,
     recentAnnotations: Annotation[] | null,
 }) {
+    const [starting, setStarting] = useState(true)
     const userMap = fetchUsersAsMap()
     const { checkServerHealth, annotations, setAnnotations, addAnnotationsToBottomOfFeed, notification, setNotification } = useWebSocket(recentAnnotations ?? [], true) 
     if (notification && notification.userId != currentUserId) {
@@ -111,6 +113,7 @@ export function RecentAnnotations({ currentUserId, bookmark, chapterData, progre
         window.addEventListener('resize', handleResize);
         handleResize()
         dataCheck()
+        setStarting(false)
     
         // Cleanup the listener on unmount
         return () => window.removeEventListener('resize', handleResize);
@@ -127,6 +130,10 @@ export function RecentAnnotations({ currentUserId, bookmark, chapterData, progre
         }
         isLoading.current = false;
     };
+
+    if (starting) {
+        return <HomeFeedSkeleton />
+    }
     
     return (
         <Virtuoso
