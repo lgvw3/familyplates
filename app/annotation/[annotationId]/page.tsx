@@ -4,6 +4,7 @@ import { fetchUsersAsMap } from "@/lib/auth/accounts";
 import { fetchCurrentUserId } from "@/lib/auth/data";
 import { Metadata } from "next";
 import { headers } from "next/headers";
+import { getAnnotationQuote, getAnnotationReference } from "@/lib/annotations/presentation";
 
 export interface AnnotationPageProps {
     params: Promise<{
@@ -38,8 +39,9 @@ export async function generateMetadata({ params }: AnnotationPageProps): Promise
     
     // Create a rich description
     let description = '';
-    if (!annotationData.unboundAnnotation && annotationData.highlightedText) {
-        description = `"${annotationData.highlightedText}" - ${annotationData.bookId.replaceAll('-', ' ')} ${annotationData.chapterNumber}:${annotationData.verseNumbers[0]}${(annotationData.verseNumbers.length > 1 ? `-${annotationData.verseNumbers[annotationData.verseNumbers.length - 1]}` : '')}\n\n`;
+    const reference = getAnnotationReference(annotationData)
+    if (reference) {
+        description = `"${getAnnotationQuote(annotationData)}" - ${reference}\n\n`;
     }
     description += annotationData.text
 

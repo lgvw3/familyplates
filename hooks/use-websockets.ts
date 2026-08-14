@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Annotation, AnnotationComment, AnnotationLike } from "@/types/scripture";
 import { fetchCurrentUserId } from '@/lib/auth/data';
+import { getAnnotationTargetKey } from '@/lib/annotations/presentation';
 
 export type NotificationParam = {
     annotation?: Annotation,
@@ -15,7 +16,7 @@ export type NotificationParam = {
 }
 
 
-export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boolean, bookId?: string, chapterNumber?: number) => {
+export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boolean, targetKey?: string) => {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [annotations, setAnnotations] = useState<Annotation[]>(initialAnnotations)
     const [retryCount, setRetryCount] = useState(0);
@@ -23,13 +24,13 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
 
 
     const addAnnotation = useCallback((annotation: Annotation) => {
-        if (!bookId && !chapterNumber || (annotation.bookId == bookId && annotation.chapterNumber == chapterNumber )) {
+        if (!targetKey || getAnnotationTargetKey(annotation) === targetKey) {
             setAnnotations(prev => {
                 const temp = prev.filter(a => a._id != annotation._id)
                 return [...temp, annotation]
             })
         }
-    }, [bookId, chapterNumber])
+    }, [targetKey])
 
     const addAnnotationToTopOfFeed = useCallback((annotation: Annotation) => {
         setAnnotations(prev => {

@@ -13,18 +13,31 @@ import { ObjectId, UpdateResult } from "mongodb";
 import { sendNotificationToOfflineUsers } from "../push-notifications/actions";
 
 const zAnnotation = z.object({
-    startIndex: z.number(),
-    endIndex: z.number(),
-    bookId: z.string(),
-    chapterNumber: z.number(),
+    schemaVersion: z.literal(2),
+    target: z.discriminatedUnion('kind', [
+        z.object({
+            kind: z.literal('scripture'),
+            sourceVersion: z.literal('book-of-mormon-local-v1'),
+            bookId: z.string().min(1),
+            chapterNumber: z.number().int().positive(),
+            start: z.object({ unit: z.number().int().positive(), offset: z.number().int().nonnegative() }),
+            end: z.object({ unit: z.number().int().positive(), offset: z.number().int().nonnegative() }),
+            quote: z.object({ exact: z.string().min(1), prefix: z.string().optional(), suffix: z.string().optional() }),
+        }),
+        z.object({
+            kind: z.literal('intro'),
+            sourceVersion: z.literal('book-of-mormon-local-v1'),
+            introId: z.string().min(1),
+            start: z.object({ unit: z.number().int().nonnegative(), offset: z.number().int().nonnegative() }),
+            end: z.object({ unit: z.number().int().nonnegative(), offset: z.number().int().nonnegative() }),
+            quote: z.object({ exact: z.string().min(1), prefix: z.string().optional(), suffix: z.string().optional() }),
+        }),
+    ]).nullable(),
     text: z.string(),
-    highlightedText: z.string(),
     type: z.enum(['note', 'link', 'photo', 'combo']),
     color: z.enum(['yellow', 'green', 'blue', 'purple', 'pink']),
     url: z.string().optional(),
     photoUrl: z.string().optional(),
-    unboundAnnotation: z.boolean().optional(),
-    verseNumbers: z.array(z.number())
 })
 
 export async function saveAnnotation(annotation: Annotation) {
@@ -60,21 +73,17 @@ export async function saveAnnotation(annotation: Annotation) {
         };
     }
 
-    const {startIndex, endIndex, verseNumbers, bookId, chapterNumber, text, highlightedText, type, color, url, photoUrl, unboundAnnotation} = validatedFields.data
+    const {target, text, type, color, url, photoUrl} = validatedFields.data
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection("annotations_new");
+    const collection = db.collection("annotations");
 
     const newAnnotation: Annotation = {
         _id: null,
-        startIndex: startIndex,
-        endIndex: endIndex,
-        bookId: bookId,
-        verseNumbers: verseNumbers,
-        chapterNumber: chapterNumber,
+        schemaVersion: 2,
+        target,
         text: text,
-        highlightedText: highlightedText,
         type: type,
         color: color,
         createdAt: new Date(),
@@ -84,10 +93,6 @@ export async function saveAnnotation(annotation: Annotation) {
         userName: user.name,
         comments: [],
         likes: []
-    }
-
-    if (unboundAnnotation) {
-        newAnnotation.unboundAnnotation = true
     }
 
     // Save annotation to the database
@@ -100,7 +105,7 @@ export async function saveAnnotation(annotation: Annotation) {
             try {
                 //real time
                 const redisPub = new redis(process.env.KV_URL ?? '');
-                await redisPub.publish("annotations_new", JSON.stringify({
+                await redisPub.publish("annotations", JSON.stringify({
                     ...annotationData, 
                     _id: result.insertedId.toString()
                 }));
@@ -161,7 +166,7 @@ export async function updateAnnotation(annotationId: string, editedText: string)
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection("annotations_new");
+    const collection = db.collection("annotations");
 
 
     // Save annotation to the database
@@ -227,7 +232,7 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection<Annotation>("annotations_new");
+    const collection = db.collection<Annotation>("annotations");
 
     const newComment: AnnotationComment = {
         _id: new ObjectId(),
@@ -313,7 +318,7 @@ export async function updateLikeStatusOfComment(currentUserId: number, annotatio
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection<Annotation>("annotations_new");
+    const collection = db.collection<Annotation>("annotations");
 
     const updatedLike: AnnotationLike = {
         _id: new ObjectId(),

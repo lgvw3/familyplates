@@ -22,7 +22,7 @@ export async function fetchAllAnnotations(skipAuth: boolean = false) {
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection("annotations_new");
+    const collection = db.collection("annotations");
 
     try {
         const results = await collection.find<Annotation>({}).toArray();
@@ -62,7 +62,7 @@ export async function fetchRecentAnnotations() {
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection("annotations_new");
+    const collection = db.collection("annotations");
 
     try {
         const results = await collection.find<Annotation>({}).sort({ createdAt: -1}).limit(10).toArray();
@@ -102,7 +102,7 @@ export async function fetchMoreAnnotations(lastAnnotation: Annotation, limit: nu
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection("annotations_new");
+    const collection = db.collection("annotations");
 
     try {
         const results = await collection.find<Annotation>({ createdAt: { $lt: lastAnnotation.createdAt } })
@@ -149,9 +149,13 @@ export async function fetchAnnotationsByChapter(book: string, chapter: number) {
     try {
         const client = await clientPromise;
         const db = client.db("main");
-        const collection = db.collection("annotations_new");
+        const collection = db.collection("annotations");
 
-        const results = await collection.find<Annotation>({bookId: book, chapterNumber: chapter}).toArray();
+        const results = await collection.find<Annotation>({
+            "target.kind": "scripture",
+            "target.bookId": book,
+            "target.chapterNumber": chapter,
+        }).toArray();
 
         if (results) {
             results.map(a => {
@@ -166,6 +170,32 @@ export async function fetchAnnotationsByChapter(book: string, chapter: number) {
         }
     } catch(error) {
         console.error('Error fetching annotations by chapter:', error)
+        return null
+    }
+}
+
+export async function fetchAnnotationsByIntro(introId: string) {
+    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
+    if (!authToken) redirect('/sign-in')
+    const { userId } = validateToken(authToken);
+    if (!userId) return null
+
+    try {
+        const client = await clientPromise;
+        const collection = client.db("main").collection("annotations");
+        const results = await collection.find<Annotation>({
+            "target.kind": "intro",
+            "target.introId": introId,
+        }).toArray();
+
+        results.forEach(annotation => {
+            annotation._id = annotation._id?.toString() ?? null
+            annotation.comments?.forEach(comment => comment._id = comment._id.toString())
+            annotation.likes?.forEach(like => like._id = like._id.toString())
+        })
+        return results
+    } catch (error) {
+        console.error('Error fetching intro annotations:', error)
         return null
     }
 }
@@ -185,7 +215,7 @@ export async function fetchAnnotationById(annotationId: string, skipAuth: boolea
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection("annotations_new");
+    const collection = db.collection("annotations");
 
     try {
         const results = await collection.findOne<Annotation>(
@@ -195,15 +225,8 @@ export async function fetchAnnotationById(annotationId: string, skipAuth: boolea
                 projection: {
                     _id: 1,
                     userId: 1,
-                    bookId: 1,
-                    chapterNumber: 1,
-                    verseNumber: 1,
-                    highlightedText: 1,
+                    target: 1,
                     text: 1,
-                    unboundAnnotation: 1,
-                    startIndex: 1,
-                    endIndex: 1,
-                    verseNumbers: 1,
                 }
             } : {}
         );
@@ -240,7 +263,7 @@ export async function fetchAnnotationsByUser(userId: number, skipAuth: boolean =
 
     const client = await clientPromise;
     const db = client.db("main");
-    const collection = db.collection("annotations_new");
+    const collection = db.collection("annotations");
 
     try {
         const results = await collection.find<Annotation>({ userId: userId }).toArray();

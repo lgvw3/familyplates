@@ -4,7 +4,7 @@ import { UserAccount } from "@/lib/auth/definitions"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Annotation } from "@/types/scripture"
-import { cn, getInitials, toTitleCase } from "@/lib/utils"
+import { cn, getInitials } from "@/lib/utils"
 import { HeartIcon, ExternalLinkIcon, Loader2Icon, MessageCircleIcon, ArrowLeftIcon, Edit3Icon, LoaderCircleIcon, ShareIcon, CheckIcon } from "lucide-react"
 import { Button, buttonVariants } from "../ui/button"
 import { useEffect, useRef, useState } from "react"
@@ -15,6 +15,7 @@ import Link from "next/link"
 import { fetchUsersAsMap } from "@/lib/auth/accounts"
 import { useWebSocket } from "@/hooks/use-websockets"
 import { motion } from "framer-motion"
+import { getAnnotationQuote, getAnnotationReference, getTargetHref } from "@/lib/annotations/presentation"
 
 
 export default function AnnotationViewerSolo({author, initialAnnotation, currentUserId, userName } : {
@@ -26,6 +27,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
 
     const { annotations, setAnnotations, notification, setNotification } = useWebSocket([initialAnnotation], false) 
     const annotation = annotations[0]
+    const reference = getAnnotationReference(annotation)
     const userMap = fetchUsersAsMap()
     const [commentContent, setCommentContent] = useState('')
     const [savingComment, setSavingComment] = useState(false)
@@ -112,10 +114,10 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                 return 'bg-blue-300 dark:bg-blue-800';
             case 'green':
                 return 'bg-green-300 dark:bg-green-800';
-            case 'blue':
-                return 'bg-blue-300 dark:bg-blue-800'
             case 'purple':
                 return 'bg-purple-300 dark:bg-purple-800'
+            case 'pink':
+                return 'bg-pink-300 dark:bg-pink-800'
             default:
                 return '';
         }
@@ -164,8 +166,8 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
             try {
                 await navigator.share({
                     title: `Annotation by ${author.name}`,  // Descriptive title
-                    text: !annotation.unboundAnnotation 
-                        ? `"${annotation.highlightedText}" - ${annotation.bookId.replaceAll('-', ' ')} ${annotation.chapterNumber}:${annotation.verseNumbers[0]}${(annotation.verseNumbers.length > 1 ? `-${annotation.verseNumbers[annotation.verseNumbers.length - 1]}` : '')}`
+                    text: annotation.target
+                        ? `"${getAnnotationQuote(annotation)}" - ${reference}`
                         : annotation.text,  // Descriptive text
                     url: url,  // Only share the URL
                 });
@@ -222,8 +224,8 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                     <CardTitle className="text-base">{annotation.userName}</CardTitle>
                                     <CardDescription>
                                         {
-                                            !annotation.unboundAnnotation ?
-                                            <>on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumbers[0]}${(annotation.verseNumbers.length > 1 ? `-${annotation.verseNumbers[annotation.verseNumbers.length - 1]}` : '')}`} • </> 
+                                            reference ?
+                                            <>on {reference} • </>
                                             : null
                                         }
                                         {getPostDate(new Date(annotation.createdAt))}
@@ -252,8 +254,8 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                 <CardTitle className="text-base">{annotation.userName}</CardTitle>
                                 <CardDescription>
                                     {
-                                        !annotation.unboundAnnotation ?
-                                        <>on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumbers[0]}${(annotation.verseNumbers.length > 1 ? `-${annotation.verseNumbers[annotation.verseNumbers.length - 1]}` : '')}`} • </> 
+                                        reference ?
+                                        <>on {reference} • </>
                                         : null
                                     }
                                     {getPostDate(new Date(annotation.createdAt))}
@@ -264,11 +266,11 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                 </CardHeader>
                 <CardContent>
                     {
-                        !annotation.unboundAnnotation && (
+                        annotation.target && (
                             <div className="flex items-center space-x-4 rounded-md border p-4">
                                 <div className="flex-1 space-y-1">
                                     <span className={cn(getBackgroundColor(), 'rounded p-1 text-sm font-medium leading-none')}>
-                                        {annotation.highlightedText}
+                                        {getAnnotationQuote(annotation)}
                                     </span>
                                 </div>
                             </div>
@@ -366,10 +368,10 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                 </Button>
                             </motion.div>
                             {
-                                !annotation.unboundAnnotation ?
+                                annotation.target ?
                                 <Link 
                                     className={cn(buttonVariants({variant: 'ghost', size: 'sm'}), "gap-2")}
-                                    href={`/book/${encodeURIComponent(annotation.bookId)}/chapter/chapter_${annotation.chapterNumber}/#verse-${annotation.verseNumbers[0]}`}
+                                    href={getTargetHref(annotation.target)}
                                 >
                                         <ExternalLinkIcon className="h-4 w-4" />
                                         <span>View in Context</span>

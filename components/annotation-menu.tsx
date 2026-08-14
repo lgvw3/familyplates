@@ -22,34 +22,37 @@ import { LinkIcon, StickyNoteIcon, XIcon, ImageIcon } from 'lucide-react'
 interface AnnotationMenuProps {
   position: { x: number; y: number; width?: number } | null;
   onClose: () => void;
+  color: HighlightColor;
+  onColorChange: (color: HighlightColor) => void;
   onSave: (annotation: {
     text: string;
     type: AnnotationType;
     color: HighlightColor;
     url?: string;
     photoUrl?: string;
-  }) => void;
+  }) => Promise<boolean>;
 }
 
-export function AnnotationMenu({ position, onClose, onSave }: AnnotationMenuProps) {
+export function AnnotationMenu({ position, onClose, onSave, color, onColorChange }: AnnotationMenuProps) {
   const [type, setType] = useState<AnnotationType>('note')
-  const [color, setColor] = useState<HighlightColor>('yellow')
   const [text, setText] = useState('')
   const [url, setUrl] = useState('')
   const [photoUrl, setPhotoUrl] = useState('')
+  const [saving, setSaving] = useState(false)
 
   if (!position) return null
 
-  const handleSave = () => {
-    onSave({
+  const handleSave = async () => {
+    setSaving(true)
+    const saved = await onSave({
       type,
       color,
       text,
       ...(url && { url }),
       ...(photoUrl && { photoUrl })
     })
-    setText('')
-    onClose()
+    setSaving(false)
+    if (saved) setText('')
   }
 
   return (
@@ -96,7 +99,7 @@ export function AnnotationMenu({ position, onClose, onSave }: AnnotationMenuProp
 
         <div className="space-y-2">
           <Label>Highlight Color</Label>
-          <Select value={color} onValueChange={(value) => setColor(value as HighlightColor)}>
+          <Select value={color} onValueChange={(value) => onColorChange(value as HighlightColor)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -169,11 +172,10 @@ export function AnnotationMenu({ position, onClose, onSave }: AnnotationMenuProp
           </div>
         )}
 
-        <Button onClick={handleSave} className="w-full">
-          Save Annotation
+        <Button onClick={handleSave} className="w-full" disabled={saving}>
+          {saving ? 'Saving…' : 'Save Annotation'}
         </Button>
       </CardContent>
     </Card>
   )
 }
-

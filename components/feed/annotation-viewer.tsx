@@ -4,14 +4,15 @@ import { UserAccount } from "@/lib/auth/definitions"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Annotation } from "@/types/scripture"
-import { cn, getInitials, toTitleCase } from "@/lib/utils"
-import { HeartIcon, ExternalLinkIcon, MessageCircleIcon } from "lucide-react"
+import { cn, getInitials } from "@/lib/utils"
+import { HeartIcon, ExternalLinkIcon, MessageCircleIcon, QuoteIcon } from "lucide-react"
 import { Button } from "../ui/button"
 import { updateLikeStatusOfComment } from "@/lib/annotations/actions"
 import { toast } from "sonner"
 import { useRouter } from 'next/navigation'
 import { useState } from "react"
 import { motion } from "framer-motion"
+import { getAnnotationQuote, getAnnotationReference, getTargetHref } from "@/lib/annotations/presentation"
 
 
 export default function AnnotationViewer({ index, author, annotation, userMap, currentUserId } : {
@@ -23,6 +24,8 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
 }) {
     const [userLike, setUserLike] = useState(annotation.likes.find(val => val.userId == currentUserId))
     const router = useRouter()
+    const reference = getAnnotationReference(annotation)
+    const quote = getAnnotationQuote(annotation)
 
     const saveLike = async() => {
         const temp = userLike ? {...userLike} : userLike
@@ -56,10 +59,10 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                 return 'bg-blue-300 dark:bg-blue-800';
             case 'green':
                 return 'bg-green-300 dark:bg-green-800';
-            case 'blue':
-                return 'bg-blue-300 dark:bg-blue-800'
             case 'purple':
                 return 'bg-purple-300 dark:bg-purple-800'
+            case 'pink':
+                return 'bg-pink-300 dark:bg-pink-800'
             default:
                 return '';
         }
@@ -115,8 +118,8 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                             <CardTitle className="text-base">{annotation.userName}</CardTitle>
                             <CardDescription>
                                 {
-                                    !annotation.unboundAnnotation ?
-                                    <>on {`${toTitleCase(annotation.bookId.replaceAll('-', ' '))} ${annotation.chapterNumber}:${annotation.verseNumbers[0]}${(annotation.verseNumbers.length > 1 ? `-${annotation.verseNumbers[annotation.verseNumbers.length - 1]}` : '')}`} • </> 
+                                    reference ?
+                                    <>on {reference} • </>
                                     : null
                                 }
                                 {getPostDate()}
@@ -126,14 +129,13 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                 </CardHeader>
                 <CardContent>
                     {
-                        !annotation.unboundAnnotation ?
-                        <div className="flex items-center space-x-4 rounded-md border p-4">
-                            <div className="flex-1 space-y-1">
-                                <span className={cn(getBackgroundColor(), 'rounded p-1 text-sm font-medium leading-none')}>
-                                    {annotation.highlightedText}
-                                </span>
-                            </div>
-                        </div>
+                        quote ?
+                        <blockquote className="mb-4 flex gap-3 rounded-md border bg-muted/30 p-4" data-testid="feed-annotation-quote">
+                            <QuoteIcon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                            <p className={cn(getBackgroundColor(), 'whitespace-pre-line rounded px-1.5 py-1 text-sm font-medium leading-relaxed')}>
+                                {quote}
+                            </p>
+                        </blockquote>
                         : null 
                     }
                     <p className="text-foreground whitespace-pre-wrap">{annotation.text}</p>
@@ -163,7 +165,7 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                         </Button>
                     </motion.div>
                     {
-                        !annotation.unboundAnnotation ?
+                        annotation.target ?
                             <Button 
                                 variant="ghost" 
                                 size="sm" 
@@ -171,7 +173,7 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                                 onClick={(e) => {
                                     e.preventDefault()
                                     e.stopPropagation()
-                                    router.push(`/book/${encodeURIComponent(annotation.bookId)}/chapter/chapter_${annotation.chapterNumber}/#verse-${annotation.verseNumbers[0]}`)
+                                    router.push(getTargetHref(annotation.target!))
                                 }}
                             >
                                     <ExternalLinkIcon className="h-4 w-4" />

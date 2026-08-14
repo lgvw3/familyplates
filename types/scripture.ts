@@ -1,5 +1,5 @@
-import { FuseResultMatch } from "fuse.js";
-import { ObjectId } from "mongodb";
+import type { FuseResultMatch } from "fuse.js";
+import type { ObjectId } from "mongodb";
 
 export interface Verse {
   number: number;
@@ -48,15 +48,43 @@ export type AnnotationType = 'note' | 'link' | 'photo' | 'combo';
 export type HighlightColor = 'yellow' | 'green' | 'blue' | 'purple' | 'pink';
 export type TextStyle = 'underline' | 'bold' | 'italic' | 'none';
 
+export interface TextRangePoint {
+  unit: number;
+  offset: number;
+}
+
+export interface TextQuote {
+  exact: string;
+  prefix?: string;
+  suffix?: string;
+}
+
+export interface ScriptureRangeTarget {
+  kind: 'scripture';
+  sourceVersion: 'book-of-mormon-local-v1';
+  bookId: string;
+  chapterNumber: number;
+  start: TextRangePoint;
+  end: TextRangePoint;
+  quote: TextQuote;
+}
+
+export interface IntroRangeTarget {
+  kind: 'intro';
+  sourceVersion: 'book-of-mormon-local-v1';
+  introId: string;
+  start: TextRangePoint;
+  end: TextRangePoint;
+  quote: TextQuote;
+}
+
+export type AnnotationTarget = ScriptureRangeTarget | IntroRangeTarget;
+
 export interface Annotation {
   _id: ObjectId | string | null;
-  startIndex: number;
-  endIndex: number;
-  verseNumbers: number[],
-  chapterNumber: number,
-  bookId: string,
+  schemaVersion: 2;
+  target: AnnotationTarget | null;
   text: string;
-  highlightedText: string;
   type: AnnotationType;
   color: HighlightColor;
   createdAt: Date;
@@ -64,7 +92,6 @@ export interface Annotation {
   photoUrl?: string;
   userId: number,
   userName: string,
-  unboundAnnotation?: boolean,
   comments: AnnotationComment[]
   likes: AnnotationLike[]
 }
@@ -85,4 +112,3 @@ export interface ScriptureItem {
 export interface SearchResult extends ScriptureItem {
   matches: FuseResultMatch[]; // Matches metadata from Fuse.js
 }
-

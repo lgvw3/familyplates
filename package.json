@@ -10,7 +10,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:highlights": "node --experimental-strip-types --test lib/highlights/ranges.test.ts",
+    "migrate:annotations": "node --env-file=.env.local scripts/migrate-annotations-v2.mjs"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.0",
