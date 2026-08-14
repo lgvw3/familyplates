@@ -4,8 +4,8 @@ import { Annotation, Chapter } from "@/types/scripture"
 import { fetchUsersAsMap } from "@/lib/auth/accounts"
 import { useWebSocket } from "@/hooks/use-websockets"
 import AnnotationViewer from "./feed/annotation-viewer"
-import { useEffect, useRef, useState } from "react"
-import { fetchMoreAnnotations, fetchRecentAnnotations } from "@/lib/annotations/data"
+import { useRef } from "react"
+import { fetchMoreAnnotations } from "@/lib/annotations/data"
 import { ContinueReading } from "./continue-reading"
 import { UserAccount } from "@/lib/auth/definitions"
 import { BookmarkedSpot } from "@/lib/reading/definitions"
@@ -13,7 +13,6 @@ import Link from "next/link"
 import { toast } from "sonner"
 import { AnnotationCreation } from "./feed/annotation-creation"
 import { Virtuoso } from 'react-virtuoso';
-import { HomeFeedSkeleton } from "./skeletons/home-feed-skeleton"
 
 
 function AnnotationCard({annotation, index, user, userMap, currentUserId, bookmark, chapterData, progress}: {
@@ -73,50 +72,12 @@ export function RecentAnnotations({ currentUserId, bookmark, chapterData, progre
     recentAnnotations: Annotation[] | null,
 }) {
     const userMap = fetchUsersAsMap()
-    const { checkServerHealth, annotations, setAnnotations, addAnnotationsToBottomOfFeed, notification, setNotification } = useWebSocket(recentAnnotations ?? [], true) 
+    const { annotations, addAnnotationsToBottomOfFeed, notification, setNotification } = useWebSocket(recentAnnotations ?? [], true)
     if (notification && notification.userId != currentUserId) {
         toast(`New ${notification.type} by ${notification.userName}`, {position: 'top-center'})
         setNotification(null)
     }
     const isLoading = useRef(false);
-
-    const [dimensions, setDimensions] = useState({
-        width: 0,
-        height: 0,
-    })
-
-    useEffect(() => {
-        const handleResize = () => {
-          setDimensions({
-            width: window.innerWidth,
-            height: window.innerHeight,
-          });
-        };
-
-        const dataCheck = async() => {
-            const serverHealth = await checkServerHealth()
-            if (!serverHealth) {
-                toast('Server health check failed', {position: 'top-center'})
-            }
-            else {
-                const fetchData = async() => {
-                    const annotationResults = await fetchRecentAnnotations()
-                    if (annotationResults) {
-                        setAnnotations(annotationResults)
-                    }
-                }
-                fetchData()
-            }
-        }
-    
-        window.addEventListener('resize', handleResize);
-        handleResize()
-        dataCheck()
-    
-        // Cleanup the listener on unmount
-        return () => window.removeEventListener('resize', handleResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     const loadMoreAnnotations = async () => {
         if (isLoading.current) return;
@@ -129,14 +90,11 @@ export function RecentAnnotations({ currentUserId, bookmark, chapterData, progre
         isLoading.current = false;
     };
 
-    if (dimensions.height === 0) {
-        return <HomeFeedSkeleton />
-    }
-    
     return (
         <Virtuoso
-            style={{ height: dimensions.height || 600, width: '100%' }}
+            style={{ height: '100dvh', width: '100%' }}
             data={annotations} // Pass the annotations array directly
+            initialItemCount={annotations.length}
             endReached={loadMoreAnnotations} // Trigger loading more annotations when the user scrolls to the end
             itemContent={(index) => (
                 <AnnotationCard
