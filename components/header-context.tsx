@@ -1,7 +1,6 @@
 // components/header-context.tsx
 'use client'
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { usePathname } from 'next/navigation';
+import React, { createContext, useCallback, useContext, useState } from "react";
 
 type HeaderContextType = {
     title?: string;
@@ -16,20 +15,13 @@ const HeaderContext = createContext<HeaderContextType>({
 });
 
 export function HeaderProvider({ children }: { children: React.ReactNode }) {
-    const [title, setTitle] = useState<string | undefined>(undefined);
-    const [subtitle, setSubtitle] = useState<string | undefined>(undefined);
-    const pathname = usePathname();
+    const [title, setTitle] = useState<string | undefined>();
+    const [subtitle, setSubtitle] = useState<string | undefined>();
 
-    // Reset header on route change
-    useEffect(() => {
-        setTitle(undefined);
-        setSubtitle(undefined);
-    }, [pathname]);
-
-    const setHeader = (newTitle?: string, newSubtitle?: string) => {
+    const setHeader = useCallback((newTitle?: string, newSubtitle?: string) => {
         setTitle(newTitle);
         setSubtitle(newSubtitle);
-    };
+    }, []);
 
     return (
         <HeaderContext.Provider value={{ title, subtitle, setHeader }}>

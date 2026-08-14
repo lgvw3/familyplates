@@ -1,8 +1,8 @@
 "use client";
 
-import type { Message as TMessage } from "ai";
+import { getToolName, isToolUIPart, type UIMessage } from "ai";
 import { AnimatePresence, motion } from "motion/react";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useState } from "react";
 import equal from "fast-deep-equal";
 
 import { Markdown } from "./markdown";
@@ -18,14 +18,8 @@ import {
 } from "lucide-react";
 import { SpinnerIcon } from "./icons";
 
-interface ReasoningPart {
-  type: "reasoning";
-  reasoning: string;
-  details: Array<{ type: "text"; text: string }>;
-}
-
 interface ReasoningMessagePartProps {
-  part: ReasoningPart;
+  part: Extract<UIMessage["parts"][number], { type: "reasoning" }>;
   isReasoning: boolean;
 }
 
@@ -34,6 +28,7 @@ export function ReasoningMessagePart({
   isReasoning,
 }: ReasoningMessagePartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const showReasoning = isReasoning || isExpanded;
 
   const variants = {
     collapsed: {
@@ -49,14 +44,6 @@ export function ReasoningMessagePart({
       marginBottom: 0,
     },
   };
-
-  const memoizedSetIsExpanded = useCallback((value: boolean) => {
-    setIsExpanded(value);
-  }, []);
-
-  useEffect(() => {
-    memoizedSetIsExpanded(isReasoning);
-  }, [isReasoning, memoizedSetIsExpanded]);
 
   return (
     <div className="flex flex-col">
@@ -74,14 +61,14 @@ export function ReasoningMessagePart({
             className={cn(
               "cursor-pointer rounded-full dark:hover:bg-zinc-800 hover:bg-zinc-200",
               {
-                "dark:bg-zinc-800 bg-zinc-200": isExpanded,
+                "dark:bg-zinc-800 bg-zinc-200": showReasoning,
               },
             )}
             onClick={() => {
               setIsExpanded(!isExpanded);
             }}
           >
-            {isExpanded ? (
+            {showReasoning ? (
               <ChevronDownIcon className="h-4 w-4" />
             ) : (
               <ChevronUpIcon className="h-4 w-4" />
@@ -91,7 +78,7 @@ export function ReasoningMessagePart({
       )}
 
       <AnimatePresence initial={false}>
-        {isExpanded && (
+        {showReasoning && (
           <motion.div
             key="reasoning"
             className="text-sm dark:text-zinc-400 text-zinc-600 flex flex-col gap-4 border-l pl-3 dark:border-zinc-800"
@@ -101,13 +88,7 @@ export function ReasoningMessagePart({
             variants={variants}
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
-            {part.details.map((detail, detailIndex) =>
-              detail.type === "text" ? (
-                <Markdown key={detailIndex}>{detail.text}</Markdown>
-              ) : (
-                "<redacted>"
-              ),
-            )}
+            <Markdown>{part.text}</Markdown>
           </motion.div>
         )}
       </AnimatePresence>
@@ -120,7 +101,7 @@ const PurePreviewMessage = ({
   isLatestMessage,
   status,
 }: {
-  message: TMessage;
+  message: UIMessage;
   isLoading: boolean;
   status: "error" | "submitted" | "streaming" | "ready";
   isLatestMessage: boolean;
@@ -169,8 +150,29 @@ const PurePreviewMessage = ({
                       </div>
                     </motion.div>
                   );
-                case "tool-invocation":
-                  const { toolName, state } = part.toolInvocation;
+                case "reasoning":
+                  return (
+                    <ReasoningMessagePart
+                      key={`message-${message.id}-${i}`}
+                      part={part}
+                      isReasoning={
+                        part.state === "streaming" ||
+                        (status === "streaming" &&
+                          i === message.parts.length - 1)
+                      }
+                    />
+                  );
+                default: {
+                  if (!isToolUIPart(part)) return null;
+
+                  const toolName = getToolName(part);
+                  const isPending =
+                    part.state === "input-streaming" ||
+                    part.state === "input-available";
+                  const isSuccessful = part.state === "output-available";
+                  const isFailed =
+                    part.state === "output-error" ||
+                    part.state === "output-denied";
 
                   return (
                     <motion.div
@@ -185,42 +187,29 @@ const PurePreviewMessage = ({
                         </div>
                         <div className="flex-1">
                           <div className="font-medium flex items-baseline gap-2">
-                            {state === "call" ? "Calling" : "Called"}{" "}
+                            {isPending ? "Calling" : "Called"}{" "}
                             <span className="font-mono bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md">
                               {toolName}
                             </span>
                           </div>
                         </div>
                         <div className="w-5 h-5 flex items-center justify-center">
-                          {state === "call" ? (
+                          {isPending ? (
                             isLatestMessage && status !== "ready" ? (
                               <Loader2 className="animate-spin h-4 w-4 text-zinc-500" />
                             ) : (
                               <StopCircle className="h-4 w-4 text-red-500" />
                             )
-                          ) : state === "result" ? (
+                          ) : isSuccessful ? (
                             <CheckCircle size={14} className="text-green-600" />
+                          ) : isFailed ? (
+                            <StopCircle className="h-4 w-4 text-red-500" />
                           ) : null}
                         </div>
                       </div>
                     </motion.div>
                   );
-                case "reasoning":
-                  return (
-                    <ReasoningMessagePart
-                      key={`message-${message.id}-${i}`}
-                      // @ts-expect-error part
-                      part={part}
-                      isReasoning={
-                        (message.parts &&
-                          status === "streaming" &&
-                          i === message.parts.length - 1) ??
-                        false
-                      }
-                    />
-                  );
-                default:
-                  return null;
+                }
               }
             })}
           </div>
@@ -232,9 +221,7 @@ const PurePreviewMessage = ({
 
 export const Message = memo(PurePreviewMessage, (prevProps, nextProps) => {
   if (prevProps.status !== nextProps.status) return false;
-  if (prevProps.message.annotations !== nextProps.message.annotations)
-    return false;
-  // if (prevProps.message.content !== nextProps.message.content) return false;
+  if (prevProps.message.metadata !== nextProps.message.metadata) return false;
   if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
 
   return true;

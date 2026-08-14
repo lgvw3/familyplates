@@ -638,6 +638,8 @@ export default function ScriptureReader({ chapter, book, initialAnnotations, cur
     } else {
       setHeader(undefined, undefined);
     }
+
+    return () => setHeader(undefined, undefined);
   }, [showStickyHeader, chapter.chapter_title, book.title, setHeader]);
 
   const renderAnnotationPanel = () => {

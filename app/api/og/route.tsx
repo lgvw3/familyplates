@@ -1,13 +1,12 @@
 import { ImageResponse } from '@vercel/og';
 import { NextRequest } from 'next/server';
 
-export const runtime = 'edge';
-
 export async function GET(req: NextRequest) {
+    const { searchParams } = req.nextUrl;
+
     try {
         console.log('Generating OG image...');
-        const { searchParams } = new URL(req.url);
-        
+
         const title = searchParams.get('title') ?? 'Family Plates';  // Default to a fallback title
         const rawDescription = searchParams.get('description') ?? '';  // Get raw description
         
@@ -157,4 +156,4 @@ export async function GET(req: NextRequest) {
             headers: { 'Content-Type': 'text/plain' },  // Plain text for easier debugging
         });
     }
-} 
+}

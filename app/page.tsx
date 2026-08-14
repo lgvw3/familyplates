@@ -23,21 +23,24 @@ async function RecentAnnotationsSection({ currentUserId }: { currentUserId: numb
   )
 }
 
-export default async function HomePage() {
+async function HomeContent() {
   const currentUserId = await fetchCurrentUserId()
   if (!currentUserId) {
     redirect('/sign-in')
   }
 
+  return <RecentAnnotationsSection currentUserId={currentUserId} />
+}
+
+export default function HomePage() {
   return (
-    <main className="">
+    <main>
       <div className="px-4 md:px-8">
         <NotificationManager/>
       </div>
       <Suspense fallback={<HomeFeedSkeleton />}>
-        <RecentAnnotationsSection currentUserId={currentUserId} />
+        <HomeContent />
       </Suspense>
     </main>
   )
 }
-

@@ -5,7 +5,7 @@ import { ModelPicker } from "./model-picker";
 
 interface InputProps {
   input: string;
-  handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  handleInputChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   isLoading: boolean;
   status: string;
   stop: () => void;
@@ -29,14 +29,12 @@ export const Textarea = ({
         value={input}
         autoFocus
         placeholder={"Say something..."}
-        // @ts-expect-error err
         onChange={handleInputChange}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             if (input.trim() && !isLoading) {
-              // @ts-expect-error err
-              const form = e.target.closest("form");
+              const form = e.currentTarget.closest("form");
               if (form) form.requestSubmit();
             }
           }

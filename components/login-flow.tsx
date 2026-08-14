@@ -11,8 +11,10 @@ import { toast } from "sonner"
 import { UserAccount } from "@/lib/auth/definitions"
 import { accounts } from "@/lib/auth/accounts"
 import { checkPassword } from "@/lib/auth/data"
+import { useRouter } from "next/navigation"
 
 export default function LoginFlow() {
+  const router = useRouter()
   const [step, setStep] = useState<"password" | "account">("password")
   const [password, setPassword] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
@@ -53,7 +55,7 @@ export default function LoginFlow() {
       }
 
       if (response.ok) {
-        window.location.href = '/'
+        router.push('/')
         return
       } else {
         toast.warning('Failed to log in. Please try again.');
@@ -209,4 +211,3 @@ function AccountStep({ accounts, onSelect, isVerifying, selectedAccount }: Accou
     </motion.div>
   )
 }
-

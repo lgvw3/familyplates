@@ -2,6 +2,7 @@ import Chat from "@/components/chat/chat";
 import { fetchCurrentUserId } from "@/lib/auth/data";
 import { Metadata } from "next";
 import { headers } from "next/headers";
+import { Suspense } from "react";
 
 export async function generateMetadata(): Promise<Metadata> {
     const title = 'Family Plates Chat';
@@ -21,8 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
     return metadata;
 }
 
-export default async function Page() {
-
+async function ChatPageContent() {
     const userAgent = (await headers()).get('user-agent') || '';
     const isBot = /bot|crawl|spider|slurp|facebook|twitter|discord|whatsapp|telegram|linkedin/i.test(userAgent);
 
@@ -37,4 +37,12 @@ export default async function Page() {
         return <div>No access</div>
     }
     return <Chat />;
+}
+
+export default function Page() {
+    return (
+        <Suspense fallback={<div className="p-4">Loading chat...</div>}>
+            <ChatPageContent />
+        </Suspense>
+    );
 }

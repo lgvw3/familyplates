@@ -22,14 +22,24 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export default function NotificationManager() {
-    const [isSupported, setIsSupported] = useState(false)
+    const isSupported = typeof window !== 'undefined'
+        && 'serviceWorker' in navigator
+        && 'PushManager' in window
     const [subscription, setSubscription] = useState<PushSubscription | null>()
     const [isLoading, setIsLoading] = useState(true)
     const [hideAlert, setHideAlert] = useState(process.env.NODE_ENV != 'production')
    
     useEffect(() => {
-        if ('serviceWorker' in navigator && 'PushManager' in window) {
-            setIsSupported(true)
+        async function registerServiceWorker() {
+            const registration = await navigator.serviceWorker.register('/sw.js', {
+                scope: '/',
+                updateViaCache: 'none',
+            })
+            const sub = await registration.pushManager.getSubscription()
+            setSubscription(sub)
+        }
+
+        if (isSupported) {
             registerServiceWorker()
         }
         const fetchData = async() => {
@@ -41,16 +51,7 @@ export default function NotificationManager() {
             setIsLoading(false)
         }
         fetchData()
-    }, [])
-   
-    async function registerServiceWorker() {
-        const registration = await navigator.serviceWorker.register('/sw.js', {
-            scope: '/',
-            updateViaCache: 'none',
-        })
-        const sub = await registration.pushManager.getSubscription()
-        setSubscription(sub)
-    }
+    }, [isSupported])
    
     async function subscribeToPush() {
         const registration = await navigator.serviceWorker.ready

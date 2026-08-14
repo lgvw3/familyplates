@@ -1,4 +1,4 @@
-import type { Message as TMessage } from "ai";
+import type { UIMessage } from "ai";
 import { Message } from "@/components/chat/message";
 import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 
@@ -7,7 +7,7 @@ export const Messages = ({
   isLoading,
   status,
 }: {
-  messages: TMessage[];
+  messages: UIMessage[];
   isLoading: boolean;
   status: "error" | "submitted" | "streaming" | "ready";
 }) => {

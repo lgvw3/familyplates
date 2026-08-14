@@ -72,7 +72,6 @@ export function RecentAnnotations({ currentUserId, bookmark, chapterData, progre
     progress: number,
     recentAnnotations: Annotation[] | null,
 }) {
-    const [starting, setStarting] = useState(true)
     const userMap = fetchUsersAsMap()
     const { checkServerHealth, annotations, setAnnotations, addAnnotationsToBottomOfFeed, notification, setNotification } = useWebSocket(recentAnnotations ?? [], true) 
     if (notification && notification.userId != currentUserId) {
@@ -113,7 +112,6 @@ export function RecentAnnotations({ currentUserId, bookmark, chapterData, progre
         window.addEventListener('resize', handleResize);
         handleResize()
         dataCheck()
-        setStarting(false)
     
         // Cleanup the listener on unmount
         return () => window.removeEventListener('resize', handleResize);
@@ -131,7 +129,7 @@ export function RecentAnnotations({ currentUserId, bookmark, chapterData, progre
         isLoading.current = false;
     };
 
-    if (starting) {
+    if (dimensions.height === 0) {
         return <HomeFeedSkeleton />
     }
     
@@ -156,4 +154,3 @@ export function RecentAnnotations({ currentUserId, bookmark, chapterData, progre
         />
     )
 }
-

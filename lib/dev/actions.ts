@@ -1,7 +1,6 @@
 'use server'
 import { Annotation } from '@/types/scripture';
-import nodemailer from 'nodemailer';
-import { MailOptions } from 'nodemailer/lib/json-transport';
+import nodemailer, { type SendMailOptions } from 'nodemailer';
 
 
 export default async function sendErrorMessageToMe(annotation: Annotation) {
@@ -18,7 +17,7 @@ export default async function sendErrorMessageToMe(annotation: Annotation) {
             },
         });
 
-        const mailOptions: MailOptions = {
+        const mailOptions: SendMailOptions = {
             from: process.env.EMAIL_USER,
             to: "logangvw3@gmail.com",
             subject: `Annotation Failed For ${annotation.userName}`,

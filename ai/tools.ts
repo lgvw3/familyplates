@@ -5,7 +5,7 @@ import { z } from "zod";
 
 export const weatherTool = tool({
   description: "Get the weather in a location",
-  parameters: z.object({
+  inputSchema: z.object({
     location: z.string().describe("The location to get the weather for"),
   }),
   execute: async ({ location }) => ({
@@ -16,13 +16,13 @@ export const weatherTool = tool({
 
 export const getAllAnnotationsTool = tool({
   description: "Get all annotations",
-  parameters: z.object({}).optional(),
+  inputSchema: z.object({}),
   execute: async () => (await fetchAllAnnotations(true)) ?? 'No annotations found'
 });
 
 export const getAnnotationsByUserTool = tool({
   description: "Get all annotations by user",
-  parameters: z.object({
+  inputSchema: z.object({
     userName: z.string().describe("The user name to get annotations for"),
   }),
   execute: async ({userName}) => {
@@ -44,4 +44,3 @@ export const getAnnotationsByUserTool = tool({
     return await fetchAnnotationsByUser(userId, true)
   }
 });
-
