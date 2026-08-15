@@ -9,7 +9,7 @@ export function ContinueReading({bookmark}: {
     bookmark: BookmarkedSpot | null,
 }) {
     const href = bookmark
-        ? `/book/${encodeURIComponent(bookmark.bookId)}/chapter/chapter_${bookmark.chapterNumber}/#verse-${bookmark.verseNumber}`
+        ? `/book/${encodeURIComponent(bookmark.bookId)}/chapter/chapter_${bookmark.chapterNumber}#verse-${bookmark.verseNumber}`
         : '/intro/title-page'
     const label = bookmark ? 'Continue reading' : 'Start reading'
 

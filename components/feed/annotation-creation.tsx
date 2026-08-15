@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { PlusIcon } from 'lucide-react'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -93,17 +94,26 @@ export function AnnotationCreation({ renderTrigger }: { renderTrigger?: (onOpen:
             event.preventDefault()
             textareaRef.current?.focus({ preventScroll: true })
           }}
-          className="inset-0 flex h-dvh w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-y-auto overscroll-contain rounded-none border-0 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] !animate-none !duration-0 sm:inset-auto sm:left-1/2 sm:top-1/2 sm:h-[min(650px,calc(100dvh-2rem))] sm:max-h-[calc(100dvh-2rem)] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:overflow-hidden sm:rounded-lg sm:border sm:p-6"
+          className="inset-0 flex h-dvh w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden overscroll-contain rounded-none border-0 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] [&>button:last-child]:hidden !animate-none !duration-0 sm:inset-auto sm:left-1/2 sm:top-1/2 sm:h-[min(650px,calc(100dvh-2rem))] sm:max-h-[calc(100dvh-2rem)] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:overflow-hidden sm:rounded-lg sm:border sm:p-6 sm:[&>button:last-child]:block"
         >
           <DialogHeader className="shrink-0 pr-10 text-left">
-            <DialogTitle>Create an annotation</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="sr-only sm:not-sr-only">Create an annotation</DialogTitle>
+            <DialogDescription className="sr-only sm:not-sr-only">
               Share a thought with the family without linking it to a specific passage.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-col gap-6 py-6 sm:min-h-0 sm:flex-1">
-            <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center justify-between gap-3 sm:hidden">
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleSave} disabled={!text.trim() || !user} aria-label="Share annotation">
+              Share
+            </Button>
+          </div>
+
+          <div className="flex min-h-0 flex-1 flex-col gap-6 py-6 sm:py-0">
+            <div className="hidden items-center gap-3 sm:flex">
               <Avatar className="size-10 shrink-0">
                 <AvatarImage src={user?.avatar} alt={user?.name} />
                 <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
@@ -119,7 +129,7 @@ export function AnnotationCreation({ renderTrigger }: { renderTrigger?: (onOpen:
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="What’s on your mind?"
-              className="min-h-[50dvh] flex-none resize-none p-4 text-lg sm:min-h-0 sm:flex-1"
+              className="h-full min-h-0 flex-1 resize-none overflow-y-auto p-4 text-lg"
             />
           </div>
         </DialogContent>

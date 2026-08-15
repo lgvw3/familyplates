@@ -178,12 +178,29 @@ export default function ScriptureReader({
   }
 
   useEffect(() => {
-    const hash = window.location.hash
-    if (!hash) return
-    const verseElement = document.querySelector(hash)
-    if (!verseElement) return
-    window.setTimeout(() => verseElement.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0)
-  }, [])
+    const scrollToHash = () => {
+      const verseId = window.location.hash.slice(1)
+      if (!verseId) return
+
+      const verseElement = document.getElementById(verseId)
+      if (!verseElement) return
+
+      const offset = 80
+      const top = verseElement.getBoundingClientRect().top + window.scrollY - offset
+      window.scrollTo({ top, behavior: 'smooth' })
+    }
+
+    const handleHashChange = () => {
+      scrollToHash()
+    }
+
+    handleHashChange()
+    window.addEventListener('hashchange', handleHashChange)
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange)
+    }
+  }, [bookId, chapterNumber, units])
 
   useEffect(() => {
     const root = textContainerRef.current
