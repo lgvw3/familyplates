@@ -11,6 +11,7 @@ import { redirect } from "next/navigation";
 import { fetchAccountById } from "../auth/accounts";
 import { ObjectId, UpdateResult } from "mongodb";
 import { sendNotificationToOfflineUsers } from "../push-notifications/actions";
+import { InvalidAttributionTargetError, resolveScriptureAttribution } from "../scripture-attribution/resolver.ts";
 
 const zAnnotation = z.object({
     schemaVersion: z.literal(2),
@@ -75,6 +76,22 @@ export async function saveAnnotation(annotation: Annotation) {
 
     const {target, text, type, color, url, photoUrl} = validatedFields.data
 
+    // Attribution is always derived from the checked-in scripture text.  The
+    // Zod schema intentionally excludes this field, so a browser cannot forge
+    // a profile identity or recorder relationship.
+    let scriptureAttribution
+    try {
+        scriptureAttribution = target ? resolveScriptureAttribution(target) : undefined
+    } catch (error) {
+        const message = error instanceof InvalidAttributionTargetError
+            ? error.message
+            : 'Unable to verify the selected scripture text'
+        return {
+            errors: { target: [message] },
+            message: 'Invalid scripture selection. Failed to create annotation',
+        }
+    }
+
     const client = await clientPromise;
     const db = client.db("main");
     const collection = db.collection("annotations");
@@ -83,6 +100,7 @@ export async function saveAnnotation(annotation: Annotation) {
         _id: null,
         schemaVersion: 2,
         target,
+        ...(scriptureAttribution ? { scriptureAttribution } : {}),
         text: text,
         type: type,
         color: color,

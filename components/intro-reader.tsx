@@ -8,21 +8,14 @@ import { Annotation, AnnotationType, HighlightColor, Intro } from '@/types/scrip
 import Image from 'next/image'
 import { AnnotationMenu } from './annotation-menu'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { introMaterialOrder } from './navigation'
 import { saveAnnotation } from '@/lib/annotations/actions'
 import { toast } from 'sonner'
 import { useWebSocket } from '@/hooks/use-websockets'
 import { AnchoredSelection, AnnotatedText } from './annotated-text'
 import { sortAnnotationsByTarget, TextUnit } from '@/lib/highlights/ranges'
-import { getAnnotationQuote } from '@/lib/annotations/presentation'
-
-const getHighlightStyle = (color: HighlightColor) => ({
-  yellow: 'bg-yellow-200 dark:bg-yellow-900',
-  green: 'bg-green-200 dark:bg-green-900',
-  blue: 'bg-blue-200 dark:bg-blue-900',
-  purple: 'bg-purple-200 dark:bg-purple-900',
-  pink: 'bg-pink-200 dark:bg-pink-900',
-})[color]
+import { AnnotationQuote } from './feed/annotation-quote'
 
 interface AnnotationMenuValue {
   text: string
@@ -53,6 +46,7 @@ export default function IntroReader({
   const introIndex = introMaterialOrder.indexOf(intro.title)
   const previousPage = introIndex > 0 ? introMaterialOrder[introIndex - 1] : null
   const nextPage = introIndex < introMaterialOrder.length - 1 ? introMaterialOrder[introIndex + 1] : null
+  const router = useRouter()
 
   const units = useMemo<TextUnit[]>(() => intro.paragraphs.map((text, index) => ({ unit: index, text })), [intro.paragraphs])
   const sortedAnnotations = useMemo(() => sortAnnotationsByTarget(annotations), [annotations])
@@ -113,16 +107,22 @@ export default function IntroReader({
   const annotationPanel = visibleAnnotations.length ? (
     <div className="space-y-4">
       {visibleAnnotations.map((annotation) => (
-        <Link key={annotation._id?.toString()} href={`/annotation/${annotation._id?.toString()}`}>
-          <div className="space-y-2 rounded border p-3 hover:bg-accent/50 transition-colors">
-            <p className={`text-sm p-2 rounded ${getHighlightStyle(annotation.color)}`}>&ldquo;{getAnnotationQuote(annotation)}&rdquo;</p>
+          <div
+            key={annotation._id?.toString()}
+            className="space-y-2 rounded border p-3 transition-colors hover:bg-accent/50"
+            onClick={(event) => {
+              if ((event.target as HTMLElement).closest('a, button, input, textarea, select, label')) return
+              router.push(`/annotation/${annotation._id?.toString()}`)
+            }}
+          >
+            <AnnotationQuote annotation={annotation} variant="panel" />
             {annotation.text && <p className="text-sm whitespace-pre-wrap">{annotation.text}</p>}
             <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{annotation.userName}</span><span>{new Date(annotation.createdAt).toLocaleDateString()}</span></div>
             {annotation.comments.length > 0 && <span className="flex items-center gap-1 text-sm"><MessageCircleIcon className="h-4 w-4" /> {annotation.comments.length}</span>}
             {annotation.url && <span className="text-sm text-blue-600">View Reference</span>}
             {annotation.photoUrl && <Image src={annotation.photoUrl} alt="Annotation" width={400} height={128} className="w-full h-32 object-cover rounded" />}
+            <Link href={`/annotation/${annotation._id?.toString()}`} className="inline-flex text-sm text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">Open annotation</Link>
           </div>
-        </Link>
       ))}
     </div>
   ) : <p className="text-muted-foreground text-sm">Select text to add annotations.</p>

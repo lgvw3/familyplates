@@ -48,6 +48,29 @@ export type AnnotationType = 'note' | 'link' | 'photo' | 'combo';
 export type HighlightColor = 'yellow' | 'green' | 'blue' | 'purple' | 'pink';
 export type TextStyle = 'underline' | 'bold' | 'italic' | 'none';
 
+/**
+ * A server-derived description of the source of an annotated passage.  It is
+ * deliberately separate from the family member who wrote the annotation.
+ */
+export type ScriptureAttributionBasis =
+  | 'record-author'
+  | 'direct-speech'
+  | 'quoted-source'
+  | 'translation'
+  | 'editorial'
+  | 'collective-testimony';
+
+export type ScriptureAttributionRelation = 'recorded-by' | 'quoted-by' | 'translated-by';
+
+export interface ScriptureAttribution {
+  version: 1;
+  ruleSetVersion: string;
+  primaryProfileId: string;
+  secondaryProfileId?: string;
+  relation?: ScriptureAttributionRelation;
+  basis: ScriptureAttributionBasis;
+}
+
 export interface TextRangePoint {
   unit: number;
   offset: number;
@@ -84,6 +107,8 @@ export interface Annotation {
   _id: ObjectId | string | null;
   schemaVersion: 2;
   target: AnnotationTarget | null;
+  /** Never accepted from a client; assigned by the save-time resolver. */
+  scriptureAttribution?: ScriptureAttribution;
   text: string;
   type: AnnotationType;
   color: HighlightColor;

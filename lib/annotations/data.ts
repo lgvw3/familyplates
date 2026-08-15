@@ -7,6 +7,19 @@ import { redirect } from "next/navigation";
 import { ObjectId } from "mongodb";
 import clientPromise from "../mongodb";
 
+function normalizeAnnotationIds(annotation: Annotation) {
+    annotation._id = annotation._id ? annotation._id.toString() : null
+    annotation.comments = annotation.comments?.map(comment => {
+        comment._id = comment._id.toString()
+        return comment
+    }) ?? []
+    annotation.likes = annotation.likes?.map(like => {
+        like._id = like._id.toString()
+        return like
+    }) ?? []
+    return annotation
+}
+
 export async function fetchAllAnnotations(skipAuth: boolean = false) {
     if (!skipAuth) {
         const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
@@ -27,17 +40,7 @@ export async function fetchAllAnnotations(skipAuth: boolean = false) {
     try {
         const results = await collection.find<Annotation>({}).toArray();
         if (results) {
-            results.map(a => {
-                a._id = a._id ? a._id.toString() : null
-                a.comments = a.comments?.map(comment => {
-                    comment._id = comment._id.toString()
-                    return comment
-                })
-                a.likes?.map(like => {
-                    like._id = like._id.toString()
-                    return like
-                })
-            })
+            results.forEach(normalizeAnnotationIds)
             return results
         }
         else {
@@ -67,17 +70,7 @@ export async function fetchRecentAnnotations() {
     try {
         const results = await collection.find<Annotation>({}).sort({ createdAt: -1}).limit(10).toArray();
         if (results) {
-            results.map(a => {
-                a._id = a._id ? a._id.toString() : null
-                a.comments = a.comments?.map(comment => {
-                    comment._id = comment._id.toString()
-                    return comment
-                })
-                a.likes?.map(like => {
-                    like._id = like._id.toString()
-                    return like
-                })
-            })
+            results.forEach(normalizeAnnotationIds)
             return results
         }
         else {
@@ -111,17 +104,7 @@ export async function fetchMoreAnnotations(lastAnnotation: Annotation, limit: nu
         .toArray();
 
         if (results) {
-            results.map(a => {
-                a._id = a._id ? a._id.toString() : null
-                a.comments = a.comments?.map(comment => {
-                    comment._id = comment._id.toString()
-                    return comment
-                })
-                a.likes?.map(like => {
-                    like._id = like._id.toString()
-                    return like
-                })
-            })
+            results.forEach(normalizeAnnotationIds)
             return results
         }
         else {
@@ -158,11 +141,7 @@ export async function fetchAnnotationsByChapter(book: string, chapter: number) {
         }).toArray();
 
         if (results) {
-            results.map(a => {
-                a._id = a._id ? a._id.toString() : null
-                a.comments?.map(c => c._id = c._id.toString())
-                a.likes?.map(l => l._id = l._id.toString())
-            })
+            results.forEach(normalizeAnnotationIds)
             return results
         }
         else {
@@ -188,11 +167,7 @@ export async function fetchAnnotationsByIntro(introId: string) {
             "target.introId": introId,
         }).toArray();
 
-        results.forEach(annotation => {
-            annotation._id = annotation._id?.toString() ?? null
-            annotation.comments?.forEach(comment => comment._id = comment._id.toString())
-            annotation.likes?.forEach(like => like._id = like._id.toString())
-        })
+        results.forEach(normalizeAnnotationIds)
         return results
     } catch (error) {
         console.error('Error fetching intro annotations:', error)
@@ -269,11 +244,7 @@ export async function fetchAnnotationsByUser(userId: number, skipAuth: boolean =
         const results = await collection.find<Annotation>({ userId: userId }).toArray();
 
         if (results) {
-            results.map(a => {
-                a._id = a._id?.toString() ? a._id.toString() : ''
-                a.comments?.map(c => c._id = c._id.toString())
-                a.likes?.map(l => l._id = l._id.toString())
-            })
+            results.forEach(normalizeAnnotationIds)
             return results
         }
         else {
@@ -283,4 +254,29 @@ export async function fetchAnnotationsByUser(userId: number, skipAuth: boolean =
         console.error(error)
         return null
     }
-}   
+}
+
+/** Recent annotations where a scripture source is either the primary or secondary identity. */
+export async function fetchAnnotationsByScripturePerson(profileId: string, limit: number = 25) {
+    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
+    if (!authToken) redirect('/sign-in')
+    const { userId } = validateToken(authToken)
+    if (!userId || !profileId) return null
+
+    const normalizedLimit = Math.max(1, Math.min(Math.floor(limit), 100))
+    try {
+        const client = await clientPromise
+        const collection = client.db('main').collection<Annotation>('annotations')
+        const results = await collection.find({
+            $or: [
+                { 'scriptureAttribution.primaryProfileId': profileId },
+                { 'scriptureAttribution.secondaryProfileId': profileId },
+            ],
+        }).sort({ createdAt: -1 }).limit(normalizedLimit).toArray()
+        results.forEach(normalizeAnnotationIds)
+        return results
+    } catch (error) {
+        console.error('Error fetching annotations by scripture person:', error)
+        return null
+    }
+}

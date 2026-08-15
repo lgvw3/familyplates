@@ -16,6 +16,7 @@ import { fetchUsersAsMap } from "@/lib/auth/accounts"
 import { useWebSocket } from "@/hooks/use-websockets"
 import { motion } from "framer-motion"
 import { getAnnotationQuote, getAnnotationReference, getTargetHref } from "@/lib/annotations/presentation"
+import { AnnotationQuote } from "./annotation-quote"
 
 
 export default function AnnotationViewerSolo({author, initialAnnotation, currentUserId, userName } : {
@@ -103,23 +104,6 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
         else {
             toast.warning(results.message as string)
             setUserLike(temp)
-        }
-    }
-
-    const getBackgroundColor = () => {
-        switch (annotation.color) {
-            case 'yellow':
-                return 'bg-yellow-300 dark:bg-yellow-800';
-            case 'blue':
-                return 'bg-blue-300 dark:bg-blue-800';
-            case 'green':
-                return 'bg-green-300 dark:bg-green-800';
-            case 'purple':
-                return 'bg-purple-300 dark:bg-purple-800'
-            case 'pink':
-                return 'bg-pink-300 dark:bg-pink-800'
-            default:
-                return '';
         }
     }
 
@@ -265,17 +249,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                     }
                 </CardHeader>
                 <CardContent>
-                    {
-                        annotation.target && (
-                            <div className="flex items-center space-x-4 rounded-md border p-4">
-                                <div className="flex-1 space-y-1">
-                                    <span className={cn(getBackgroundColor(), 'rounded p-1 text-sm font-medium leading-none')}>
-                                        {getAnnotationQuote(annotation)}
-                                    </span>
-                                </div>
-                            </div>
-                        )
-                    }
+                    {annotation.target && <AnnotationQuote annotation={annotation} variant="solo" className="mb-4" />}
                     {
                         editMode && author.id == currentUserId ?
                             <>

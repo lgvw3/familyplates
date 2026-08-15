@@ -12,6 +12,8 @@
     "start": "next start",
     "lint": "eslint .",
     "test:highlights": "node --experimental-strip-types --test lib/highlights/ranges.test.ts",
+    "test:attribution": "node --experimental-strip-types --test lib/scripture-attribution/resolver.test.ts",
+    "backfill:annotation-attribution": "node --experimental-strip-types --env-file=.env.local scripts/backfill-annotation-attribution.mjs",
     "migrate:annotations": "node --env-file=.env.local scripts/migrate-annotations-v2.mjs"
   },
   "dependencies": {

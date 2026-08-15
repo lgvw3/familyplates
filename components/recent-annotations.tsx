@@ -9,7 +9,6 @@ import { fetchMoreAnnotations } from "@/lib/annotations/data"
 import { ContinueReading } from "./continue-reading"
 import { UserAccount } from "@/lib/auth/definitions"
 import { BookmarkedSpot } from "@/lib/reading/definitions"
-import Link from "next/link"
 import { toast } from "sonner"
 import { AnnotationCreation } from "./feed/annotation-creation"
 import { Virtuoso } from 'react-virtuoso';
@@ -46,18 +45,16 @@ function AnnotationCard({annotation, index, user, userMap, currentUserId, bookma
     
     if (user) {
         return (
-            <Link 
-                className="md:px-8"
-                href={`/annotation/${annotation._id?.toString()}`}
-            >
+            <div className="md:px-8">
                 <AnnotationViewer 
                     index={index}
                     author={user} 
                     annotation={annotation} 
                     userMap={userMap}
                     currentUserId={currentUserId}
+                    annotationHref={`/annotation/${annotation._id?.toString()}`}
                 />
-            </Link>
+            </div>
         )
     }
     return null

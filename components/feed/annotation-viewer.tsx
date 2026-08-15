@@ -4,28 +4,30 @@ import { UserAccount } from "@/lib/auth/definitions"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Annotation } from "@/types/scripture"
-import { cn, getInitials } from "@/lib/utils"
-import { HeartIcon, ExternalLinkIcon, MessageCircleIcon, QuoteIcon } from "lucide-react"
+import { getInitials } from "@/lib/utils"
+import { HeartIcon, ExternalLinkIcon, MessageCircleIcon } from "lucide-react"
 import { Button } from "../ui/button"
 import { updateLikeStatusOfComment } from "@/lib/annotations/actions"
 import { toast } from "sonner"
 import { useRouter } from 'next/navigation'
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { getAnnotationQuote, getAnnotationReference, getTargetHref } from "@/lib/annotations/presentation"
+import { getAnnotationReference, getTargetHref } from "@/lib/annotations/presentation"
+import Link from "next/link"
+import { AnnotationQuote } from "./annotation-quote"
 
 
-export default function AnnotationViewer({ index, author, annotation, userMap, currentUserId } : {
+export default function AnnotationViewer({ index, author, annotation, userMap, currentUserId, annotationHref } : {
     index?: number, 
     author: UserAccount, 
     annotation: Annotation, 
     userMap: Map<number, UserAccount>, 
     currentUserId: number,
+    annotationHref: string,
 }) {
     const [userLike, setUserLike] = useState(annotation.likes.find(val => val.userId == currentUserId))
     const router = useRouter()
     const reference = getAnnotationReference(annotation)
-    const quote = getAnnotationQuote(annotation)
 
     const saveLike = async() => {
         const temp = userLike ? {...userLike} : userLike
@@ -48,23 +50,6 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
         if (!results.newLike) {
             toast.warning(results.message as string)
             setUserLike(temp)
-        }
-    }
-
-    const getBackgroundColor = () => {
-        switch (annotation.color) {
-            case 'yellow':
-                return 'bg-yellow-300 dark:bg-yellow-800';
-            case 'blue':
-                return 'bg-blue-300 dark:bg-blue-800';
-            case 'green':
-                return 'bg-green-300 dark:bg-green-800';
-            case 'purple':
-                return 'bg-purple-300 dark:bg-purple-800'
-            case 'pink':
-                return 'bg-pink-300 dark:bg-pink-800'
-            default:
-                return '';
         }
     }
 
@@ -107,6 +92,10 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
             <Card 
                 key={annotation._id?.toString()}
                 className={`cursor-pointer ${index == 0 ? 'rounded-b-none' : 'rounded-none'}`}
+                onClick={(event) => {
+                    if ((event.target as HTMLElement).closest('a, button, input, textarea, select, label')) return
+                    router.push(annotationHref)
+                }}
             >
                 <CardHeader>
                     <div className="flex items-center gap-4">
@@ -125,23 +114,21 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                                 {getPostDate()}
                             </CardDescription>
                         </div>
+                        <Link
+                            href={annotationHref}
+                            aria-label={`Open annotation by ${annotation.userName}`}
+                            className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                            <ExternalLinkIcon className="h-4 w-4" aria-hidden="true" />
+                        </Link>
                     </div>
                 </CardHeader>
                 <CardContent>
-                    {
-                        quote ?
-                        <blockquote className="mb-4 flex gap-3 rounded-md border bg-muted/30 p-4" data-testid="feed-annotation-quote">
-                            <QuoteIcon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                            <p className={cn(getBackgroundColor(), 'whitespace-pre-line rounded px-1.5 py-1 text-sm font-medium leading-relaxed')}>
-                                {quote}
-                            </p>
-                        </blockquote>
-                        : null 
-                    }
+                    {annotation.target && <AnnotationQuote annotation={annotation} variant="feed" className="mb-4" />}
                     <p className="text-foreground whitespace-pre-wrap">{annotation.text}</p>
                 </CardContent>
                 <CardFooter className="flex items-center gap-4">
-                    <Button variant="ghost" size="sm" className="gap-2">
+                    <Button variant="ghost" size="sm" className="gap-2" onClick={(event) => event.stopPropagation()}>
                         <MessageCircleIcon className="h-4 w-4" /> { annotation.comments.length ?? null }
                     </Button>
                     <motion.div whileTap={{ scale: 0.8 }}>

@@ -9,6 +9,7 @@ import Image from 'next/image'
 import { AnnotationMenu } from './annotation-menu'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from './ui/breadcrumb'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { saveAnnotation } from '@/lib/annotations/actions'
 import { toast } from 'sonner'
 import { useWebSocket } from '@/hooks/use-websockets'
@@ -17,15 +18,7 @@ import { saveBookmark } from '@/lib/reading/action'
 import { useHeader } from './header-context'
 import { AnchoredSelection, AnnotatedText } from './annotated-text'
 import { sortAnnotationsByTarget, TextUnit } from '@/lib/highlights/ranges'
-import { getAnnotationQuote } from '@/lib/annotations/presentation'
-
-const getHighlightStyle = (color: HighlightColor) => ({
-  yellow: 'bg-yellow-200 dark:bg-yellow-900',
-  green: 'bg-green-200 dark:bg-green-900',
-  blue: 'bg-blue-200 dark:bg-blue-900',
-  purple: 'bg-purple-200 dark:bg-purple-900',
-  pink: 'bg-pink-200 dark:bg-pink-900',
-})[color]
+import { AnnotationQuote } from './feed/annotation-quote'
 
 interface ScriptureReaderProps {
   chapter: Chapter
@@ -71,6 +64,7 @@ export default function ScriptureReader({
   const headingRef = useRef<HTMLHeadingElement>(null)
   const textContainerRef = useRef<HTMLDivElement>(null)
   const { setHeader } = useHeader()
+  const router = useRouter()
 
   const units = useMemo<TextUnit[]>(() => chapter.verses.map((verse) => ({
     unit: verse.number,
@@ -148,11 +142,15 @@ export default function ScriptureReader({
     return (
       <div className="space-y-4">
         {visibleAnnotations.map((annotation) => (
-          <Link key={annotation._id?.toString()} href={`/annotation/${annotation._id?.toString()}`}>
-            <div className="space-y-2 rounded border p-3 hover:bg-accent/50 transition-colors">
-              <p className={`text-sm p-2 rounded ${getHighlightStyle(annotation.color)}`}>
-                &ldquo;{getAnnotationQuote(annotation)}&rdquo;
-              </p>
+            <div
+              key={annotation._id?.toString()}
+              className="space-y-2 rounded border p-3 transition-colors hover:bg-accent/50"
+              onClick={(event) => {
+                if ((event.target as HTMLElement).closest('a, button, input, textarea, select, label')) return
+                router.push(`/annotation/${annotation._id?.toString()}`)
+              }}
+            >
+              <AnnotationQuote annotation={annotation} variant="panel" />
               {annotation.text && <p className="text-sm whitespace-pre-wrap">{annotation.text}</p>}
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{annotation.userName}</span>
@@ -167,8 +165,13 @@ export default function ScriptureReader({
               {annotation.photoUrl && (
                 <Image src={annotation.photoUrl} alt="Annotation" width={400} height={128} className="w-full h-32 object-cover rounded" />
               )}
+              <Link
+                href={`/annotation/${annotation._id?.toString()}`}
+                className="inline-flex text-sm text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                Open annotation
+              </Link>
             </div>
-          </Link>
         ))}
       </div>
     )
