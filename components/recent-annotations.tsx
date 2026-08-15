@@ -1,10 +1,10 @@
 'use client'
 
-import { Annotation, Chapter } from "@/types/scripture"
+import { Annotation } from "@/types/scripture"
 import { fetchUsersAsMap } from "@/lib/auth/accounts"
 import { useWebSocket } from "@/hooks/use-websockets"
 import AnnotationViewer from "./feed/annotation-viewer"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { fetchMoreAnnotations } from "@/lib/annotations/data"
 import { ContinueReading } from "./continue-reading"
 import { UserAccount } from "@/lib/auth/definitions"
@@ -12,38 +12,19 @@ import { BookmarkedSpot } from "@/lib/reading/definitions"
 import { toast } from "sonner"
 import { AnnotationCreation } from "./feed/annotation-creation"
 import { Virtuoso } from 'react-virtuoso';
+import { motion } from "framer-motion"
+import { PlusIcon } from "lucide-react"
+import { Button } from "./ui/button"
 
 
-function AnnotationCard({annotation, index, user, userMap, currentUserId, bookmark, chapterData, progress}: {
-    annotation: Annotation | null,
+function AnnotationCard({annotation, index, user, userMap, currentUserId}: {
+    annotation: Annotation,
     index: number,
-    //style: React.CSSProperties,
     user: UserAccount | undefined, 
     userMap: Map<number, UserAccount>, 
     currentUserId: number,
-    bookmark: BookmarkedSpot | null,
-    chapterData: Chapter | null | undefined,
-    progress: number,
 }) {
-    // Special handling for the first item (ContinueReading)
-    if (index === 0) {
-        return (
-            <>
-                <div className="py-4 px-4 md:px-8">
-                    <ContinueReading bookmark={bookmark} chapterData={chapterData} progress={progress} />
-                </div>
-                <div className="flex flex-col gap-2 pt-4 px-4 md:px-8">
-                    <h2 className="text-2xl font-bold tracking-tight">Recent Annotations & Notes</h2>
-                    <p className="text-muted-foreground">See thoughts shared by the fam</p>
-                </div>
-                <div className="pt-4 md:px-8">
-                    <AnnotationCreation />
-                </div>
-            </>
-        )
-    }
-    
-    if (user && annotation) {
+    if (user) {
         return (
             <div className="md:px-8">
                 <AnnotationViewer 
@@ -61,11 +42,9 @@ function AnnotationCard({annotation, index, user, userMap, currentUserId, bookma
   }
 
 
-export function RecentAnnotations({ currentUserId, bookmark, chapterData, progress, recentAnnotations }: {
+export function RecentAnnotations({ currentUserId, bookmark, recentAnnotations }: {
     currentUserId: number,
     bookmark: BookmarkedSpot | null,
-    chapterData: Chapter | null | undefined,
-    progress: number,
     recentAnnotations: Annotation[] | null,
 }) {
     const userMap = fetchUsersAsMap()
@@ -75,8 +54,30 @@ export function RecentAnnotations({ currentUserId, bookmark, chapterData, progre
         setNotification(null)
     }
     const isLoading = useRef(false);
+    const [scroller, setScroller] = useState<HTMLElement | Window | null>(null)
+    const [actionsVisible, setActionsVisible] = useState(true)
+    const lastScrollTop = useRef(0)
     const [hasMore, setHasMore] = useState(true)
-    const feedItems: Array<Annotation | null> = [null, ...annotations]
+
+    useEffect(() => {
+        if (!scroller) return
+
+        const getScrollTop = () => 'scrollY' in scroller ? scroller.scrollY : scroller.scrollTop
+        lastScrollTop.current = getScrollTop()
+
+        const handleScroll = () => {
+            const currentScrollTop = getScrollTop()
+            const delta = currentScrollTop - lastScrollTop.current
+
+            if (Math.abs(delta) < 4) return
+
+            setActionsVisible(delta < 0 || currentScrollTop <= 0)
+            lastScrollTop.current = currentScrollTop
+        }
+
+        scroller.addEventListener('scroll', handleScroll, { passive: true })
+        return () => scroller.removeEventListener('scroll', handleScroll)
+    }, [scroller])
 
     const loadMoreAnnotations = async () => {
         if (isLoading.current || !hasMore || annotations.length === 0) return;
@@ -99,23 +100,47 @@ export function RecentAnnotations({ currentUserId, bookmark, chapterData, progre
     };
 
     return (
-        <Virtuoso
-            style={{ height: '100dvh', width: '100%' }}
-            data={feedItems}
-            endReached={loadMoreAnnotations} // Trigger loading more annotations when the user scrolls to the end
-            itemContent={(index, item) => (
-                <AnnotationCard
-                    annotation={item}
-                    index={index}
-                    user={index === 0 || !item ? undefined : userMap.get(item.userId)}
-                    userMap={userMap}
-                    currentUserId={currentUserId}
-                    bookmark={bookmark}
-                    chapterData={chapterData}
-                    progress={progress}
+        <>
+            <Virtuoso
+                style={{ width: '100%' }}
+                data={annotations}
+                scrollerRef={setScroller}
+                useWindowScroll
+                endReached={loadMoreAnnotations}
+                itemContent={(index, item) => (
+                    <AnnotationCard
+                        annotation={item}
+                        index={index}
+                        user={userMap.get(item.userId)}
+                        userMap={userMap}
+                        currentUserId={currentUserId}
+                    />
+                )}
+                className="scrollbar-hide"
+            />
+            <motion.div
+                animate={{ opacity: actionsVisible ? 1 : 0, y: actionsVisible ? 0 : 24 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="fixed bottom-6 right-6 z-40 flex items-center gap-3"
+                style={{ pointerEvents: actionsVisible ? 'auto' : 'none' }}
+            >
+                <AnnotationCreation
+                    renderTrigger={(onOpen) => (
+                        <Button
+                            type="button"
+                            size="icon"
+                            variant="secondary"
+                            className="size-14 rounded-full shadow-lg shadow-black/25 transition-none hover:bg-secondary hover:text-secondary-foreground"
+                            aria-label="Create an unbound annotation"
+                            title="Create an unbound annotation"
+                            onClick={onOpen}
+                        >
+                            <PlusIcon className="size-7" />
+                        </Button>
+                    )}
                 />
-            )}
-            className="scrollbar-hide"
-        />
+                <ContinueReading bookmark={bookmark} />
+            </motion.div>
+        </>
     )
 }

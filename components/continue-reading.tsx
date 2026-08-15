@@ -1,72 +1,54 @@
 import Link from "next/link"
 import { ArrowRight, BookOpen } from 'lucide-react'
 import { Button } from "@/components/ui/button"
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { BookmarkedSpot } from "@/lib/reading/definitions"
-import { toTitleCase } from "@/lib/utils"
-import { Chapter } from "@/types/scripture"
+import { motion } from "framer-motion"
 
 
-export function ContinueReading({bookmark, chapterData, progress}: {
+export function ContinueReading({bookmark}: {
     bookmark: BookmarkedSpot | null,
-    chapterData: Chapter | null | undefined,
-    progress: number
 }) {
+    const href = bookmark
+        ? `/book/${encodeURIComponent(bookmark.bookId)}/chapter/chapter_${bookmark.chapterNumber}/#verse-${bookmark.verseNumber}`
+        : '/intro/title-page'
+    const label = bookmark ? 'Continue reading' : 'Start reading'
+
     return (
-        <Card className="relative overflow-hidden w-full">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5" />
-                    { bookmark ? 'Continue Reading' : 'Start Reading' }
-                </CardTitle>
-                <CardDescription>{ bookmark ? 'Pick up where you left off' : 'Start Fresh' }</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
-                    {
-                        bookmark ?
-                        <div className="space-y-2">
-                            <div className="flex flex-col">
-                                <p className="font-medium">{toTitleCase(bookmark.bookId.replaceAll('-', ' '))} - Chapter {bookmark?.chapterNumber}</p>
-                                <span className="text-sm text-muted-foreground">
-                                    Verse {bookmark?.verseNumber} of {chapterData?.verses.length}
-                                </span>
-                            </div>
-                            <Progress value={progress} className="h-2" />
-                        </div>
-                        : null
-                    }
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Last read {bookmark?.lastRead.toDateString()}</span>
-                        <Button asChild>
-                            {
-                                bookmark ?
-                                <Link 
-                                    href={`/book/${encodeURIComponent(bookmark.bookId)}/chapter/chapter_${bookmark.chapterNumber}/#verse-${bookmark.verseNumber}`}
-                                    className="gap-2"
-                                >
-                                    Continue <ArrowRight className="h-4 w-4" />
-                                </Link>
-                                : 
-                                <Link 
-                                    href={'/intro/title-page'}
-                                    className="gap-2"
-                                >
-                                    Start Reading <ArrowRight className="h-4 w-4" />
-                                </Link>
-                            }
-                        </Button>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
+        <motion.div
+            initial="rest"
+            whileHover="hover"
+            whileTap={{ scale: 0.94 }}
+            variants={{
+                rest: { scale: 1 },
+                hover: { scale: 1.04 },
+            }}
+        >
+            <Button asChild size="icon" className="size-14 rounded-full border shadow-lg shadow-black/25">
+                <Link href={href} aria-label={label} title={label}>
+                    <span className="relative flex size-6 items-center justify-center overflow-hidden">
+                        <motion.span
+                            variants={{
+                                rest: { x: 0 },
+                                hover: { x: 24 },
+                            }}
+                            transition={{ duration: 0.24, ease: 'easeIn' }}
+                            className="absolute"
+                        >
+                            <BookOpen className="size-6" />
+                        </motion.span>
+                        <motion.span
+                            variants={{
+                                rest: { x: -24 },
+                                hover: { x: 0 },
+                            }}
+                            transition={{ duration: 0.24, ease: 'easeOut' }}
+                            className="absolute"
+                        >
+                            <ArrowRight className="size-6" />
+                        </motion.span>
+                    </span>
+                </Link>
+            </Button>
+        </motion.div>
     )
 }
-
