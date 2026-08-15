@@ -4,7 +4,7 @@ import { Annotation, Chapter } from "@/types/scripture"
 import { fetchUsersAsMap } from "@/lib/auth/accounts"
 import { useWebSocket } from "@/hooks/use-websockets"
 import AnnotationViewer from "./feed/annotation-viewer"
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { fetchMoreAnnotations } from "@/lib/annotations/data"
 import { ContinueReading } from "./continue-reading"
 import { UserAccount } from "@/lib/auth/definitions"
@@ -15,7 +15,7 @@ import { Virtuoso } from 'react-virtuoso';
 
 
 function AnnotationCard({annotation, index, user, userMap, currentUserId, bookmark, chapterData, progress}: {
-    annotation: Annotation,
+    annotation: Annotation | null,
     index: number,
     //style: React.CSSProperties,
     user: UserAccount | undefined, 
@@ -43,7 +43,7 @@ function AnnotationCard({annotation, index, user, userMap, currentUserId, bookma
         )
     }
     
-    if (user) {
+    if (user && annotation) {
         return (
             <div className="md:px-8">
                 <AnnotationViewer 
@@ -75,29 +75,39 @@ export function RecentAnnotations({ currentUserId, bookmark, chapterData, progre
         setNotification(null)
     }
     const isLoading = useRef(false);
+    const [hasMore, setHasMore] = useState(true)
+    const feedItems: Array<Annotation | null> = [null, ...annotations]
 
     const loadMoreAnnotations = async () => {
-        if (isLoading.current) return;
+        if (isLoading.current || !hasMore || annotations.length === 0) return;
         isLoading.current = true;
 
-        const newAnnotations = await fetchMoreAnnotations(annotations[annotations.length - 1], 15);
-        if (newAnnotations) {
-            addAnnotationsToBottomOfFeed(newAnnotations)
+        try {
+            const newAnnotations = await fetchMoreAnnotations(annotations[annotations.length - 1], 15);
+            if (newAnnotations === null) {
+                return
+            }
+
+            if (newAnnotations.length) {
+                addAnnotationsToBottomOfFeed(newAnnotations)
+            } else {
+                setHasMore(false)
+            }
+        } finally {
+            isLoading.current = false;
         }
-        isLoading.current = false;
     };
 
     return (
         <Virtuoso
             style={{ height: '100dvh', width: '100%' }}
-            data={annotations} // Pass the annotations array directly
-            initialItemCount={annotations.length}
+            data={feedItems}
             endReached={loadMoreAnnotations} // Trigger loading more annotations when the user scrolls to the end
-            itemContent={(index) => (
+            itemContent={(index, item) => (
                 <AnnotationCard
-                    annotation={index === 0 ? annotations[index] : annotations[index - 1]}
+                    annotation={item}
                     index={index}
-                    user={index === 0 ? undefined : userMap.get(annotations[index - 1].userId)}
+                    user={index === 0 || !item ? undefined : userMap.get(item.userId)}
                     userMap={userMap}
                     currentUserId={currentUserId}
                     bookmark={bookmark}

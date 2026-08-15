@@ -68,7 +68,7 @@ export async function fetchRecentAnnotations() {
     const collection = db.collection("annotations");
 
     try {
-        const results = await collection.find<Annotation>({}).sort({ createdAt: -1}).limit(10).toArray();
+        const results = await collection.find<Annotation>({}).sort({ createdAt: -1, _id: -1 }).limit(10).toArray();
         if (results) {
             results.forEach(normalizeAnnotationIds)
             return results
@@ -98,8 +98,24 @@ export async function fetchMoreAnnotations(lastAnnotation: Annotation, limit: nu
     const collection = db.collection("annotations");
 
     try {
-        const results = await collection.find<Annotation>({ createdAt: { $lt: lastAnnotation.createdAt } })
-        .sort({ createdAt: -1 })
+        const createdAt = new Date(lastAnnotation.createdAt)
+        if (Number.isNaN(createdAt.getTime())) {
+            throw new Error('Invalid annotation pagination cursor')
+        }
+
+        const lastId = lastAnnotation._id?.toString()
+        const cursorId = lastId && ObjectId.isValid(lastId) ? new ObjectId(lastId) : null
+        const cursor = cursorId
+            ? {
+                $or: [
+                    { createdAt: { $lt: createdAt } },
+                    { createdAt, _id: { $lt: cursorId } },
+                ],
+            }
+            : { createdAt: { $lt: createdAt } }
+
+        const results = await collection.find<Annotation>(cursor)
+        .sort({ createdAt: -1, _id: -1 })
         .limit(limit)
         .toArray();
 
