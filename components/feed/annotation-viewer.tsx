@@ -13,17 +13,18 @@ import { useRouter } from 'next/navigation'
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { getAnnotationReference, getTargetHref } from "@/lib/annotations/presentation"
-import Link from "next/link"
 import { AnnotationQuote } from "./annotation-quote"
+import { cn } from "@/lib/utils"
 
 
-export default function AnnotationViewer({ index, author, annotation, userMap, currentUserId, annotationHref } : {
+export default function AnnotationViewer({ index, author, annotation, userMap, currentUserId, annotationHref, flat = false } : {
     index?: number, 
     author: UserAccount, 
     annotation: Annotation, 
     userMap: Map<number, UserAccount>, 
     currentUserId: number,
     annotationHref: string,
+    flat?: boolean,
 }) {
     const [userLike, setUserLike] = useState(annotation.likes.find(val => val.userId == currentUserId))
     const router = useRouter()
@@ -91,7 +92,12 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
         <>
             <Card 
                 key={annotation._id?.toString()}
-                className={`cursor-pointer ${index == 0 ? 'rounded-b-none' : 'rounded-none'}`}
+                className={cn(
+                    'cursor-pointer',
+                    flat
+                        ? 'rounded-none border-0 border-b border-border/70 bg-transparent shadow-none transition-colors hover:bg-accent/50 dark:hover:bg-accent/40 last:border-b-0'
+                        : index == 0 ? 'rounded-b-none' : 'rounded-none',
+                )}
                 onClick={(event) => {
                     if ((event.target as HTMLElement).closest('a, button, input, textarea, select, label')) return
                     router.push(annotationHref)
@@ -114,18 +120,11 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                                 {getPostDate()}
                             </CardDescription>
                         </div>
-                        <Link
-                            href={annotationHref}
-                            aria-label={`Open annotation by ${annotation.userName}`}
-                            className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        >
-                            <ExternalLinkIcon className="h-4 w-4" aria-hidden="true" />
-                        </Link>
                     </div>
                 </CardHeader>
                 <CardContent>
-                    {annotation.target && <AnnotationQuote annotation={annotation} variant="feed" className="mb-4" />}
-                    <p className="text-foreground whitespace-pre-wrap">{annotation.text}</p>
+                    <p className={cn("text-foreground whitespace-pre-wrap", annotation.target && "mb-4")}>{annotation.text}</p>
+                    {annotation.target && <AnnotationQuote annotation={annotation} variant="feed" />}
                 </CardContent>
                 <CardFooter className="flex items-center gap-4">
                     <Button variant="ghost" size="sm" className="gap-2" onClick={(event) => event.stopPropagation()}>

@@ -7,6 +7,7 @@ import type { ScriptureAttribution } from '@/types/scripture'
 type ScriptureAttributionBylineProps = {
   attribution: ScriptureAttribution | null | undefined
   size?: 'default' | 'compact'
+  layout?: 'stacked' | 'inline' | 'quote'
   className?: string
 }
 
@@ -45,6 +46,7 @@ function ProfileAvatar({ profile, size }: { profile: ScripturePersonProfile, siz
 export function ScriptureAttributionByline({
   attribution,
   size = 'default',
+  layout = 'stacked',
   className,
 }: ScriptureAttributionBylineProps) {
   const primary = getScripturePersonProfile(attribution?.primaryProfileId)
@@ -58,12 +60,19 @@ export function ScriptureAttributionByline({
     : null
 
   return (
-    <div className={cn('flex flex-col items-start gap-1.5 text-xs text-muted-foreground', className)}>
-      <div className="flex -space-x-2" aria-hidden="true">
+    <div className={cn(
+      layout === 'quote' ? 'contents' : 'flex items-start text-xs text-muted-foreground',
+      layout === 'inline' ? 'flex-row items-center gap-2' : 'flex-col gap-1.5',
+      className,
+    )}>
+      <div className={cn(
+        'flex -space-x-2',
+        layout === 'quote' && 'row-span-2 self-start pt-0.5',
+      )} aria-hidden="true">
         <ProfileAvatar profile={primary} size={size} />
         {distinctSecondary && <ProfileAvatar profile={distinctSecondary} size={size} />}
       </div>
-      <p className="leading-snug">
+      <p className={cn('leading-snug', layout === 'quote' && 'self-start')}>
         <Link
           href={`/scripture-people/${encodeURIComponent(primary.id)}`}
           className="font-medium text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"

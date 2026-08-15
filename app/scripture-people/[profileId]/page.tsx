@@ -1,15 +1,17 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   getScripturePersonProfile,
 } from '@/lib/scripture-attribution/catalog'
 import { getAssociatedPassagesForProfile, type ScripturePersonAssociatedPassage } from '@/lib/scripture-attribution/rules'
 import { fetchAnnotationsByScripturePerson } from '@/lib/annotations/data'
-import { getAnnotationReference } from '@/lib/annotations/presentation'
 import { toTitleCase } from '@/lib/utils'
-import { AnnotationQuote } from '@/components/feed/annotation-quote'
+import { fetchCurrentUserId } from '@/lib/auth/data'
+import { fetchUsersAsMap } from '@/lib/auth/accounts'
+import { ProfilePortraitTooltip } from '@/components/scripture-people/profile-portrait-tooltip'
+import { ProfileContentTabs } from '@/components/scripture-people/profile-content-tabs'
+import { ProfileAnnotations } from '@/components/scripture-people/profile-annotations'
 
 // This authenticated page reads a live profile timeline from MongoDB.
 // Cache Components needs it to block at request time instead of prerendering.
@@ -66,6 +68,9 @@ export default async function ScripturePersonProfilePage({ params }: ScripturePe
   })
   const associatedPassages = getAssociatedPassagesForProfile(profile.id)
   const recentAnnotations = await fetchAnnotationsByScripturePerson(profile.id, 25)
+  const currentUserId = await fetchCurrentUserId()
+  if (currentUserId == null) redirect('/sign-in')
+  const users = Array.from(fetchUsersAsMap().values())
   const provenanceLabel = profile.portraitProvenance.kind === 'generated'
     ? 'AI-generated artistic depiction'
     : profile.portraitProvenance.kind === 'official'
@@ -84,12 +89,19 @@ export default async function ScripturePersonProfilePage({ params }: ScripturePe
         ← Back to annotations
       </Link>
 
-      <article className="rounded-xl border bg-card p-6 text-card-foreground shadow sm:p-8">
+      <article className="text-card-foreground">
         <header className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-          <Avatar className="h-24 w-24 border-2 border-background bg-muted shadow-sm">
-            <AvatarImage src={profile.portraitPath} alt={profile.name} className="object-cover" style={portraitObjectPosition ? { objectPosition: portraitObjectPosition } : undefined} />
-            <AvatarFallback className="text-2xl">{profile.portraitFallback}</AvatarFallback>
-          </Avatar>
+          <ProfilePortraitTooltip
+            id={profile.id}
+            name={profile.name}
+            portraitPath={profile.portraitPath}
+            portraitFallback={profile.portraitFallback}
+            portraitObjectPosition={portraitObjectPosition}
+            provenanceLabel={provenanceLabel}
+            provenanceCredit={profile.portraitProvenance.credit}
+            provenanceNote={provenanceNote}
+            sourceUrl={profile.portraitProvenance.sourceUrl}
+          />
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tight">{profile.name}</h1>
             <p className="text-sm text-muted-foreground">{profile.roles.join(' · ')}</p>
@@ -97,62 +109,40 @@ export default async function ScripturePersonProfilePage({ params }: ScripturePe
         </header>
 
         <div className="mt-8 space-y-6">
-          <section aria-labelledby="about-heading">
-            <h2 id="about-heading" className="text-lg font-semibold">About</h2>
-            <p className="mt-2 leading-7 text-muted-foreground">{profile.biography}</p>
+          <section aria-label="About">
+            <p className="leading-7 text-muted-foreground">{profile.biography}</p>
           </section>
 
-          <section className="border-t pt-5" aria-labelledby="portrait-heading">
-            <h2 id="portrait-heading" className="text-lg font-semibold">Portrait</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {profile.portraitProvenance.kind === 'generated'
-                ? profile.portraitProvenance.credit
-                : <>{provenanceLabel}. {profile.portraitProvenance.credit}</>}
-              {provenanceNote && <> {provenanceNote}</>}
-              {profile.portraitProvenance.sourceUrl && (
-                <>
-                  {' '}
-                  <a
-                    href={profile.portraitProvenance.sourceUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    View source artwork
-                  </a>
-                </>
+          <section className="border-t pt-5" aria-label="Scripture profile content">
+            <ProfileContentTabs
+              initialTab={recentAnnotations?.length ? 'annotations' : 'passages'}
+              annotations={recentAnnotations?.length ? (
+                <ProfileAnnotations
+                  annotations={recentAnnotations}
+                  users={users}
+                  currentUserId={currentUserId}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">No annotations have been attributed here yet.</p>
               )}
-            </p>
-          </section>
-
-          <section className="border-t pt-5" aria-labelledby="recent-annotations-heading">
-            <h2 id="recent-annotations-heading" className="text-lg font-semibold">Recent annotations</h2>
-            {recentAnnotations?.length ? (
-              <div className="mt-3 space-y-3">
-                {recentAnnotations.map((annotation) => {
-                  const reference = getAnnotationReference(annotation)
-                  return (
-                    <article key={annotation._id?.toString()} className="rounded-lg border p-3">
-                      {annotation.target && <AnnotationQuote annotation={annotation} variant="panel" />}
-                      {annotation.text && <p className="mt-3 whitespace-pre-wrap text-sm">{annotation.text}</p>}
-                      <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                        <span>{annotation.userName}</span>
-                        {reference && <span>on {reference}</span>}
-                        <span>{new Date(annotation.createdAt).toLocaleDateString()}</span>
-                        <Link
-                          href={`/annotation/${annotation._id?.toString()}`}
-                          className="text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        >
-                          Open annotation
-                        </Link>
-                      </div>
-                    </article>
-                  )
-                })}
-              </div>
-            ) : (
-              <p className="mt-2 text-sm text-muted-foreground">No annotations have been attributed here yet.</p>
-            )}
+              passages={associatedPassages.length > 0 ? (
+                <ul className="grid gap-2 sm:grid-cols-2">
+                  {associatedPassages.map((passage) => (
+                    <li key={passage.ruleId}>
+                      <Link
+                        href={associatedPassageHref(passage)}
+                        className="block rounded-md border p-3 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      >
+                        <span className="font-medium text-foreground">{associatedPassageTitle(passage)}</span>
+                        <span className="mt-1 block text-xs leading-snug text-muted-foreground">{passage.evidence}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">No associated passages have been identified.</p>
+              )}
+            />
           </section>
 
           {members.length > 0 && (
@@ -173,24 +163,6 @@ export default async function ScripturePersonProfilePage({ params }: ScripturePe
             </section>
           )}
 
-          {associatedPassages.length > 0 && (
-            <section className="border-t pt-5" aria-labelledby="passages-heading">
-              <h2 id="passages-heading" className="text-lg font-semibold">Associated passages</h2>
-              <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-                {associatedPassages.map((passage) => (
-                  <li key={passage.ruleId}>
-                    <Link
-                      href={associatedPassageHref(passage)}
-                      className="block rounded-md border p-3 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    >
-                      <span className="font-medium text-foreground">{associatedPassageTitle(passage)}</span>
-                      <span className="mt-1 block text-xs leading-snug text-muted-foreground">{passage.evidence}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
         </div>
       </article>
     </main>

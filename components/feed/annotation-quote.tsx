@@ -1,4 +1,3 @@
-import { QuoteIcon } from 'lucide-react'
 import type { Annotation, HighlightColor } from '@/types/scripture'
 import { getAnnotationQuote } from '@/lib/annotations/presentation'
 import { cn } from '@/lib/utils'
@@ -23,8 +22,6 @@ export function AnnotationQuote({ annotation, variant, className }: AnnotationQu
   if (!quote) return null
 
   const compact = variant === 'panel'
-  const showQuoteIcon = variant !== 'panel'
-
   return (
     <blockquote
       className={cn(
@@ -34,22 +31,18 @@ export function AnnotationQuote({ annotation, variant, className }: AnnotationQu
       )}
       data-testid={variant === 'feed' ? 'feed-annotation-quote' : `annotation-quote-${variant}`}
     >
-      <div className={cn('flex', compact ? 'gap-2' : 'gap-3')}>
-        {showQuoteIcon && <QuoteIcon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />}
-        <div className="min-w-0 flex-1">
-          <p className={cn(
-            highlightClass(annotation.color),
-            'whitespace-pre-line rounded px-1.5 py-1 font-medium leading-relaxed',
-            compact ? 'text-sm' : 'text-sm',
-          )}>
-            {quote}
-          </p>
-          <ScriptureAttributionByline
-            attribution={annotation.scriptureAttribution}
-            size={compact ? 'compact' : 'default'}
-            className="mt-3 border-t border-border/70 pt-3"
-          />
-        </div>
+      <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2 gap-y-1">
+        <ScriptureAttributionByline
+          attribution={annotation.scriptureAttribution}
+          size={compact ? 'compact' : 'default'}
+          layout="quote"
+        />
+        <p className={cn(
+          highlightClass(annotation.color),
+          'whitespace-pre-line rounded px-1.5 py-1 font-medium leading-relaxed text-sm',
+        )}>
+          {quote}
+        </p>
       </div>
     </blockquote>
   )

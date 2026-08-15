@@ -249,7 +249,6 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                     }
                 </CardHeader>
                 <CardContent>
-                    {annotation.target && <AnnotationQuote annotation={annotation} variant="solo" className="mb-4" />}
                     {
                         editMode && author.id == currentUserId ?
                             <>
@@ -277,8 +276,9 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                 </div>
                             </>
                         :
-                        <p className="text-foreground whitespace-pre-wrap">{annotation.text}</p>
+                        <p className={cn("text-foreground whitespace-pre-wrap", annotation.target && "mb-4")}>{annotation.text}</p>
                     }
+                    {annotation.target && <AnnotationQuote annotation={annotation} variant="solo" />}
                 </CardContent>
                 <CardFooter className="flex items-center gap-2 pt-4 border-t-4 border-b">
                     {
