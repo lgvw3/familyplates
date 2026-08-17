@@ -1,11 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -14,13 +10,23 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea"
 import { Label } from "@/components/ui/label"
-import { AnnotationType, HighlightColor } from '../types/scripture'
-import { LinkIcon, StickyNoteIcon, XIcon, ImageIcon } from 'lucide-react'
+import type { AnnotationTarget, AnnotationType, HighlightColor, ScriptureAttribution } from '../types/scripture'
+import { LinkIcon, StickyNoteIcon, ImageIcon, ChevronDownIcon, Loader2Icon } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { ScriptureAttributionByline } from '@/components/scripture-people/scripture-attribution-byline'
+import { previewScriptureAttribution } from '@/lib/scripture-attribution/data'
+import { cn } from '@/lib/utils'
 
 interface AnnotationMenuProps {
-  position: { x: number; y: number; width?: number } | null;
+  open: boolean;
   onClose: () => void;
   color: HighlightColor;
   onColorChange: (color: HighlightColor) => void;
@@ -31,16 +37,111 @@ interface AnnotationMenuProps {
     url?: string;
     photoUrl?: string;
   }) => Promise<boolean>;
+  target?: AnnotationTarget | null;
+  quote?: string;
 }
 
-export function AnnotationMenu({ position, onClose, onSave, color, onColorChange }: AnnotationMenuProps) {
+function QuotePreview({ quote, attribution, loading }: {
+  quote: string
+  attribution: ScriptureAttribution | null
+  loading: boolean
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const isTruncated = quote.length > 100
+  const displayedQuote = !expanded && isTruncated ? `${quote.slice(0, 100).trimEnd()}…` : quote
+
+  return (
+    <div
+      className={cn(
+        'rounded-md border bg-muted/30 p-4 text-left transition-colors',
+        isTruncated && 'cursor-pointer hover:bg-muted/50',
+      )}
+      onClick={() => isTruncated && setExpanded((current) => !current)}
+      onKeyDown={(event) => {
+        if (isTruncated && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault()
+          setExpanded((current) => !current)
+        }
+      }}
+      role={isTruncated ? 'button' : undefined}
+      tabIndex={isTruncated ? 0 : undefined}
+      aria-expanded={isTruncated ? expanded : undefined}
+      data-testid="annotation-composer-quote"
+    >
+      <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2 gap-y-2">
+        {loading ? (
+          <>
+            <div className="size-8 animate-pulse rounded-full bg-muted" />
+            <div className="h-4 w-36 animate-pulse rounded bg-muted" />
+          </>
+        ) : (
+          <ScriptureAttributionByline attribution={attribution} size="default" layout="quote" />
+        )}
+        <div className="col-span-2 min-w-0">
+          <p className="whitespace-pre-line rounded px-1.5 py-1 text-sm font-medium leading-relaxed">
+            {displayedQuote}
+          </p>
+          {isTruncated && (
+            <span className="flex items-center gap-1 px-1.5 pt-1 text-xs text-muted-foreground">
+              {expanded ? 'Show less' : 'Show more'} <ChevronDownIcon className={cn('size-3 transition-transform', expanded && 'rotate-180')} />
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function AnnotationMenu({ open, onClose, onSave, color, onColorChange, target, quote }: AnnotationMenuProps) {
   const [type, setType] = useState<AnnotationType>('note')
   const [text, setText] = useState('')
   const [url, setUrl] = useState('')
   const [photoUrl, setPhotoUrl] = useState('')
   const [saving, setSaving] = useState(false)
+  const [attribution, setAttribution] = useState<ScriptureAttribution | null>(null)
+  const [loadingAttribution, setLoadingAttribution] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  if (!position) return null
+  useEffect(() => {
+    if (!open || !target) return
+
+    let active = true
+    const loadAttribution = async () => {
+      setLoadingAttribution(true)
+      try {
+        const result = await previewScriptureAttribution(target)
+        if (active) setAttribution(result)
+      } catch {
+        if (active) setAttribution(null)
+      } finally {
+        if (active) setLoadingAttribution(false)
+      }
+    }
+    void loadAttribution()
+
+    return () => {
+      active = false
+    }
+  }, [open, target])
+
+  useEffect(() => {
+    if (!open) return
+
+    const bodyOverflow = document.body.style.overflow
+    const documentOverflow = document.documentElement.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+
+    const frame = window.requestAnimationFrame(() => {
+      textareaRef.current?.focus({ preventScroll: true })
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frame)
+      document.body.style.overflow = bodyOverflow
+      document.documentElement.style.overflow = documentOverflow
+    }
+  }, [open])
 
   const handleSave = async () => {
     setSaving(true)
@@ -52,130 +153,89 @@ export function AnnotationMenu({ position, onClose, onSave, color, onColorChange
       ...(photoUrl && { photoUrl })
     })
     setSaving(false)
-    if (saved) setText('')
+    if (saved) {
+      setText('')
+      setUrl('')
+      setPhotoUrl('')
+    }
   }
 
   return (
-    <Card
-      className="fixed bottom-0 left-0 right-0 z-50 w-full md:w-80 md:left-1/2 md:-translate-x-1/2 overflow-auto"
-      style={{
-        maxHeight: '80vh',
-        boxShadow: '0 -4px 6px -1px rgb(0 0 0 / 0.1)',
-        transform: `translateY(${position ? '0' : '100%'})`,
-        transition: 'transform 300ms ease-in-out'
-      }}
-    >
-      <CardContent className="p-3 space-y-4">
-        <div className="w-12 h-1 bg-gray-200 rounded-full mx-auto mb-2 md:hidden" />
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+      <DialogContent
+        onOpenAutoFocus={(event) => {
+          event.preventDefault()
+          textareaRef.current?.focus({ preventScroll: true })
+        }}
+        className="inset-0 flex h-dvh w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden overscroll-contain rounded-none border-0 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] [&>button:last-child]:hidden !animate-none !duration-0 sm:inset-auto sm:left-1/2 sm:top-1/2 sm:h-[min(720px,calc(100dvh-2rem))] sm:max-h-[calc(100dvh-2rem)] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:overflow-hidden sm:rounded-lg sm:border sm:p-6 sm:[&>button:last-child]:block"
+      >
+        <DialogHeader className="shrink-0 pr-10 text-left">
+          <DialogTitle className="sr-only sm:not-sr-only">Create an annotation</DialogTitle>
+          <DialogDescription className="sr-only sm:not-sr-only">Add a thought about the selected scripture.</DialogDescription>
+        </DialogHeader>
 
-        <div className="flex justify-between items-center">
-          <div className="flex gap-2">
-            <Button
-              variant={type === 'note' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setType('note')}
-            >
-              <StickyNoteIcon className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={type === 'link' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setType('link')}
-            >
-              <LinkIcon className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={type === 'photo' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setType('photo')}
-            >
-              <ImageIcon className="h-4 w-4" />
-            </Button>
-          </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <XIcon className="h-4 w-4" />
+        <div className="flex shrink-0 items-center justify-between gap-3 sm:hidden">
+          <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSave} disabled={!text.trim() || saving} aria-label="Share annotation">
+            {saving ? <Loader2Icon className="size-4 animate-spin" /> : 'Share'}
           </Button>
         </div>
 
-        <div className="space-y-2">
-          <Label>Highlight Color</Label>
-          <Select value={color} onValueChange={(value) => onColorChange(value as HighlightColor)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="yellow">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-yellow-200" />
-                  Yellow
-                </div>
-              </SelectItem>
-              <SelectItem value="green">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-green-200" />
-                  Green
-                </div>
-              </SelectItem>
-              <SelectItem value="blue">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-blue-200" />
-                  Blue
-                </div>
-              </SelectItem>
-              <SelectItem value="purple">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-purple-200" />
-                  Purple
-                </div>
-              </SelectItem>
-              <SelectItem value="pink">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-pink-200" />
-                  Pink
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain py-6 sm:py-0">
+          {quote && <QuotePreview quote={quote} attribution={attribution} loading={loadingAttribution} />}
 
-        <div className="space-y-2">
-          <Label>Note</Label>
-          <AutoResizeTextarea
+          <div className="flex shrink-0 items-center justify-between gap-3">
+            <div className="flex gap-1">
+              <Button type="button" variant={type === 'note' ? 'default' : 'ghost'} size="sm" onClick={() => setType('note')} aria-label="Note annotation"><StickyNoteIcon className="size-4" /></Button>
+              <Button type="button" variant={type === 'link' ? 'default' : 'ghost'} size="sm" onClick={() => setType('link')} aria-label="Link annotation"><LinkIcon className="size-4" /></Button>
+              <Button type="button" variant={type === 'photo' ? 'default' : 'ghost'} size="sm" onClick={() => setType('photo')} aria-label="Photo annotation"><ImageIcon className="size-4" /></Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="annotation-color" className="text-xs text-muted-foreground">Highlight</Label>
+              <Select value={color} onValueChange={(value) => onColorChange(value as HighlightColor)}>
+                <SelectTrigger id="annotation-color" className="h-9 w-28"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yellow">Yellow</SelectItem>
+                  <SelectItem value="green">Green</SelectItem>
+                  <SelectItem value="blue">Blue</SelectItem>
+                  <SelectItem value="purple">Purple</SelectItem>
+                  <SelectItem value="pink">Pink</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Textarea
+            autoFocus
+            ref={textareaRef}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(event) => setText(event.target.value)}
             placeholder="Add your annotation..."
-            className="h-20"
+            className="min-h-40 flex-1 resize-none overflow-y-auto p-4 text-lg"
+            data-testid="annotation-composer-textarea"
           />
+
+          {type === 'link' && (
+            <div className="shrink-0 space-y-2">
+              <Label htmlFor="annotation-url">URL</Label>
+              <Input id="annotation-url" type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://..." />
+            </div>
+          )}
+
+          {type === 'photo' && (
+            <div className="shrink-0 space-y-2">
+              <Label htmlFor="annotation-photo-url">Photo URL</Label>
+              <Input id="annotation-photo-url" type="url" value={photoUrl} onChange={(event) => setPhotoUrl(event.target.value)} placeholder="https://..." />
+            </div>
+          )}
         </div>
 
-        {type === 'link' && (
-          <div className="space-y-2">
-            <Label>URL</Label>
-            <Input
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://..."
-            />
-          </div>
-        )}
-
-        {(type === 'photo' || type === 'combo') && (
-          <div className="space-y-2">
-            <Label>Photo URL</Label>
-            <Input
-              type="url"
-              value={photoUrl}
-              onChange={(e) => setPhotoUrl(e.target.value)}
-              placeholder="https://..."
-            />
-          </div>
-        )}
-
-        <Button onClick={handleSave} className="w-full" disabled={saving}>
-          {saving ? 'Saving…' : 'Save Annotation'}
-        </Button>
-      </CardContent>
-    </Card>
+        <div className="hidden shrink-0 justify-end sm:flex">
+          <Button onClick={handleSave} disabled={!text.trim() || saving}>
+            {saving ? 'Saving…' : 'Share annotation'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

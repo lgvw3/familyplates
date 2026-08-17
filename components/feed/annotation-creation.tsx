@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { UserAccount } from '@/lib/auth/definitions'
@@ -26,6 +27,15 @@ export function AnnotationCreation({ renderTrigger }: { renderTrigger?: (onOpen:
   const [user, setUser] = useState<UserAccount>()
   const [isOpen, setIsOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const router = useRouter()
+
+  const handleOpen = () => {
+    if (window.matchMedia('(max-width: 639px)').matches) {
+      router.push('/annotation/new')
+      return
+    }
+    setIsOpen(true)
+  }
 
   const handleSave = async () => {
     if (!user || !text.trim()) return
@@ -63,26 +73,16 @@ export function AnnotationCreation({ renderTrigger }: { renderTrigger?: (onOpen:
     getUserData()
   }, [])
 
-  useEffect(() => {
-    if (!isOpen || !window.matchMedia('(max-width: 639px)').matches) return
-
-    const frame = window.requestAnimationFrame(() => {
-      textareaRef.current?.focus({ preventScroll: true })
-    })
-
-    return () => window.cancelAnimationFrame(frame)
-  }, [isOpen])
-
   return (
     <>
-      {renderTrigger ? renderTrigger(() => setIsOpen(true)) : (
+      {renderTrigger ? renderTrigger(handleOpen) : (
         <Button
           type="button"
           size="icon"
           className="fixed bottom-6 right-6 z-40 size-14 rounded-full shadow-lg shadow-black/25"
           aria-label="Create an unbound annotation"
           title="Create an unbound annotation"
-          onClick={() => setIsOpen(true)}
+          onClick={handleOpen}
         >
           <PlusIcon className="size-7" />
         </Button>

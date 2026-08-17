@@ -35,7 +35,7 @@ const zAnnotation = z.object({
         }),
     ]).nullable(),
     text: z.string(),
-    type: z.enum(['note', 'link', 'photo', 'combo']),
+    type: z.enum(['note', 'link', 'photo']),
     color: z.enum(['yellow', 'green', 'blue', 'purple', 'pink']),
     url: z.string().optional(),
     photoUrl: z.string().optional(),

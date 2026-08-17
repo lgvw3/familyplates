@@ -44,7 +44,7 @@ export type AnnotationLike = {
   timeStamp: Date
 }
 
-export type AnnotationType = 'note' | 'link' | 'photo' | 'combo';
+export type AnnotationType = 'note' | 'link' | 'photo';
 export type HighlightColor = 'yellow' | 'green' | 'blue' | 'purple' | 'pink';
 export type TextStyle = 'underline' | 'bold' | 'italic' | 'none';
 

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { ChevronLeftIcon, ChevronRightIcon, MessageCircleIcon } from 'lucide-react'
-import { Annotation, AnnotationType, Book, Chapter, HighlightColor } from '@/types/scripture'
+import { Annotation, AnnotationTarget, AnnotationType, Book, Chapter, HighlightColor } from '@/types/scripture'
 import Image from 'next/image'
 import { AnnotationMenu } from './annotation-menu'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from './ui/breadcrumb'
@@ -54,7 +54,7 @@ export default function ScriptureReader({
   const targetKey = `scripture:${bookId}:${chapterNumber}`
   const isFirstChapter = chapterNumber === 1
   const { annotations, addAnnotation, notification, setNotification } = useWebSocket(initialAnnotations, false, targetKey)
-  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number; width: number } | null>(null)
+  const [annotationComposerOpen, setAnnotationComposerOpen] = useState(false)
   const [currentSelection, setCurrentSelection] = useState<AnchoredSelection | null>(null)
   const [draftColor, setDraftColor] = useState<HighlightColor>('yellow')
   const [annotationsOpen, setAnnotationsOpen] = useState(false)
@@ -72,6 +72,16 @@ export default function ScriptureReader({
     text: verse.text,
   })), [chapter.verses])
 
+  const selectedTarget = useMemo<AnnotationTarget | null>(() => currentSelection ? ({
+    kind: 'scripture',
+    sourceVersion: 'book-of-mormon-local-v1',
+    bookId,
+    chapterNumber,
+    start: currentSelection.start,
+    end: currentSelection.end,
+    quote: { exact: currentSelection.quote },
+  }) : null, [bookId, chapterNumber, currentSelection])
+
   const sortedAnnotations = useMemo(() => sortAnnotationsByTarget(annotations), [annotations])
 
   useEffect(() => {
@@ -83,11 +93,11 @@ export default function ScriptureReader({
 
   const handleSelection = (selection: AnchoredSelection) => {
     setCurrentSelection(selection)
-    setMenuPosition({ x: 0, y: 0, width: window.innerWidth })
+    setAnnotationComposerOpen(true)
   }
 
   const handleCloseMenu = () => {
-    setMenuPosition(null)
+    setAnnotationComposerOpen(false)
     setCurrentSelection(null)
     window.getSelection()?.removeAllRanges()
   }
@@ -309,7 +319,15 @@ export default function ScriptureReader({
       </div>
 
       <div id="annotation-menu">
-        <AnnotationMenu position={menuPosition} color={draftColor} onColorChange={setDraftColor} onSave={handleAddAnnotation} onClose={handleCloseMenu} />
+        <AnnotationMenu
+          open={annotationComposerOpen}
+          target={selectedTarget}
+          quote={currentSelection?.quote}
+          color={draftColor}
+          onColorChange={setDraftColor}
+          onSave={handleAddAnnotation}
+          onClose={handleCloseMenu}
+        />
       </div>
     </div>
   )

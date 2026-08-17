@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { ChevronLeftIcon, ChevronRightIcon, MessageCircleIcon } from 'lucide-react'
-import { Annotation, AnnotationType, HighlightColor, Intro } from '@/types/scripture'
+import { Annotation, AnnotationTarget, AnnotationType, HighlightColor, Intro } from '@/types/scripture'
 import Image from 'next/image'
 import { AnnotationMenu } from './annotation-menu'
 import Link from 'next/link'
@@ -38,7 +38,7 @@ export default function IntroReader({
 }) {
   const targetKey = `intro:${introId}`
   const { annotations, addAnnotation, notification, setNotification } = useWebSocket(initialAnnotations, false, targetKey)
-  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number; width: number } | null>(null)
+  const [annotationComposerOpen, setAnnotationComposerOpen] = useState(false)
   const [currentSelection, setCurrentSelection] = useState<AnchoredSelection | null>(null)
   const [draftColor, setDraftColor] = useState<HighlightColor>('yellow')
   const [annotationsOpen, setAnnotationsOpen] = useState(false)
@@ -49,6 +49,14 @@ export default function IntroReader({
   const router = useRouter()
 
   const units = useMemo<TextUnit[]>(() => intro.paragraphs.map((text, index) => ({ unit: index, text })), [intro.paragraphs])
+  const selectedTarget = useMemo<AnnotationTarget | null>(() => currentSelection ? ({
+    kind: 'intro',
+    sourceVersion: 'book-of-mormon-local-v1',
+    introId,
+    start: currentSelection.start,
+    end: currentSelection.end,
+    quote: { exact: currentSelection.quote },
+  }) : null, [currentSelection, introId])
   const sortedAnnotations = useMemo(() => sortAnnotationsByTarget(annotations), [annotations])
 
   useEffect(() => {
@@ -59,7 +67,7 @@ export default function IntroReader({
   }, [currentUserId, notification, setNotification])
 
   const closeMenu = () => {
-    setMenuPosition(null)
+    setAnnotationComposerOpen(false)
     setCurrentSelection(null)
     window.getSelection()?.removeAllRanges()
   }
@@ -144,7 +152,7 @@ export default function IntroReader({
             draft={currentSelection ? { ...currentSelection, color: draftColor } : null}
             onSelection={(selection) => {
               setCurrentSelection(selection)
-              setMenuPosition({ x: 0, y: 0, width: window.innerWidth })
+              setAnnotationComposerOpen(true)
             }}
             onAnnotationsClick={(ids) => {
               setCurrentAnnotationIds(ids)
@@ -166,7 +174,17 @@ export default function IntroReader({
         </Sheet>
       </div>
 
-      <div id="annotation-menu"><AnnotationMenu position={menuPosition} color={draftColor} onColorChange={setDraftColor} onSave={save} onClose={closeMenu} /></div>
+      <div id="annotation-menu">
+        <AnnotationMenu
+          open={annotationComposerOpen}
+          target={selectedTarget}
+          quote={currentSelection?.quote}
+          color={draftColor}
+          onColorChange={setDraftColor}
+          onSave={save}
+          onClose={closeMenu}
+        />
+      </div>
     </div>
   )
 }
