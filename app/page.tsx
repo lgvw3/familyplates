@@ -1,17 +1,24 @@
 import NotificationManager from "@/components/push-notifications/notification-manager"
 import { RecentAnnotations } from "@/components/recent-annotations"
 import { HomeFeedSkeleton } from "@/components/skeletons/home-feed-skeleton"
-import { fetchRecentAnnotations } from "@/lib/annotations/data"
+import { fetchFeedPage } from "@/lib/annotations/data"
 import { fetchCurrentUserId } from "@/lib/auth/data"
 import { fetchBookmarkBySignedInUser } from "@/lib/reading/data"
 import { redirect } from "next/navigation"
 import { Suspense } from "react"
 
 async function RecentAnnotationsSection({ currentUserId }: { currentUserId: number }) {
-  const [bookmark, recentAnnotations] = await Promise.all([fetchBookmarkBySignedInUser(), fetchRecentAnnotations()])
+  const sessionStartedAt = new Date().toISOString()
+  const [bookmark, initialFeed] = await Promise.all([
+    fetchBookmarkBySignedInUser(),
+    fetchFeedPage({ limit: 15, sessionStartedAt }),
+  ])
+  if (!initialFeed) return null
   return (
     <RecentAnnotations 
-      recentAnnotations={recentAnnotations}
+      key={sessionStartedAt}
+      initialFeed={initialFeed}
+      sessionStartedAt={sessionStartedAt}
       currentUserId={currentUserId}
       bookmark={bookmark}
     />

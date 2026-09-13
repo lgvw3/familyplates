@@ -6,11 +6,17 @@ import { validateToken } from "../auth/utils";
 import { redirect } from "next/navigation";
 import { ObjectId } from "mongodb";
 import clientPromise from "../mongodb";
+import type { FeedActivity, FeedCursor, FeedPage } from "@/types/feed";
 
 function normalizeAnnotationIds(annotation: Annotation) {
     annotation._id = annotation._id ? annotation._id.toString() : null
     annotation.comments = annotation.comments?.map(comment => {
         comment._id = comment._id.toString()
+        comment.parentCommentId = comment.parentCommentId?.toString()
+        comment.likes = comment.likes?.map(like => ({
+            ...like,
+            _id: like._id.toString(),
+        })) ?? []
         return comment
     }) ?? []
     annotation.likes = annotation.likes?.map(like => {
@@ -18,6 +24,150 @@ function normalizeAnnotationIds(annotation: Annotation) {
         return like
     }) ?? []
     return annotation
+}
+
+function annotationActivityKey(annotationId: string) {
+    return `annotation:${annotationId}`
+}
+
+function commentActivityKey(commentId: string) {
+    return `comment:${commentId}`
+}
+
+type ActivityView = {
+    userId: number;
+    activityKey: string;
+    firstSeenAt: Date;
+}
+
+function compareFeedActivities(a: FeedActivity, b: FeedActivity) {
+    if (a.unseen !== b.unseen) return a.unseen ? -1 : 1
+    const timeDifference = new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime()
+    return timeDifference || b.key.localeCompare(a.key)
+}
+
+function isAfterCursor(activity: FeedActivity, cursor: FeedCursor) {
+    if (activity.unseen !== cursor.unseen) return !activity.unseen && cursor.unseen
+    const activityTime = new Date(activity.occurredAt).getTime()
+    const cursorTime = new Date(cursor.occurredAt).getTime()
+    if (activityTime !== cursorTime) return activityTime < cursorTime
+    return activity.key.localeCompare(cursor.key) < 0
+}
+
+/**
+ * Personalized home feed. New annotations are shown as threads (with their
+ * comments); once the annotation has been seen, each new comment
+ * becomes its own activity with reply context.
+ */
+export async function fetchFeedPage({
+    limit = 15,
+    cursor,
+    sessionStartedAt,
+}: {
+    limit?: number;
+    cursor?: FeedCursor | null;
+    sessionStartedAt: string;
+}): Promise<FeedPage | null> {
+    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value
+    if (!authToken) redirect('/sign-in')
+    const { userId } = validateToken(authToken)
+    if (!userId) return null
+
+    const sessionStart = new Date(sessionStartedAt)
+    if (Number.isNaN(sessionStart.getTime())) throw new Error('Invalid feed session time')
+
+    try {
+        const client = await clientPromise
+        const db = client.db('main')
+        const annotations = await db.collection('annotations')
+            .find<Annotation>({})
+            .sort({ createdAt: -1, _id: -1 })
+            .toArray()
+        annotations.forEach(normalizeAnnotationIds)
+
+        const views = await db.collection<ActivityView>('activityViews')
+            .find({ userId })
+            .toArray()
+        const firstSeenByKey = new Map(views.map(view => [view.activityKey, new Date(view.firstSeenAt)]))
+        const wasUnseenAtSessionStart = (key: string, authorId: number) => {
+            if (authorId === userId) return false
+            const firstSeenAt = firstSeenByKey.get(key)
+            return !firstSeenAt || firstSeenAt > sessionStart
+        }
+
+        const activities: FeedActivity[] = []
+        for (const annotation of annotations) {
+            const annotationId = annotation._id?.toString()
+            if (!annotationId) continue
+            const annotationKey = annotationActivityKey(annotationId)
+            const annotationUnseen = wasUnseenAtSessionStart(annotationKey, annotation.userId)
+            const comments = annotation.comments ?? []
+            const unseenComments = comments.filter(comment =>
+                wasUnseenAtSessionStart(commentActivityKey(comment._id.toString()), comment.userId)
+            )
+
+            if (annotationUnseen) {
+                const latestUnseenAt = unseenComments.reduce(
+                    (latest, comment) => Math.max(latest, new Date(comment.timeStamp).getTime()),
+                    new Date(annotation.createdAt).getTime(),
+                )
+                activities.push({
+                    key: annotationKey,
+                    kind: 'annotation',
+                    occurredAt: new Date(latestUnseenAt),
+                    unseen: true,
+                    seenKeys: [annotationKey],
+                    annotation,
+                    contextComments: comments,
+                })
+                continue
+            }
+
+            if (unseenComments.length) {
+                const byId = new Map(comments.map(comment => [comment._id.toString(), comment]))
+                for (const comment of unseenComments) {
+                    const parentComment = comment.parentCommentId
+                        ? byId.get(comment.parentCommentId.toString())
+                        : undefined
+                    activities.push({
+                        key: commentActivityKey(comment._id.toString()),
+                        kind: 'comment',
+                        occurredAt: new Date(comment.timeStamp),
+                        unseen: true,
+                        seenKeys: [commentActivityKey(comment._id.toString())],
+                        annotation,
+                        comment,
+                        parentComment,
+                    })
+                }
+                continue
+            }
+
+            activities.push({
+                key: annotationKey,
+                kind: 'annotation',
+                occurredAt: new Date(annotation.createdAt),
+                unseen: false,
+                seenKeys: [annotationKey],
+                annotation,
+            })
+        }
+
+        const ordered = activities.sort(compareFeedActivities)
+        const remaining = cursor ? ordered.filter(activity => isAfterCursor(activity, cursor)) : ordered
+        const items = remaining.slice(0, limit)
+        const last = items.at(-1)
+        const nextCursor = remaining.length > items.length && last ? {
+            unseen: last.unseen,
+            occurredAt: new Date(last.occurredAt).toISOString(),
+            key: last.key,
+        } : null
+
+        return { items, nextCursor }
+    } catch (error) {
+        console.error('Error fetching personalized feed:', error)
+        return null
+    }
 }
 
 export async function fetchAllAnnotations(skipAuth: boolean = false) {
@@ -223,11 +373,7 @@ export async function fetchAnnotationById(annotationId: string, skipAuth: boolea
         );
 
         if (results) {
-            results._id = results._id?.toString() ? results._id.toString() : ''
-            if (!skipAuth) {
-                results.comments?.map(c => c._id = c._id.toString())
-                results.likes?.map(l => l._id = l._id.toString())
-            }
+            normalizeAnnotationIds(results)
             return results
         }
         else {

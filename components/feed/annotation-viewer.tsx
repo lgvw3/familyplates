@@ -7,7 +7,7 @@ import { Annotation } from "@/types/scripture"
 import { getInitials } from "@/lib/utils"
 import { HeartIcon, ExternalLinkIcon, MessageCircleIcon } from "lucide-react"
 import { Button } from "../ui/button"
-import { updateLikeStatusOfComment } from "@/lib/annotations/actions"
+import { updateLikeStatusOfAnnotation } from "@/lib/annotations/actions"
 import { toast } from "sonner"
 import { useRouter } from 'next/navigation'
 import { useState } from "react"
@@ -17,7 +17,7 @@ import { AnnotationQuote } from "./annotation-quote"
 import { cn } from "@/lib/utils"
 
 
-export default function AnnotationViewer({ index, author, annotation, userMap, currentUserId, annotationHref, flat = false } : {
+export default function AnnotationViewer({ index, author, annotation, userMap, currentUserId, annotationHref, flat = false, threaded = false } : {
     index?: number, 
     author: UserAccount, 
     annotation: Annotation, 
@@ -25,8 +25,10 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
     currentUserId: number,
     annotationHref: string,
     flat?: boolean,
+    threaded?: boolean,
 }) {
     const [userLike, setUserLike] = useState(annotation.likes.find(val => val.userId == currentUserId))
+    const [likeCount, setLikeCount] = useState(annotation.likes.length)
     const router = useRouter()
     const reference = getAnnotationReference(annotation)
 
@@ -47,10 +49,12 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                 }
             }
         })
-        const results = await updateLikeStatusOfComment(currentUserId, annotation._id?.toString() ?? '', userLike)
-        if (!results.newLike) {
+        setLikeCount(count => Math.max(0, count + (userLike ? -1 : 1)))
+        const results = await updateLikeStatusOfAnnotation(annotation._id?.toString() ?? '')
+        if (results.message !== 'Success') {
             toast.warning(results.message as string)
             setUserLike(temp)
+            setLikeCount(annotation.likes.length)
         }
     }
 
@@ -96,7 +100,9 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                     'cursor-pointer',
                     flat
                         ? 'rounded-none border-0 border-b border-border/70 bg-transparent shadow-none transition-colors hover:bg-accent/50 dark:hover:bg-accent/40 last:border-b-0'
-                        : index == 0 ? 'rounded-b-none' : 'rounded-none',
+                        : 'rounded-none',
+                    !flat && index === 0 && 'border-t-0',
+                    threaded && 'border-b-0',
                 )}
                 onClick={(event) => {
                     if ((event.target as HTMLElement).closest('a, button, input, textarea, select, label')) return
@@ -127,7 +133,10 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                     {annotation.target && <AnnotationQuote annotation={annotation} variant="feed" />}
                 </CardContent>
                 <CardFooter className="flex items-center gap-4">
-                    <Button variant="ghost" size="sm" className="gap-2" onClick={(event) => event.stopPropagation()}>
+                    <Button variant="ghost" size="sm" className="gap-2" onClick={(event) => {
+                        event.stopPropagation()
+                        router.push(annotationHref)
+                    }}>
                         <MessageCircleIcon className="h-4 w-4" /> { annotation.comments.length ?? null }
                     </Button>
                     <motion.div whileTap={{ scale: 0.8 }}>
@@ -147,7 +156,7 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                                 : 
                                     <HeartIcon className="h-4 w-4" />
                             }
-                            { annotation.likes.length ?? null }
+                            { likeCount || null }
                         </Button>
                     </motion.div>
                     {

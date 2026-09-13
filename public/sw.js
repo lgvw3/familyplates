@@ -18,6 +18,17 @@ self.addEventListener('push', function (event) {
    
 self.addEventListener('notificationclick', function (event) {
     event.notification.close();
-    const url = event.notification.data?.url || 'https://familyplates.vercel.app';
-    event.waitUntil(clients.openWindow(url));
+    const requestedUrl = new URL(event.notification.data?.url || '/', self.location.origin).href;
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (windowClients) {
+            for (const client of windowClients) {
+                if ('navigate' in client) {
+                    return client.navigate(requestedUrl).then(function () {
+                        return client.focus();
+                    });
+                }
+            }
+            return clients.openWindow(requestedUrl);
+        })
+    );
 })

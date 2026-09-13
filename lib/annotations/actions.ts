@@ -129,7 +129,12 @@ export async function saveAnnotation(annotation: Annotation) {
                 }));
 
                 // subscribers offline
-                await sendNotificationToOfflineUsers(annotationData.text, `New annotation from ${firstName} `, userId, result.insertedId.toString())
+                await sendNotificationToOfflineUsers(
+                    annotationData.text,
+                    `New annotation from ${firstName}`,
+                    userId,
+                    `/annotation/${result.insertedId.toString()}`,
+                )
 
                 return {
                     message: 'Success',
@@ -213,10 +218,11 @@ export async function updateAnnotation(annotationId: string, editedText: string)
 }
 
 const zComment = z.object({
-    content: z.string()
+    content: z.string().trim().min(1).max(4000),
+    parentCommentId: z.string().optional(),
 })
 
-export async function addCommentToAnnotation(comment: string, annotationId: string) {
+export async function addCommentToAnnotation(comment: string, annotationId: string, parentCommentId?: string) {
 
     const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
     if (!authToken) {
@@ -237,16 +243,20 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
         }
     }
 
-    const validatedFields = zComment.safeParse({content: comment})
+    const validatedFields = zComment.safeParse({content: comment, parentCommentId})
 
     if (!validatedFields.success) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
-            message: "Missing fields. Failed to create annotation",
+            message: "Missing fields. Failed to create comment",
         };
     }
 
     const {content} = validatedFields.data
+
+    if (!ObjectId.isValid(annotationId) || (parentCommentId && !ObjectId.isValid(parentCommentId))) {
+        return { message: 'Invalid comment destination' }
+    }
 
     const client = await clientPromise;
     const db = client.db("main");
@@ -257,10 +267,20 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
         userId: userId,
         userName: user.name,
         content: content,
-        timeStamp: new Date()
+        timeStamp: new Date(),
+        ...(parentCommentId ? { parentCommentId: new ObjectId(parentCommentId) } : {}),
+        likes: [],
     }
 
     try {
+        if (parentCommentId) {
+            const parentExists = await collection.findOne({
+                _id: new ObjectId(annotationId),
+                'comments._id': new ObjectId(parentCommentId),
+            }, { projection: { _id: 1 } })
+            if (!parentExists) return { message: 'The comment you are replying to no longer exists' }
+        }
+
         const result = await collection.updateOne(
             { _id: new ObjectId(annotationId) },
             {
@@ -283,7 +303,13 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
 
                 //offline
                 const firstName = newComment.userName.split(' ')[0]
-                await sendNotificationToOfflineUsers(newComment.content, `New comment from ${firstName} `, userId, annotationId)
+                const commentId = newComment._id.toString()
+                await sendNotificationToOfflineUsers(
+                    newComment.content,
+                    parentCommentId ? `${firstName} replied to a comment` : `New comment from ${firstName}`,
+                    userId,
+                    `/annotation/${annotationId}?comment=${commentId}#comment-${commentId}`,
+                )
 
                 return {
                     message: 'Success',
@@ -314,7 +340,7 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
     }
 }
 
-export async function updateLikeStatusOfComment(currentUserId: number, annotationId: string, userLike: AnnotationLike | undefined) {
+export async function updateLikeStatusOfAnnotation(annotationId: string) {
     const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
     if (!authToken) {
         redirect('/sign-in')
@@ -348,8 +374,8 @@ export async function updateLikeStatusOfComment(currentUserId: number, annotatio
     try {
         let results: UpdateResult<Annotation>
         const existingAnnotation = await collection.findOne({_id: new ObjectId(annotationId)})
-        if (userLike) {
-            const existingLike = existingAnnotation?.likes?.find(val => val.userId == currentUserId)
+        const existingLike = existingAnnotation?.likes?.find(val => val.userId == userId)
+        if (existingLike) {
             // User already liked: Unlike
             results = await collection.updateOne(
                 { _id: new ObjectId(annotationId) },
@@ -369,18 +395,19 @@ export async function updateLikeStatusOfComment(currentUserId: number, annotatio
                 const redisPub = new redis(process.env.KV_URL ?? '');
                 await redisPub.publish("likes", JSON.stringify({
                     like: updatedLike,
-                    likes: !userLike,
+                    likes: !existingLike,
                     annotationId: annotationId
                 }));
                 // offline
-                if (!userLike) {
+                if (!existingLike) {
                     // liking it
                     const firstName = updatedLike.userName.split(' ')[0]
                     const annotationAuthorFirstName = existingAnnotation?.userName.split(' ')[0]
-                    await sendNotificationToOfflineUsers('', `${firstName} liked ${annotationAuthorFirstName}'s thoughts `, userId, annotationId)
+                    await sendNotificationToOfflineUsers('', `${firstName} liked ${annotationAuthorFirstName}'s thoughts`, userId, `/annotation/${annotationId}`)
                 }
                 return {
                     message: 'Success',
+                    doesLike: !existingLike,
                     newLike: {
                         ...updatedLike,
                         _id: updatedLike._id.toString()
@@ -406,4 +433,95 @@ export async function updateLikeStatusOfComment(currentUserId: number, annotatio
             message: error
         }
     }
+}
+
+export async function updateLikeStatusOfComment(annotationId: string, commentId: string) {
+    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value
+    if (!authToken) redirect('/sign-in')
+    const { userId } = validateToken(authToken)
+    if (!userId) return { message: 'Unauthorized. This app is just for my family for now' }
+    const user = fetchAccountById(userId)
+    if (!user) return { message: 'Unauthorized. This app is just for my family for now' }
+    if (!ObjectId.isValid(annotationId) || !ObjectId.isValid(commentId)) {
+        return { message: 'Invalid comment' }
+    }
+
+    const client = await clientPromise
+    const collection = client.db('main').collection<Annotation>('annotations')
+    const annotation = await collection.findOne({ _id: new ObjectId(annotationId) })
+    const comment = annotation?.comments?.find(item => item._id.toString() === commentId)
+    if (!comment) return { message: 'Comment not found' }
+
+    const existingLike = comment.likes?.find(like => like.userId === userId)
+    const newLike: AnnotationLike = {
+        _id: new ObjectId(),
+        userId,
+        userName: user.name,
+        timeStamp: new Date(),
+    }
+
+    const result = existingLike
+        ? await collection.updateOne(
+            { _id: new ObjectId(annotationId) },
+            { $pull: { 'comments.$[comment].likes': { userId } } },
+            { arrayFilters: [{ 'comment._id': new ObjectId(commentId) }] },
+        )
+        : await collection.updateOne(
+            { _id: new ObjectId(annotationId) },
+            { $push: { 'comments.$[comment].likes': newLike } },
+            { arrayFilters: [{ 'comment._id': new ObjectId(commentId) }] },
+        )
+
+    if (!result.modifiedCount) return { message: 'Could not update comment like' }
+
+    try {
+        const redisPub = new redis(process.env.KV_URL ?? '')
+        await redisPub.publish('commentLikes', JSON.stringify({
+            annotationId,
+            commentId,
+            like: newLike,
+            likes: !existingLike,
+        }))
+        if (!existingLike) {
+            const firstName = user.name.split(' ')[0]
+            await sendNotificationToOfflineUsers(
+                '',
+                `${firstName} liked ${comment.userName.split(' ')[0]}'s comment`,
+                userId,
+                `/annotation/${annotationId}?comment=${commentId}#comment-${commentId}`,
+            )
+        }
+    } catch (error) {
+        console.error('Comment like notification failed:', error)
+    }
+
+    return {
+        message: 'Success',
+        doesLike: !existingLike,
+        newLike: { ...newLike, _id: newLike._id.toString() },
+    }
+}
+
+export async function markFeedActivitiesSeen(activityKeys: string[]) {
+    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value
+    if (!authToken) redirect('/sign-in')
+    const { userId } = validateToken(authToken)
+    if (!userId) return { message: 'Unauthorized' }
+
+    const keys = [...new Set(activityKeys)].filter(key => /^(annotation|comment):[a-f\d]{24}$/i.test(key))
+    if (!keys.length) return { message: 'Success' }
+
+    const client = await clientPromise
+    const collection = client.db('main').collection('activityViews')
+    await collection.createIndex({ userId: 1, activityKey: 1 }, { unique: true })
+    const firstSeenAt = new Date()
+    await collection.bulkWrite(keys.map(activityKey => ({
+        updateOne: {
+            filter: { userId, activityKey },
+            update: { $setOnInsert: { userId, activityKey, firstSeenAt } },
+            upsert: true,
+        },
+    })), { ordered: false })
+
+    return { message: 'Success' }
 }

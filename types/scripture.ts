@@ -34,7 +34,9 @@ export type AnnotationComment = {
   userId: number,
   userName: string,
   timeStamp: Date,
-  content: string
+  content: string,
+  parentCommentId?: ObjectId | string,
+  likes: AnnotationLike[]
 }
 
 export type AnnotationLike = {

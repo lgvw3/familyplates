@@ -1,7 +1,7 @@
 'use client'
 
 import { UserAccount } from "@/lib/auth/definitions"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card"
+import { CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Annotation } from "@/types/scripture"
 import { cn, getInitials } from "@/lib/utils"
@@ -9,7 +9,7 @@ import { HeartIcon, ExternalLinkIcon, Loader2Icon, MessageCircleIcon, ArrowLeftI
 import { Button, buttonVariants } from "../ui/button"
 import { useEffect, useRef, useState } from "react"
 import { AutoResizeTextarea } from "../ui/auto-resize-textarea"
-import { addCommentToAnnotation, updateAnnotation, updateLikeStatusOfComment } from "@/lib/annotations/actions"
+import { addCommentToAnnotation, markFeedActivitiesSeen, updateAnnotation, updateLikeStatusOfAnnotation } from "@/lib/annotations/actions"
 import { toast } from "sonner"
 import Link from "next/link"
 import { fetchUsersAsMap } from "@/lib/auth/accounts"
@@ -17,6 +17,7 @@ import { useWebSocket } from "@/hooks/use-websockets"
 import { motion } from "framer-motion"
 import { getAnnotationQuote, getAnnotationReference, getTargetHref } from "@/lib/annotations/presentation"
 import { AnnotationQuote } from "./annotation-quote"
+import { CommentTree } from "./comment-thread"
 
 
 export default function AnnotationViewerSolo({author, initialAnnotation, currentUserId, userName } : {
@@ -33,6 +34,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
     const [commentContent, setCommentContent] = useState('')
     const [savingComment, setSavingComment] = useState(false)
     const [userLike, setUserLike] = useState(annotation.likes?.find(val => val.userId == currentUserId))
+    const [likeCount, setLikeCount] = useState(annotation.likes?.length ?? 0)
     const [addCommentOpen, setAddCommentOpen] = useState(false)
     const [editMode, setEditMode] = useState(false)
     const [editedVersion, setEditedVersion] = useState('')
@@ -51,6 +53,19 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
             textareaRef.current.focus();
         }
     }, [addCommentOpen]);
+
+    useEffect(() => {
+        const annotationId = annotation._id?.toString()
+        if (!annotationId) return
+        void markFeedActivitiesSeen([`annotation:${annotationId}`])
+
+        const hash = window.location.hash
+        if (hash.startsWith('#comment-')) {
+            window.setTimeout(() => document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
+        }
+    // Mark the thread snapshot displayed when the detail view opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     const saveEditOfAnnotation = async () => {
         setEditSaving(true)
@@ -71,6 +86,10 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
         const results = await addCommentToAnnotation(commentContent, annotation._id?.toString() ?? '')
         if (results.newComment) {
             toast.success('Comment shared!')
+            const newComment = results.newComment
+            setAnnotations(previous => previous.map(item => item._id?.toString() === annotation._id?.toString()
+                ? { ...item, comments: [...item.comments, newComment] }
+                : item))
             setCommentContent('')
             setAddCommentOpen(false)
         }
@@ -97,13 +116,12 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                 }
             }
         })
-        const results = await updateLikeStatusOfComment(currentUserId, annotation._id?.toString() ?? '', userLike)
-        if (results.newLike) {
-            setCommentContent('')
-        }
-        else {
+        setLikeCount(count => Math.max(0, count + (userLike ? -1 : 1)))
+        const results = await updateLikeStatusOfAnnotation(annotation._id?.toString() ?? '')
+        if (results.message !== 'Success') {
             toast.warning(results.message as string)
             setUserLike(temp)
+            setLikeCount(annotation.likes?.length ?? 0)
         }
     }
 
@@ -184,8 +202,8 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
     };
 
     return (
-        <div className="md:mx-4 min-h-lvh mt-4">
-            <Card>
+        <div className="min-h-lvh">
+            <article className="bg-background">
                 <CardHeader>
                     <div className="flex flex-grow items-center pb-4">
                         <Link 
@@ -280,7 +298,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                     }
                     {annotation.target && <AnnotationQuote annotation={annotation} variant="solo" />}
                 </CardContent>
-                <CardFooter className="flex items-center gap-2 pt-4 border-t-4 border-b">
+                <CardFooter className="flex items-center gap-2 pt-4">
                     {
                         addCommentOpen ?
                             <div className="flex flex-col w-full">
@@ -338,7 +356,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                         : 
                                             <HeartIcon className="h-4 w-4" />
                                     }
-                                    { annotation.likes.length ?? null }
+                                    { likeCount || null }
                                 </Button>
                             </motion.div>
                             {
@@ -372,33 +390,22 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                         </>
                     }
                 </CardFooter>
-            </Card>
-            {
-                annotation.comments.map(comment => {
-                    const commentAuthor = userMap.get(comment.userId)
-                    return (
-                        <Card key={comment._id.toString()} className="rounded-none">
-                            <CardHeader>
-                                <div className="flex items-center gap-4">
-                                    <Avatar>
-                                        <AvatarImage src={commentAuthor?.avatar} alt={commentAuthor?.name} />
-                                        <AvatarFallback>{getInitials(commentAuthor?.name)}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1">
-                                        <CardTitle className="text-base">{comment.userName}</CardTitle>
-                                        <CardDescription>
-                                            {getPostDate(new Date(comment.timeStamp))}
-                                        </CardDescription>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-foreground whitespace-pre-wrap">{comment.content}</p>
-                            </CardContent>
-                        </Card>
-                    )
-                })
-            }
+            </article>
+            <div className="bg-background">
+                <CommentTree
+                    annotationId={annotation._id?.toString() ?? ''}
+                    comments={annotation.comments}
+                    currentUserId={currentUserId}
+                    currentUserName={userName}
+                    userMap={userMap}
+                    connectedToAnnotation
+                    onCommentAdded={(newComment) => setAnnotations(previous => previous.map(item =>
+                        item._id?.toString() === annotation._id?.toString()
+                            ? { ...item, comments: [...item.comments, newComment] }
+                            : item
+                    ))}
+                />
+            </div>
         </div>
     )
 }

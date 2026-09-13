@@ -118,7 +118,7 @@ export async function sendNotification(message: string, title: string) {
     }
 }
 
-export async function sendNotificationToOfflineUsers(message: string, title: string, authorId: number, annotationId: string) {
+export async function sendNotificationToOfflineUsers(message: string, title: string, authorId: number, targetPath: string) {
     const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
     if (!authToken) {
         return
@@ -139,7 +139,10 @@ export async function sendNotificationToOfflineUsers(message: string, title: str
         const subs = await collection.find<NotificationSubscription>({}).toArray()
         const notificationPromises: Promise<webpush.SendResult>[] = []
         
-        subs.map(async sub => {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://familyplates.vercel.app'
+        const targetUrl = new URL(targetPath, appUrl).toString()
+
+        for (const sub of subs) {
             if (process.env.NODE_ENV != 'production') {
                 //dev
                 if (sub.userId == 8) {// me for now
@@ -155,7 +158,7 @@ export async function sendNotificationToOfflineUsers(message: string, title: str
                         JSON.stringify({
                             title: title,
                             body: message,
-                            url: `https://familyplates.vercel.app/annotation/${annotationId}`
+                            url: targetUrl,
                         })
                     ))
                 }
@@ -169,11 +172,12 @@ export async function sendNotificationToOfflineUsers(message: string, title: str
                         JSON.stringify({
                             title: title,
                             body: message,
+                            url: targetUrl,
                         })
                     ))
                 //}
             }
-        })
+        }
 
         await Promise.all(notificationPromises)
     } catch(error) {

@@ -51,13 +51,44 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
             if (temp) {
                 const updatedTemp = {
                     ...temp,
-                    comments: [...(temp.comments || []), { ...commentData.comment, _id: commentData.comment._id.toString() }],
+                    comments: temp.comments.some(comment => comment._id.toString() === commentData.comment._id.toString())
+                        ? temp.comments
+                        : [...(temp.comments || []), {
+                            ...commentData.comment,
+                            _id: commentData.comment._id.toString(),
+                            parentCommentId: commentData.comment.parentCommentId?.toString(),
+                            likes: commentData.comment.likes ?? [],
+                        }],
                 };
                 return prev.map(val => (val._id?.toString() === commentData.annotationId ? updatedTemp : val));
             } else {
                 return [...prev];
             }
         })
+    }, [])
+
+    const addCommentLikes = useCallback((likeData: {
+        likes: boolean;
+        like: AnnotationLike;
+        annotationId: string;
+        commentId: string;
+    }) => {
+        setAnnotations(previous => previous.map(annotation => {
+            if (annotation._id?.toString() !== likeData.annotationId) return annotation
+            return {
+                ...annotation,
+                comments: annotation.comments.map(comment => {
+                    if (comment._id.toString() !== likeData.commentId) return comment
+                    const likes = comment.likes ?? []
+                    return {
+                        ...comment,
+                        likes: likeData.likes
+                            ? [...likes.filter(like => like.userId !== likeData.like.userId), likeData.like]
+                            : likes.filter(like => like.userId !== likeData.like.userId),
+                    }
+                }),
+            }
+        }))
     }, [])
 
     const addLikes = useCallback((likeData: { likes: boolean, like: AnnotationLike; annotationId: string; }) => {
@@ -132,6 +163,24 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
                         })
                     }
                 }
+                else if (data.channel == 'commentLikes') {
+                    const likeData: {
+                        likes: boolean;
+                        like: AnnotationLike;
+                        annotationId: string;
+                        commentId: string;
+                    } = JSON.parse(data.data)
+                    addCommentLikes(likeData)
+                    if (likeData.likes) {
+                        setNotification({
+                            like: likeData.like,
+                            doesLike: true,
+                            userName: likeData.like.userName,
+                            userId: likeData.like.userId,
+                            type: 'like',
+                        })
+                    }
+                }
                 else if (data.channel == 'bookmarks') {
                     // local save of bookmarks of family members
                     // when they are active display just once in feed
@@ -159,7 +208,7 @@ export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boo
             ws?.close();
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [addAnnotation, addAnnotationToTopOfFeed, addComment, addLikes, isFeed]);
+    }, [addAnnotation, addAnnotationToTopOfFeed, addComment, addCommentLikes, addLikes, isFeed]);
 
     const checkServerHealth = async () => {
         try {

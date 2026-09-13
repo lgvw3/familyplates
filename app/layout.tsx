@@ -9,18 +9,22 @@ import { Header } from '@/components/header';
 import { Navigation } from '@/components/navigation';
 import { Toaster } from '@/components/ui/sonner';
 import { HeaderProvider } from '@/components/header-context';
+import { ThemeChrome } from '@/components/theme-chrome';
 
 const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Family Plates",
   description: "Our own, Van Wagoner, small plates",
+  appleWebApp: {
+    capable: true,
+    title: 'Family Plates',
+    statusBarStyle: 'default',
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "hsl(0 0% 100%)" },        // :root --background
-    { media: "(prefers-color-scheme: dark)",  color: "hsl(20 14.3% 4.1%)" }     // .dark --background
-  ],
+  themeColor: '#ffffff',
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({
@@ -37,6 +41,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <ThemeChrome />
           <HeaderProvider>
             <Header />
             <Navigation />
@@ -51,5 +56,4 @@ export default function RootLayout({
     </html>
   )
 }
-
 

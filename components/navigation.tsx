@@ -49,7 +49,7 @@ export function Navigation() {
         <div>
             <Sheet>
                 <SheetTrigger asChild>
-                    <Button variant="outline" size="icon" className="fixed left-4 top-3 z-50 h-8 w-8">
+                    <Button variant="outline" size="icon" className="fixed left-4 top-[calc(0.75rem+env(safe-area-inset-top))] z-50 h-8 w-8">
                         <Menu className="h-4 w-4" />
                         <span className="sr-only">Toggle navigation menu</span>
                     </Button>
@@ -130,4 +130,3 @@ function NavigationItems() {
         </div>
     )
 }
-

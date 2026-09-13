@@ -10,7 +10,7 @@ export function Header() {
     const { title, subtitle } = useHeader();
 
     return (
-        <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-center">
+        <header className="sticky top-0 z-40 flex w-full items-center justify-center border-b bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container grid grid-cols-3 h-14 relative">
                 <div></div>
                 <Link href="/" className="flex items-center justify-center gap-2 font-bold relative h-14">
@@ -53,4 +53,3 @@ export function Header() {
         </header>
     )
   }
-

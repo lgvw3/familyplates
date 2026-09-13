@@ -96,6 +96,7 @@ body {
   * {
     @apply border-border;
   }
+  html,
   body {
     @apply bg-background text-foreground;
   }
