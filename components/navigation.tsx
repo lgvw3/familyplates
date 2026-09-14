@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, Menu } from 'lucide-react'
+import { ChevronRight, Menu, Users } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import {
     Sheet,
@@ -58,6 +58,13 @@ export function Navigation() {
                     <SheetHeader>
                         <SheetTitle>Navigation</SheetTitle>
                     </SheetHeader>
+                    <Link
+                        href="/family"
+                        className="mt-5 flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                    >
+                        <Users className="size-4" />
+                        Family profiles
+                    </Link>
                     Intro
                     <nav className="mt-4 mb-4">
                         <IntroItems />

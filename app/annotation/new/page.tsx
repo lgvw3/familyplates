@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { UserAccount } from '@/lib/auth/definitions'
-import { fetchCurrentUserId } from '@/lib/auth/data'
-import { fetchAccountById } from '@/lib/auth/accounts'
+import { fetchCurrentFamilyAccount } from '@/lib/auth/profile-actions'
 import { getInitials } from '@/lib/utils'
 import { saveAnnotation } from '@/lib/annotations/actions'
 import { toast } from 'sonner'
@@ -22,8 +21,8 @@ export default function NewAnnotationPage() {
 
   useEffect(() => {
     const getUserData = async () => {
-      const id = await fetchCurrentUserId()
-      if (id) setUser(fetchAccountById(id))
+      const account = await fetchCurrentFamilyAccount()
+      if (account) setUser(account)
     }
     void getUserData()
   }, [])

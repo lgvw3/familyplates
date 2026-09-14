@@ -3,15 +3,17 @@ import { RecentAnnotations } from "@/components/recent-annotations"
 import { HomeFeedSkeleton } from "@/components/skeletons/home-feed-skeleton"
 import { fetchFeedPage } from "@/lib/annotations/data"
 import { fetchCurrentUserId } from "@/lib/auth/data"
+import { fetchFamilyAccounts } from '@/lib/auth/profiles'
 import { fetchBookmarkBySignedInUser } from "@/lib/reading/data"
 import { redirect } from "next/navigation"
 import { Suspense } from "react"
 
 async function RecentAnnotationsSection({ currentUserId }: { currentUserId: number }) {
   const sessionStartedAt = new Date().toISOString()
-  const [bookmark, initialFeed] = await Promise.all([
+  const [bookmark, initialFeed, users] = await Promise.all([
     fetchBookmarkBySignedInUser(),
     fetchFeedPage({ limit: 15, sessionStartedAt }),
+    fetchFamilyAccounts(),
   ])
   if (!initialFeed) return null
   return (
@@ -20,6 +22,7 @@ async function RecentAnnotationsSection({ currentUserId }: { currentUserId: numb
       initialFeed={initialFeed}
       sessionStartedAt={sessionStartedAt}
       currentUserId={currentUserId}
+      users={users}
       bookmark={bookmark}
     />
   )

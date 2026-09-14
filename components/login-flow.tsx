@@ -9,11 +9,10 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { toast } from "sonner"
 import { UserAccount } from "@/lib/auth/definitions"
-import { accounts } from "@/lib/auth/accounts"
 import { checkPassword } from "@/lib/auth/data"
 import { useRouter } from "next/navigation"
 
-export default function LoginFlow() {
+export default function LoginFlow({ accounts }: { accounts: UserAccount[] }) {
   const router = useRouter()
   const [step, setStep] = useState<"password" | "account">("password")
   const [password, setPassword] = useState("")

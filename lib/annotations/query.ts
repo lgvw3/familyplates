@@ -41,7 +41,7 @@ export function useAnnotationCollection(initialAnnotations: Annotation[], target
   return useQueries({
     queries: collection.map(id => ({
       queryKey: annotationKey(id),
-      queryFn: () => Promise.reject(new Error(`Annotation ${id} has not been hydrated`)),
+      queryFn: (): Promise<Annotation> => Promise.reject(new Error(`Annotation ${id} has not been hydrated`)),
       initialData: initialById.get(id),
       enabled: false,
     })),

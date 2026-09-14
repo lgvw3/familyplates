@@ -385,7 +385,7 @@ export async function fetchAnnotationById(annotationId: string, skipAuth: boolea
     }
 }
 
-export async function fetchAnnotationsByUser(userId: number, skipAuth: boolean = false) {
+export async function fetchAnnotationsByUser(userId: number, skipAuth: boolean = false, limit: number = 25) {
     if (!skipAuth) {
         const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
         if (!authToken) {
@@ -403,7 +403,11 @@ export async function fetchAnnotationsByUser(userId: number, skipAuth: boolean =
     const collection = db.collection("annotations");
 
     try {
-        const results = await collection.find<Annotation>({ userId: userId }).toArray();
+        const normalizedLimit = Math.max(1, Math.min(Math.floor(limit), 100))
+        const results = await collection.find<Annotation>({ userId: userId })
+            .sort({ createdAt: -1, _id: -1 })
+            .limit(normalizedLimit)
+            .toArray();
 
         if (results) {
             results.forEach(normalizeAnnotationIds)

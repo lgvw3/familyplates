@@ -8,7 +8,7 @@ import { getAssociatedPassagesForProfile, type ScripturePersonAssociatedPassage 
 import { fetchAnnotationsByScripturePerson } from '@/lib/annotations/data'
 import { toTitleCase } from '@/lib/utils'
 import { fetchCurrentUserId } from '@/lib/auth/data'
-import { fetchUsersAsMap } from '@/lib/auth/accounts'
+import { fetchFamilyAccounts } from '@/lib/auth/profiles'
 import { ProfilePortraitTooltip } from '@/components/scripture-people/profile-portrait-tooltip'
 import { ProfileContentTabs } from '@/components/scripture-people/profile-content-tabs'
 import { ProfileAnnotations } from '@/components/scripture-people/profile-annotations'
@@ -70,7 +70,7 @@ export default async function ScripturePersonProfilePage({ params }: ScripturePe
   const recentAnnotations = await fetchAnnotationsByScripturePerson(profile.id, 25)
   const currentUserId = await fetchCurrentUserId()
   if (currentUserId == null) redirect('/sign-in')
-  const users = Array.from(fetchUsersAsMap().values())
+  const users = await fetchFamilyAccounts()
   const provenanceLabel = profile.portraitProvenance.kind === 'generated'
     ? 'AI-generated artistic depiction'
     : profile.portraitProvenance.kind === 'official'

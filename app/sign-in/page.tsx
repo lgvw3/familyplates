@@ -1,7 +1,13 @@
 import LoginFlow from "@/components/login-flow";
+import { fetchFamilyAccounts } from '@/lib/auth/profiles'
+import { connection } from 'next/server'
 
-export default function Page() {
+export const instant = false
+
+export default async function Page() {
+    await connection()
+    const accounts = await fetchFamilyAccounts()
     return (
-        <LoginFlow />
+        <LoginFlow accounts={accounts} />
     )
 }
