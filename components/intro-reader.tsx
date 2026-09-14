@@ -39,7 +39,7 @@ export default function IntroReader({
 }) {
   const targetKey = `intro:${introId}`
   const annotations = useAnnotationCollection(initialAnnotations, targetKey)
-  const { addAnnotation, notification, setNotification } = useWebSocket(targetKey)
+  const { invalidateAnnotation, notification, setNotification } = useWebSocket()
   const [annotationComposerOpen, setAnnotationComposerOpen] = useState(false)
   const [currentSelection, setCurrentSelection] = useState<AnchoredSelection | null>(null)
   const [draftColor, setDraftColor] = useState<HighlightColor>('yellow')
@@ -104,7 +104,7 @@ export default function IntroReader({
       return false
     }
 
-    addAnnotation({ ...result.annotation, _id: result.insertedId })
+    invalidateAnnotation({ ...result.annotation, _id: result.insertedId })
     toast.success('Note shared with the family!')
     closeMenu()
     return true

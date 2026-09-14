@@ -12,6 +12,7 @@ import { fetchAccountById } from "../auth/accounts";
 import { ObjectId } from "mongodb";
 import { sendNotificationToOfflineUsers } from "../push-notifications/actions";
 import { InvalidAttributionTargetError, resolveScriptureAttribution } from "../scripture-attribution/resolver.ts";
+import { annotationUpdatesChannel, serializeAnnotationUpdate } from './realtime'
 
 const zAnnotation = z.object({
     schemaVersion: z.literal(2),
@@ -201,11 +202,30 @@ export async function updateAnnotation(annotationId: string, editedText: string)
 
     // Save annotation to the database
     try {
+        const existingAnnotation = await collection.findOne<Annotation>(
+            { _id: new ObjectId(annotationId) },
+            { projection: { target: 1 } },
+        )
+        if (!existingAnnotation) {
+            return { message: 'Annotation not found' }
+        }
+
         const result = await collection.updateOne({_id: new ObjectId(annotationId)}, { $set: {
             text: editedText
         }});
 
         if (result.modifiedCount) {
+            try {
+                // This event carries invalidation metadata only. MongoDB remains
+                // the source of truth for the edited annotation text.
+                const redisPub = new redis(process.env.KV_URL ?? '')
+                await redisPub.publish(annotationUpdatesChannel, serializeAnnotationUpdate({
+                    annotationId,
+                    target: existingAnnotation.target,
+                }))
+            } catch (error) {
+                console.error('Annotation update notification failed:', error)
+            }
             return {
                 message: 'Success',
             }
@@ -300,7 +320,6 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
         );
 
         if (result.modifiedCount) {
-            const savedAnnotation = await collection.findOne({ _id: new ObjectId(annotationId) })
             try {
                 // real time
                 const redisPub = new redis(process.env.KV_URL ?? '');
@@ -325,8 +344,6 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
             }
             return {
                 message: 'Success',
-                newComment: { ...newComment, _id: newComment._id.toString() },
-                annotation: savedAnnotation ? serializeAnnotation(savedAnnotation) : undefined,
             }
         }
         else {
@@ -378,25 +395,26 @@ export async function setAnnotationLiked(annotationId: string, liked: boolean) {
         if (!ObjectId.isValid(annotationId)) return { message: 'Invalid annotation' }
         const existingAnnotation = await collection.findOne({_id: new ObjectId(annotationId)})
         if (!existingAnnotation) return { message: 'Annotation not found' }
-        if (liked) {
-            await collection.updateOne(
+        const updateResult = liked
+            ? await collection.updateOne(
                 { _id: new ObjectId(annotationId), 'likes.userId': { $ne: userId } },
                 { $push: { likes: updatedLike } },
             )
-        } else {
-            await collection.updateOne(
-                { _id: new ObjectId(annotationId) },
+            : await collection.updateOne(
+                { _id: new ObjectId(annotationId), 'likes.userId': userId },
                 { $pull: { likes: { userId } } },
             )
-        }
-        const savedAnnotation = await collection.findOne({ _id: new ObjectId(annotationId) })
-        if (!savedAnnotation) return { message: 'Annotation not found' }
-        try {
+
+        // The desired-state filters above make concurrent/repeated requests
+        // idempotent. Only the request that actually changed the document may
+        // announce that transition or notify the annotation author.
+        if (updateResult.modifiedCount > 0) {
+            try {
                 // real time
                 const redisPub = new redis(process.env.KV_URL ?? '');
                 await redisPub.publish("likes", JSON.stringify({
                     like: updatedLike,
-                    likes: liked,
+                    liked,
                     annotationId: annotationId
                 }));
                 // offline
@@ -406,10 +424,11 @@ export async function setAnnotationLiked(annotationId: string, liked: boolean) {
                     const annotationAuthorFirstName = existingAnnotation?.userName.split(' ')[0]
                     await sendNotificationToOfflineUsers('', `${firstName} liked ${annotationAuthorFirstName}'s thoughts`, userId, `/annotation/${annotationId}`)
                 }
-        } catch(err) {
-            console.error('Like notification failed:', err)
+            } catch(err) {
+                console.error('Like notification failed:', err)
+            }
         }
-        return { message: 'Success', annotation: serializeAnnotation(savedAnnotation) }
+        return { message: 'Success' }
     } catch(error) {
         console.error(error)
         return {
@@ -442,48 +461,50 @@ export async function setCommentLiked(annotationId: string, commentId: string, l
         timeStamp: new Date(),
     }
 
-    if (liked) {
-        await collection.updateOne(
+    const updateResult = liked
+        ? await collection.updateOne(
             {
                 _id: new ObjectId(annotationId),
                 comments: { $elemMatch: { _id: new ObjectId(commentId), 'likes.userId': { $ne: userId } } },
             },
             { $push: { 'comments.$.likes': newLike } },
         )
-    } else {
-        await collection.updateOne(
-            { _id: new ObjectId(annotationId) },
+        : await collection.updateOne(
+            {
+                _id: new ObjectId(annotationId),
+                comments: { $elemMatch: { _id: new ObjectId(commentId), 'likes.userId': userId } },
+            },
             { $pull: { 'comments.$[comment].likes': { userId } } },
             { arrayFilters: [{ 'comment._id': new ObjectId(commentId) }] },
         )
-    }
-    const savedAnnotation = await collection.findOne({ _id: new ObjectId(annotationId) })
-    if (!savedAnnotation) return { message: 'Annotation not found' }
 
-    try {
-        const redisPub = new redis(process.env.KV_URL ?? '')
-        await redisPub.publish('commentLikes', JSON.stringify({
-            annotationId,
-            commentId,
-            like: newLike,
-            likes: liked,
-        }))
-        if (liked) {
-            const firstName = user.name.split(' ')[0]
-            await sendNotificationToOfflineUsers(
-                '',
-                `${firstName} liked ${comment.userName.split(' ')[0]}'s comment`,
-                userId,
-                `/annotation/${annotationId}?comment=${commentId}#comment-${commentId}`,
-            )
+    // A no-op means another request already established this desired state.
+    // Return the database snapshot, but do not emit duplicate side effects.
+    if (updateResult.modifiedCount > 0) {
+        try {
+            const redisPub = new redis(process.env.KV_URL ?? '')
+            await redisPub.publish('commentLikes', JSON.stringify({
+                annotationId,
+                commentId,
+                like: newLike,
+                liked,
+            }))
+            if (liked) {
+                const firstName = user.name.split(' ')[0]
+                await sendNotificationToOfflineUsers(
+                    '',
+                    `${firstName} liked ${comment.userName.split(' ')[0]}'s comment`,
+                    userId,
+                    `/annotation/${annotationId}?comment=${commentId}#comment-${commentId}`,
+                )
+            }
+        } catch (error) {
+            console.error('Comment like notification failed:', error)
         }
-    } catch (error) {
-        console.error('Comment like notification failed:', error)
     }
 
     return {
         message: 'Success',
-        annotation: serializeAnnotation(savedAnnotation),
     }
 }
 

@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { UserAccount } from '@/lib/auth/definitions'
@@ -19,6 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
+import { feedRootKey } from '@/lib/annotations/query'
 
 export function AnnotationCreation({ renderTrigger, user }: {
   renderTrigger?: (onOpen: () => void) => ReactNode
@@ -28,6 +30,7 @@ export function AnnotationCreation({ renderTrigger, user }: {
   const [isOpen, setIsOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const router = useRouter()
+  const queryClient = useQueryClient()
 
   const handleOpen = () => {
     if (window.matchMedia('(max-width: 639px)').matches) {
@@ -57,6 +60,7 @@ export function AnnotationCreation({ renderTrigger, user }: {
       toast.warning("Sharing annotation failed")
     }
     else {
+      await queryClient.invalidateQueries({ queryKey: feedRootKey })
       setText('')
       setIsOpen(false)
     }

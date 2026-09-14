@@ -76,10 +76,12 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
         setEditSaving(true)
         const editResults = await updateAnnotation(initialAnnotation._id!.toString(), editedVersion)
         if (editResults.message == 'Success') {
+            await queryClient.invalidateQueries({ queryKey: annotationKey(annotationId) })
             toast.success('Annotation updated!')
+            setEditMode(false)
+        } else {
+            toast.warning(String(editResults.message))
         }
-        queryClient.setQueryData(annotationKey(annotationId), { ...annotation, text: editedVersion })
-        setEditMode(false)
         setEditSaving(false)
     }
 

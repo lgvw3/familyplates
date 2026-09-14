@@ -12,7 +12,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
 export function DataProvider({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient({
         defaultOptions: {
-            queries: { staleTime: Infinity, refetchOnWindowFocus: false },
+            queries: { staleTime: 30_000, refetchOnReconnect: true, refetchOnWindowFocus: true },
         },
     }))
 

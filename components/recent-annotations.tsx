@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { Virtuoso } from 'react-virtuoso'
 import { motion } from 'framer-motion'
 import { PlusIcon } from 'lucide-react'
@@ -16,7 +16,7 @@ import { FeedActivityCard } from '@/components/feed/feed-activity-card'
 import { AnnotationCreation } from '@/components/feed/annotation-creation'
 import { ContinueReading } from '@/components/continue-reading'
 import { Button } from '@/components/ui/button'
-import { useHydrateAnnotations } from '@/lib/annotations/query'
+import { feedKey } from '@/lib/annotations/query'
 
 export function RecentAnnotations({
   currentUserId,
@@ -33,17 +33,22 @@ export function RecentAnnotations({
 }) {
   const userMap = fetchUsersAsMap(users)
   const currentUserName = userMap.get(currentUserId)?.name ?? ''
-  const queryClient = useQueryClient()
-  const feedKey = ['feed', sessionStartedAt] as const
-  const activities = useQuery({
-    queryKey: feedKey,
-    queryFn: () => Promise.resolve(initialFeed.items),
-    initialData: initialFeed.items,
-  }).data
-  useHydrateAnnotations(activities.map(activity => activity.annotation))
-  const [nextCursor, setNextCursor] = useState<FeedCursor | null>(initialFeed.nextCursor)
+  const feed = useInfiniteQuery({
+    queryKey: feedKey(sessionStartedAt),
+    queryFn: async ({ pageParam }) => {
+      const page = await fetchFeedPage({ limit: 15, cursor: pageParam, sessionStartedAt })
+      if (!page) throw new Error('Could not load the feed')
+      return page
+    },
+    initialPageParam: null as FeedCursor | null,
+    initialData: { pages: [initialFeed], pageParams: [null] },
+    getNextPageParam: page => page.nextCursor ?? undefined,
+  })
+  const activities = useMemo(() => {
+    const byKey = new Map(feed.data.pages.flatMap(page => page.items).map(activity => [activity.key, activity]))
+    return [...byKey.values()]
+  }, [feed.data.pages])
   const { notification, setNotification } = useWebSocket()
-  const isLoading = useRef(false)
   const [scroller, setScroller] = useState<HTMLElement | Window | null>(null)
   const [actionsVisible, setActionsVisible] = useState(true)
   const lastScrollTop = useRef(0)
@@ -71,21 +76,8 @@ export function RecentAnnotations({
     return () => scroller.removeEventListener('scroll', handleScroll)
   }, [scroller])
 
-  const loadMore = async () => {
-    if (isLoading.current || !nextCursor) return
-    isLoading.current = true
-    try {
-      const page = await fetchFeedPage({ limit: 15, cursor: nextCursor, sessionStartedAt })
-      if (!page) return
-      queryClient.setQueryData<typeof activities>(feedKey, previous => {
-        previous ??= []
-        const knownKeys = new Set(previous.map(activity => activity.key))
-        return [...previous, ...page.items.filter(activity => !knownKeys.has(activity.key))]
-      })
-      setNextCursor(page.nextCursor)
-    } finally {
-      isLoading.current = false
-    }
+  const loadMore = () => {
+    if (feed.hasNextPage && !feed.isFetchingNextPage) void feed.fetchNextPage()
   }
 
   return (

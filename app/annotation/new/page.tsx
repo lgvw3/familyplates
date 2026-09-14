@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeftIcon, Loader2Icon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -11,9 +12,11 @@ import { fetchCurrentFamilyAccount } from '@/lib/auth/profile-actions'
 import { getInitials } from '@/lib/utils'
 import { saveAnnotation } from '@/lib/annotations/actions'
 import { toast } from 'sonner'
+import { feedRootKey } from '@/lib/annotations/query'
 
 export default function NewAnnotationPage() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [text, setText] = useState('')
   const [user, setUser] = useState<UserAccount>()
   const [saving, setSaving] = useState(false)
@@ -59,6 +62,7 @@ export default function NewAnnotationPage() {
     }
 
     toast.success('Note shared with the family!')
+    await queryClient.invalidateQueries({ queryKey: feedRootKey })
     router.back()
   }
 

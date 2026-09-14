@@ -55,7 +55,7 @@ export default function ScriptureReader({
   const targetKey = `scripture:${bookId}:${chapterNumber}`
   const isFirstChapter = chapterNumber === 1
   const annotations = useAnnotationCollection(initialAnnotations, targetKey)
-  const { addAnnotation, notification, setNotification } = useWebSocket(targetKey)
+  const { invalidateAnnotation, notification, setNotification } = useWebSocket()
   const [annotationComposerOpen, setAnnotationComposerOpen] = useState(false)
   const [currentSelection, setCurrentSelection] = useState<AnchoredSelection | null>(null)
   const [draftColor, setDraftColor] = useState<HighlightColor>('yellow')
@@ -136,7 +136,7 @@ export default function ScriptureReader({
       return false
     }
 
-    addAnnotation({ ...result.annotation, _id: result.insertedId })
+    invalidateAnnotation({ ...result.annotation, _id: result.insertedId })
     toast.success('Note shared with the family!')
     handleCloseMenu()
     return true
