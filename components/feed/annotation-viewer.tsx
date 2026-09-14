@@ -7,18 +7,17 @@ import { Annotation } from "@/types/scripture"
 import { getInitials } from "@/lib/utils"
 import { HeartIcon, ExternalLinkIcon, MessageCircleIcon } from "lucide-react"
 import { Button } from "../ui/button"
-import { updateLikeStatusOfAnnotation } from "@/lib/annotations/actions"
 import { toast } from "sonner"
 import { useRouter } from 'next/navigation'
-import { useState } from "react"
 import { motion } from "framer-motion"
 import { getAnnotationReference, getTargetHref } from "@/lib/annotations/presentation"
 import { AnnotationQuote } from "./annotation-quote"
 import { cn } from "@/lib/utils"
+import { useAnnotation, useSetAnnotationLiked } from "@/lib/annotations/query"
 import Link from 'next/link'
 
 
-export default function AnnotationViewer({ index, author, annotation, userMap, currentUserId, annotationHref, flat = false, threaded = false } : {
+export default function AnnotationViewer({ index, author, annotation: initialAnnotation, userMap, currentUserId, annotationHref, flat = false, threaded = false } : {
     index?: number, 
     author: UserAccount, 
     annotation: Annotation, 
@@ -28,36 +27,14 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
     flat?: boolean,
     threaded?: boolean,
 }) {
-    const [userLike, setUserLike] = useState(annotation.likes.find(val => val.userId == currentUserId))
-    const [likeCount, setLikeCount] = useState(annotation.likes.length)
+    const annotation = useAnnotation(initialAnnotation)
+    const annotationId = annotation._id?.toString() ?? ''
+    const userLike = annotation.likes.find(val => val.userId === currentUserId)
+    const setLiked = useSetAnnotationLiked(annotationId, currentUserId, userMap.get(currentUserId)?.name ?? '')
     const router = useRouter()
     const reference = getAnnotationReference(annotation)
 
-    const saveLike = async() => {
-        const temp = userLike ? {...userLike} : userLike
-        setUserLike((prev) => { // optimistic set for perceived speed
-            if (prev) {
-                //likes: unlike
-                return undefined
-            }
-            else {
-                //no like: likes
-                return {
-                    _id: "",
-                    userId: currentUserId,
-                    userName: userMap.get(currentUserId)?.name ?? '',
-                    timeStamp: new Date()
-                }
-            }
-        })
-        setLikeCount(count => Math.max(0, count + (userLike ? -1 : 1)))
-        const results = await updateLikeStatusOfAnnotation(annotation._id?.toString() ?? '')
-        if (results.message !== 'Success') {
-            toast.warning(results.message as string)
-            setUserLike(temp)
-            setLikeCount(annotation.likes.length)
-        }
-    }
+    const saveLike = () => setLiked.mutate(!userLike, { onError: error => toast.warning(error.message) })
 
     function getHourDifference(date1: Date, date2: Date): number {
         const diffInMs = Math.abs(date1.getTime() - date2.getTime());
@@ -161,7 +138,7 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
                                 : 
                                     <HeartIcon className="h-4 w-4" />
                             }
-                            { likeCount || null }
+                            { annotation.likes.length || null }
                         </Button>
                     </motion.div>
                     {

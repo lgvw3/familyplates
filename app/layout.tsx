@@ -1,5 +1,5 @@
 import { Inter } from 'next/font/google'
-import { ThemeProvider } from "@/components/providers"
+import { DataProvider, ThemeProvider } from "@/components/providers"
 
 import "@/app/globals.css"
 import { Metadata, Viewport } from 'next';
@@ -45,16 +45,18 @@ export default function RootLayout({
           storageKey="family-plates-system-theme"
           disableTransitionOnChange
         >
-          <ThemeChrome />
-          <HeaderProvider>
-            <Header />
-            <Navigation />
-            <main>
-              {children}
-            </main>
-            <Toaster richColors />
-            <Footer />
-          </HeaderProvider>
+          <DataProvider>
+            <ThemeChrome />
+            <HeaderProvider>
+              <Header />
+              <Navigation />
+              <main>
+                {children}
+              </main>
+              <Toaster richColors />
+              <Footer />
+            </HeaderProvider>
+          </DataProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -2,14 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { HeartIcon, Loader2Icon, MessageCircleIcon } from 'lucide-react'
-import type { AnnotationComment, AnnotationLike } from '@/types/scripture'
+import type { AnnotationComment } from '@/types/scripture'
 import type { UserAccount } from '@/lib/auth/definitions'
-import { addCommentToAnnotation, markFeedActivitiesSeen, updateLikeStatusOfComment } from '@/lib/annotations/actions'
+import { markFeedActivitiesSeen } from '@/lib/annotations/actions'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea'
 import { cn, getInitials } from '@/lib/utils'
 import { toast } from 'sonner'
+import { useAddComment, useSetCommentLiked } from '@/lib/annotations/query'
 import Link from 'next/link'
 
 function formatActivityDate(value: Date) {
@@ -34,7 +35,6 @@ export function CommentCard({
   currentUserName,
   userMap,
   compact = false,
-  onCommentAdded,
 }: {
   annotationId: string
   comment: AnnotationComment
@@ -42,14 +42,11 @@ export function CommentCard({
   currentUserName: string
   userMap: Map<number, UserAccount>
   compact?: boolean
-  onCommentAdded?: (comment: AnnotationComment) => void
 }) {
   const commentId = comment._id.toString()
-  const initialLikes = comment.likes ?? []
-  const [userLike, setUserLike] = useState<AnnotationLike | undefined>(
-    initialLikes.find(like => like.userId === currentUserId),
-  )
-  const [likeCount, setLikeCount] = useState(initialLikes.length)
+  const userLike = (comment.likes ?? []).find(like => like.userId === currentUserId)
+  const setLiked = useSetCommentLiked(annotationId, commentId, currentUserId, currentUserName)
+  const addComment = useAddComment(annotationId)
   const [replyOpen, setReplyOpen] = useState(false)
   const [reply, setReply] = useState('')
   const [savingReply, setSavingReply] = useState(false)
@@ -77,34 +74,17 @@ export function CommentCard({
     }
   }, [commentId])
 
-  const toggleLike = async () => {
-    const previous = userLike
-    const optimisticLike = previous ? undefined : {
-      _id: '',
-      userId: currentUserId,
-      userName: currentUserName,
-      timeStamp: new Date(),
-    }
-    setUserLike(optimisticLike)
-    setLikeCount(count => Math.max(0, count + (previous ? -1 : 1)))
-    const result = await updateLikeStatusOfComment(annotationId, commentId)
-    if (result.message !== 'Success') {
-      setUserLike(previous)
-      setLikeCount(initialLikes.length)
-      toast.warning(result.message as string)
-    }
-  }
+  const toggleLike = () => setLiked.mutate(!userLike, { onError: error => toast.warning(error.message) })
 
   const saveReply = async () => {
     setSavingReply(true)
-    const result = await addCommentToAnnotation(reply, annotationId, commentId)
-    if (result.newComment) {
-      onCommentAdded?.(result.newComment as AnnotationComment)
+    try {
+      await addComment.mutateAsync({ content: reply, parentCommentId: commentId })
       setReply('')
       setReplyOpen(false)
       toast.success('Reply shared!')
-    } else {
-      toast.warning(result.message as string)
+    } catch (error) {
+      toast.warning(error instanceof Error ? error.message : 'Could not share reply')
     }
     setSavingReply(false)
   }
@@ -150,7 +130,7 @@ export function CommentCard({
               aria-label={userLike ? 'Unlike comment' : 'Like comment'}
             >
               <HeartIcon className={cn('size-4', userLike && 'fill-red-500 stroke-red-500')} />
-              {likeCount || null}
+              {comment.likes?.length || null}
             </Button>
           </div>
           {replyOpen && (
@@ -185,7 +165,6 @@ export function CommentTree({
   userMap,
   parentCommentId,
   connectedToAnnotation = false,
-  onCommentAdded,
 }: {
   annotationId: string
   comments: AnnotationComment[]
@@ -194,7 +173,6 @@ export function CommentTree({
   userMap: Map<number, UserAccount>
   parentCommentId?: string
   connectedToAnnotation?: boolean
-  onCommentAdded?: (comment: AnnotationComment) => void
 }) {
   const children = comments.filter(comment =>
     parentCommentId
@@ -231,7 +209,6 @@ export function CommentTree({
               currentUserName={currentUserName}
               userMap={userMap}
               compact={nested}
-              onCommentAdded={onCommentAdded}
             />
             {hasReplies && (
               <div className={nested ? 'ml-7' : 'ml-11'}>
@@ -242,7 +219,6 @@ export function CommentTree({
                   currentUserName={currentUserName}
                   userMap={userMap}
                   parentCommentId={commentId}
-                  onCommentAdded={onCommentAdded}
                 />
               </div>
             )}
