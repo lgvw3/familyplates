@@ -9,7 +9,7 @@ import { cookies } from "next/headers";
 import { validateToken } from "../auth/utils";
 import { redirect } from "next/navigation";
 import { fetchAccountById } from "../auth/accounts";
-import { ObjectId, UpdateResult } from "mongodb";
+import { ObjectId } from "mongodb";
 import { sendNotificationToOfflineUsers } from "../push-notifications/actions";
 import { InvalidAttributionTargetError, resolveScriptureAttribution } from "../scripture-attribution/resolver.ts";
 
@@ -40,6 +40,20 @@ const zAnnotation = z.object({
     url: z.string().optional(),
     photoUrl: z.string().optional(),
 })
+
+function serializeAnnotation(annotation: Annotation): Annotation {
+    return {
+        ...annotation,
+        _id: annotation._id?.toString() ?? null,
+        comments: (annotation.comments ?? []).map(comment => ({
+            ...comment,
+            _id: comment._id.toString(),
+            parentCommentId: comment.parentCommentId?.toString(),
+            likes: (comment.likes ?? []).map(like => ({ ...like, _id: like._id.toString() })),
+        })),
+        likes: (annotation.likes ?? []).map(like => ({ ...like, _id: like._id.toString() })),
+    }
+}
 
 export async function saveAnnotation(annotation: Annotation) {
 
@@ -120,6 +134,7 @@ export async function saveAnnotation(annotation: Annotation) {
         const result = await collection.insertOne(annotationData);
 
         if (result.insertedId) {
+            const savedAnnotation = serializeAnnotation({ ...newAnnotation, _id: result.insertedId })
             try {
                 //real time
                 const redisPub = new redis(process.env.KV_URL ?? '');
@@ -136,19 +151,11 @@ export async function saveAnnotation(annotation: Annotation) {
                     `/annotation/${result.insertedId.toString()}`,
                 )
 
-                return {
-                    message: 'Success',
-                    insertedId: result.insertedId.toString(),
-                    annotation: newAnnotation
-                }
             }
             catch(err) {
-                console.error(err)
-                sendErrorMessageToMe(annotation)
-                return {
-                    message: `Real time update error: ${err}`
-                }
+                console.error('Annotation notification failed:', err)
             }
+            return { message: 'Success', insertedId: result.insertedId.toString(), annotation: savedAnnotation }
         }
         else {
             console.error("Database Error: Could not save annotation. Failed insert.")
@@ -293,6 +300,7 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
         );
 
         if (result.modifiedCount) {
+            const savedAnnotation = await collection.findOne({ _id: new ObjectId(annotationId) })
             try {
                 // real time
                 const redisPub = new redis(process.env.KV_URL ?? '');
@@ -311,19 +319,14 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
                     `/annotation/${annotationId}?comment=${commentId}#comment-${commentId}`,
                 )
 
-                return {
-                    message: 'Success',
-                    newComment: {
-                        ...newComment,
-                        _id: newComment._id.toString()
-                    }
-                }
             }
             catch(err) {
-                console.error(err)
-                return {
-                    message: `Real time update error: ${err}`
-                }
+                console.error('Comment notification failed:', err)
+            }
+            return {
+                message: 'Success',
+                newComment: { ...newComment, _id: newComment._id.toString() },
+                annotation: savedAnnotation ? serializeAnnotation(savedAnnotation) : undefined,
             }
         }
         else {
@@ -340,7 +343,7 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
     }
 }
 
-export async function updateLikeStatusOfAnnotation(annotationId: string) {
+export async function setAnnotationLiked(annotationId: string, liked: boolean) {
     const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
     if (!authToken) {
         redirect('/sign-in')
@@ -372,61 +375,41 @@ export async function updateLikeStatusOfAnnotation(annotationId: string) {
     }
 
     try {
-        let results: UpdateResult<Annotation>
+        if (!ObjectId.isValid(annotationId)) return { message: 'Invalid annotation' }
         const existingAnnotation = await collection.findOne({_id: new ObjectId(annotationId)})
-        const existingLike = existingAnnotation?.likes?.find(val => val.userId == userId)
-        if (existingLike) {
-            // User already liked: Unlike
-            results = await collection.updateOne(
-                { _id: new ObjectId(annotationId) },
-                { $pull: { likes: existingLike} }
-            );
+        if (!existingAnnotation) return { message: 'Annotation not found' }
+        if (liked) {
+            await collection.updateOne(
+                { _id: new ObjectId(annotationId), 'likes.userId': { $ne: userId } },
+                { $push: { likes: updatedLike } },
+            )
         } else {
-            // User not liked: Like
-            results = await collection.updateOne(
+            await collection.updateOne(
                 { _id: new ObjectId(annotationId) },
-                { $addToSet: { likes: updatedLike } }
-            );
+                { $pull: { likes: { userId } } },
+            )
         }
-
-        if (results.modifiedCount) {
-            try {
+        const savedAnnotation = await collection.findOne({ _id: new ObjectId(annotationId) })
+        if (!savedAnnotation) return { message: 'Annotation not found' }
+        try {
                 // real time
                 const redisPub = new redis(process.env.KV_URL ?? '');
                 await redisPub.publish("likes", JSON.stringify({
                     like: updatedLike,
-                    likes: !existingLike,
+                    likes: liked,
                     annotationId: annotationId
                 }));
                 // offline
-                if (!existingLike) {
+                if (liked) {
                     // liking it
                     const firstName = updatedLike.userName.split(' ')[0]
                     const annotationAuthorFirstName = existingAnnotation?.userName.split(' ')[0]
                     await sendNotificationToOfflineUsers('', `${firstName} liked ${annotationAuthorFirstName}'s thoughts`, userId, `/annotation/${annotationId}`)
                 }
-                return {
-                    message: 'Success',
-                    doesLike: !existingLike,
-                    newLike: {
-                        ...updatedLike,
-                        _id: updatedLike._id.toString()
-                    }
-                }
-            }
-            catch(err) {
-                console.error(err)
-                return {
-                    message: `Real time update error: ${err}`
-                }
-            }
+        } catch(err) {
+            console.error('Like notification failed:', err)
         }
-        else {
-            console.error("Database Error: Could not update like. Failed insert.")
-            return {
-                message: "Database Error: Could not update like"
-            }
-        }
+        return { message: 'Success', annotation: serializeAnnotation(savedAnnotation) }
     } catch(error) {
         console.error(error)
         return {
@@ -435,7 +418,7 @@ export async function updateLikeStatusOfAnnotation(annotationId: string) {
     }
 }
 
-export async function updateLikeStatusOfComment(annotationId: string, commentId: string) {
+export async function setCommentLiked(annotationId: string, commentId: string, liked: boolean) {
     const authToken = (await cookies()).get('familyPlatesAuthToken')?.value
     if (!authToken) redirect('/sign-in')
     const { userId } = validateToken(authToken)
@@ -452,7 +435,6 @@ export async function updateLikeStatusOfComment(annotationId: string, commentId:
     const comment = annotation?.comments?.find(item => item._id.toString() === commentId)
     if (!comment) return { message: 'Comment not found' }
 
-    const existingLike = comment.likes?.find(like => like.userId === userId)
     const newLike: AnnotationLike = {
         _id: new ObjectId(),
         userId,
@@ -460,19 +442,23 @@ export async function updateLikeStatusOfComment(annotationId: string, commentId:
         timeStamp: new Date(),
     }
 
-    const result = existingLike
-        ? await collection.updateOne(
+    if (liked) {
+        await collection.updateOne(
+            {
+                _id: new ObjectId(annotationId),
+                comments: { $elemMatch: { _id: new ObjectId(commentId), 'likes.userId': { $ne: userId } } },
+            },
+            { $push: { 'comments.$.likes': newLike } },
+        )
+    } else {
+        await collection.updateOne(
             { _id: new ObjectId(annotationId) },
             { $pull: { 'comments.$[comment].likes': { userId } } },
             { arrayFilters: [{ 'comment._id': new ObjectId(commentId) }] },
         )
-        : await collection.updateOne(
-            { _id: new ObjectId(annotationId) },
-            { $push: { 'comments.$[comment].likes': newLike } },
-            { arrayFilters: [{ 'comment._id': new ObjectId(commentId) }] },
-        )
-
-    if (!result.modifiedCount) return { message: 'Could not update comment like' }
+    }
+    const savedAnnotation = await collection.findOne({ _id: new ObjectId(annotationId) })
+    if (!savedAnnotation) return { message: 'Annotation not found' }
 
     try {
         const redisPub = new redis(process.env.KV_URL ?? '')
@@ -480,9 +466,9 @@ export async function updateLikeStatusOfComment(annotationId: string, commentId:
             annotationId,
             commentId,
             like: newLike,
-            likes: !existingLike,
+            likes: liked,
         }))
-        if (!existingLike) {
+        if (liked) {
             const firstName = user.name.split(' ')[0]
             await sendNotificationToOfflineUsers(
                 '',
@@ -497,8 +483,7 @@ export async function updateLikeStatusOfComment(annotationId: string, commentId:
 
     return {
         message: 'Success',
-        doesLike: !existingLike,
-        newLike: { ...newLike, _id: newLike._id.toString() },
+        annotation: serializeAnnotation(savedAnnotation),
     }
 }
 

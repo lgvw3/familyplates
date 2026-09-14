@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation'
 import { saveAnnotation } from '@/lib/annotations/actions'
 import { toast } from 'sonner'
 import { useWebSocket } from '@/hooks/use-websockets'
+import { useAnnotationCollection } from '@/lib/annotations/query'
 import { debounce } from 'lodash'
 import { saveBookmark } from '@/lib/reading/action'
 import { useHeader } from './header-context'
@@ -53,7 +54,8 @@ export default function ScriptureReader({
   const bookId = book.title.toLowerCase().replaceAll(' ', '-')
   const targetKey = `scripture:${bookId}:${chapterNumber}`
   const isFirstChapter = chapterNumber === 1
-  const { annotations, addAnnotation, notification, setNotification } = useWebSocket(initialAnnotations, false, targetKey)
+  const annotations = useAnnotationCollection(initialAnnotations, targetKey)
+  const { addAnnotation, notification, setNotification } = useWebSocket(targetKey)
   const [annotationComposerOpen, setAnnotationComposerOpen] = useState(false)
   const [currentSelection, setCurrentSelection] = useState<AnchoredSelection | null>(null)
   const [draftColor, setDraftColor] = useState<HighlightColor>('yellow')

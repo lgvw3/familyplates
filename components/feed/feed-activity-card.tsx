@@ -11,6 +11,7 @@ import AnnotationViewer from '@/components/feed/annotation-viewer'
 import { CommentTree } from '@/components/feed/comment-thread'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card } from '@/components/ui/card'
+import { useAnnotation } from '@/lib/annotations/query'
 
 function SeenWhenVisible({ activity, children }: { activity: FeedActivity; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -84,8 +85,10 @@ export function FeedActivityCard({
   currentUserName: string
 }) {
   const router = useRouter()
-  const annotation = activity.annotation
+  const annotation = useAnnotation(activity.annotation)
   const annotationId = annotation._id?.toString() ?? ''
+  const contextCommentIds = new Set(activity.contextComments?.map(comment => comment._id.toString()))
+  const contextComments = annotation.comments.filter(comment => contextCommentIds.has(comment._id.toString()))
   const author = userMap.get(annotation.userId)
   if (!author) return null
 
@@ -100,13 +103,13 @@ export function FeedActivityCard({
             userMap={userMap}
             currentUserId={currentUserId}
             annotationHref={`/annotation/${annotationId}`}
-            threaded={Boolean(activity.contextComments?.length)}
+            threaded={Boolean(contextComments.length)}
           />
-          {activity.contextComments?.length ? (
+          {contextComments.length ? (
             <Card className="rounded-none border-t-0">
               <CommentTree
                 annotationId={annotationId}
-                comments={activity.contextComments}
+                comments={contextComments}
                 currentUserId={currentUserId}
                 currentUserName={currentUserName}
                 userMap={userMap}
@@ -119,12 +122,12 @@ export function FeedActivityCard({
     )
   }
 
-  const comment = activity.comment
+  const comment = annotation.comments.find(item => item._id.toString() === activity.comment?._id.toString())
   if (!comment) return null
   const commentHref = `/annotation/${annotationId}?comment=${comment._id.toString()}#comment-${comment._id.toString()}`
-  const contextComments = activity.parentComment
+  const threadComments = activity.parentComment
     ? [
-        { ...activity.parentComment, parentCommentId: undefined },
+        { ...(annotation.comments.find(item => item._id.toString() === activity.parentComment?._id.toString()) ?? activity.parentComment), parentCommentId: undefined },
         comment,
       ]
     : [{ ...comment, parentCommentId: undefined }]
@@ -143,7 +146,7 @@ export function FeedActivityCard({
           />
           <CommentTree
             annotationId={annotationId}
-            comments={contextComments}
+            comments={threadComments}
             currentUserId={currentUserId}
             currentUserName={currentUserName}
             userMap={userMap}

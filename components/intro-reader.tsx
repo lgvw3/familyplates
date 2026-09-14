@@ -13,6 +13,7 @@ import { introMaterialOrder } from './navigation'
 import { saveAnnotation } from '@/lib/annotations/actions'
 import { toast } from 'sonner'
 import { useWebSocket } from '@/hooks/use-websockets'
+import { useAnnotationCollection } from '@/lib/annotations/query'
 import { AnchoredSelection, AnnotatedText } from './annotated-text'
 import { sortAnnotationsByTarget, TextUnit } from '@/lib/highlights/ranges'
 import { AnnotationQuote } from './feed/annotation-quote'
@@ -37,7 +38,8 @@ export default function IntroReader({
   currentUserId: number
 }) {
   const targetKey = `intro:${introId}`
-  const { annotations, addAnnotation, notification, setNotification } = useWebSocket(initialAnnotations, false, targetKey)
+  const annotations = useAnnotationCollection(initialAnnotations, targetKey)
+  const { addAnnotation, notification, setNotification } = useWebSocket(targetKey)
   const [annotationComposerOpen, setAnnotationComposerOpen] = useState(false)
   const [currentSelection, setCurrentSelection] = useState<AnchoredSelection | null>(null)
   const [draftColor, setDraftColor] = useState<HighlightColor>('yellow')

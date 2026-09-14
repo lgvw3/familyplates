@@ -1,224 +1,110 @@
-'use client';
+'use client'
 
-import { useCallback, useEffect, useState } from 'react';
-import { Annotation, AnnotationComment, AnnotationLike } from "@/types/scripture";
-import { fetchCurrentUserId } from '@/lib/auth/data';
-import { getAnnotationTargetKey } from '@/lib/annotations/presentation';
+import { useCallback, useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import type { Annotation, AnnotationComment, AnnotationLike } from '@/types/scripture'
+import { fetchCurrentUserId } from '@/lib/auth/data'
+import { getAnnotationTargetKey } from '@/lib/annotations/presentation'
+import { annotationCollectionKey, annotationKey, appendComment } from '@/lib/annotations/query'
 
 export type NotificationParam = {
-    annotation?: Annotation,
-    comment?: AnnotationComment,
-    like?: AnnotationLike,
-    doesLike?: boolean,
-    userName: string,
-    userId: number,
-    type: 'annotation' | 'comment' | 'like'
+  annotation?: Annotation
+  comment?: AnnotationComment
+  like?: AnnotationLike
+  doesLike?: boolean
+  userName: string
+  userId: number
+  type: 'annotation' | 'comment' | 'like'
 }
 
+export function useWebSocket(targetKey?: string) {
+  const queryClient = useQueryClient()
+  const [retryCount, setRetryCount] = useState(0)
+  const [notification, setNotification] = useState<NotificationParam | null>(null)
 
-export const useWebSocket = (initialAnnotations: Annotation[] = [], isFeed?: boolean, targetKey?: string) => {
-    const [socket, setSocket] = useState<WebSocket | null>(null);
-    const [annotations, setAnnotations] = useState<Annotation[]>(initialAnnotations)
-    const [retryCount, setRetryCount] = useState(0);
-    const [notification, setNotification] = useState<NotificationParam | null>()
+  const addAnnotation = useCallback((annotation: Annotation) => {
+    const id = annotation._id?.toString()
+    if (!id) return
+    queryClient.setQueryData(annotationKey(id), annotation)
+    if (targetKey && getAnnotationTargetKey(annotation) === targetKey) {
+      queryClient.setQueryData<string[]>(annotationCollectionKey(targetKey), current =>
+        current?.includes(id) ? current : [...(current ?? []), id],
+      )
+    }
+  }, [queryClient, targetKey])
 
+  useEffect(() => {
+    let ws: WebSocket | null = null
+    let retryTimer: ReturnType<typeof setTimeout> | undefined
+    let disposed = false
 
-    const addAnnotation = useCallback((annotation: Annotation) => {
-        if (!targetKey || getAnnotationTargetKey(annotation) === targetKey) {
-            setAnnotations(prev => {
-                const temp = prev.filter(a => a._id != annotation._id)
-                return [...temp, annotation]
-            })
+    const connect = async () => {
+      const userId = await fetchCurrentUserId()
+      if (disposed) return
+      ws = new WebSocket(`${process.env.NEXT_PUBLIC_WEB_SOCKET_URL}?userId=${userId}`)
+      ws.onopen = () => setRetryCount(0)
+      ws.onmessage = event => {
+        const envelope = JSON.parse(event.data)
+        if (envelope.channel === 'annotations') {
+          const annotation: Annotation = JSON.parse(envelope.data)
+          addAnnotation(annotation)
+          setNotification({ annotation, userName: annotation.userName, userId: annotation.userId, type: 'annotation' })
+          return
         }
-    }, [targetKey])
-
-    const addAnnotationToTopOfFeed = useCallback((annotation: Annotation) => {
-        setAnnotations(prev => {
-            const temp = prev.filter(a => a._id != annotation._id)
-            return [annotation, ...temp]
-        })
-    }, [])
-
-    const addAnnotationsToBottomOfFeed = useCallback((annotations: Annotation[]) => {
-        setAnnotations(prev => {
-            return [...prev, ...annotations]
-        })
-    }, [])
-
-    const addComment = useCallback((commentData: { annotationId: string; comment: AnnotationComment; }) => {
-        setAnnotations(prev => {
-            const temp = prev.find(val => val._id?.toString() === commentData.annotationId);
-            if (temp) {
-                const updatedTemp = {
-                    ...temp,
-                    comments: temp.comments.some(comment => comment._id.toString() === commentData.comment._id.toString())
-                        ? temp.comments
-                        : [...(temp.comments || []), {
-                            ...commentData.comment,
-                            _id: commentData.comment._id.toString(),
-                            parentCommentId: commentData.comment.parentCommentId?.toString(),
-                            likes: commentData.comment.likes ?? [],
-                        }],
-                };
-                return prev.map(val => (val._id?.toString() === commentData.annotationId ? updatedTemp : val));
-            } else {
-                return [...prev];
-            }
-        })
-    }, [])
-
-    const addCommentLikes = useCallback((likeData: {
-        likes: boolean;
-        like: AnnotationLike;
-        annotationId: string;
-        commentId: string;
-    }) => {
-        setAnnotations(previous => previous.map(annotation => {
-            if (annotation._id?.toString() !== likeData.annotationId) return annotation
-            return {
-                ...annotation,
-                comments: annotation.comments.map(comment => {
-                    if (comment._id.toString() !== likeData.commentId) return comment
-                    const likes = comment.likes ?? []
-                    return {
-                        ...comment,
-                        likes: likeData.likes
-                            ? [...likes.filter(like => like.userId !== likeData.like.userId), likeData.like]
-                            : likes.filter(like => like.userId !== likeData.like.userId),
-                    }
-                }),
-            }
-        }))
-    }, [])
-
-    const addLikes = useCallback((likeData: { likes: boolean, like: AnnotationLike; annotationId: string; }) => {
-        setAnnotations(prev => {
-            const temp = prev.find(val => val._id?.toString() === likeData.annotationId);
-            if (temp) {
-                const updatedTemp = {
-                    ...temp,
-                    likes: likeData.likes ? [...(temp.likes || []), { ...likeData.like, _id: likeData.like._id.toString() }] : [...(temp.likes?.filter(val => val.userId != likeData.like.userId) || [])],
-                };
-                return prev.map(val => (val._id?.toString() === likeData.annotationId ? updatedTemp : val));
-            } else {
-                return prev;
-            }
-        })
-    }, [])
-
-    useEffect(() => {
-
-        let ws: WebSocket | null = null;
-        const connect = async () => {
-            const userId = await fetchCurrentUserId()
-
-            ws = new WebSocket(`${process.env.NEXT_PUBLIC_WEB_SOCKET_URL}?userId=${userId}`);
-            ws.onopen = () => {
-                console.log('WebSocket connected');
-                if (socket) {
-                    console.log('Closing old connection')
-                    socket.close()
-                }
-                setSocket(ws)
-                setRetryCount(0); // Reset retry count on successful connection
-            };
-
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                if (data.channel == 'annotations') {
-                    const ann: Annotation = JSON.parse(data.data)
-                    setNotification({
-                        annotation: ann,
-                        userName: ann.userName,
-                        userId: ann.userId,
-                        type: 'annotation'
-                    })
-                    if (isFeed) {
-                        addAnnotationToTopOfFeed(ann)
-                    }
-                    else {
-                        addAnnotation(ann)
-                    }
-                }
-                else if (data.channel == 'comments') {
-                    const commentChannelData: { annotationId: string; comment: AnnotationComment; } = JSON.parse(data.data)
-                    addComment(commentChannelData)
-                    setNotification({
-                        comment: commentChannelData.comment,
-                        userName: commentChannelData.comment.userName,
-                        userId: commentChannelData.comment.userId,
-                        type: 'comment'
-                    })
-                }
-                else if (data.channel == "likes") {
-                    const likeChannelData: { likes: boolean, like: AnnotationLike; annotationId: string; } = JSON.parse(data.data)
-                    addLikes(likeChannelData)
-                    if (likeChannelData.likes) {
-                        setNotification({
-                            like: likeChannelData.like,
-                            doesLike: likeChannelData.likes,
-                            userName: likeChannelData.like.userName,
-                            userId: likeChannelData.like.userId,
-                            type: 'like'
-                        })
-                    }
-                }
-                else if (data.channel == 'commentLikes') {
-                    const likeData: {
-                        likes: boolean;
-                        like: AnnotationLike;
-                        annotationId: string;
-                        commentId: string;
-                    } = JSON.parse(data.data)
-                    addCommentLikes(likeData)
-                    if (likeData.likes) {
-                        setNotification({
-                            like: likeData.like,
-                            doesLike: true,
-                            userName: likeData.like.userName,
-                            userId: likeData.like.userId,
-                            type: 'like',
-                        })
-                    }
-                }
-                else if (data.channel == 'bookmarks') {
-                    // local save of bookmarks of family members
-                    // when they are active display just once in feed
-                    // do a notification and invite to "read along"
-                }
-            };
-
-            ws.onerror = (error) => {
-                console.error('WebSocket error:', error);
-            };
-
-            ws.onclose = () => {
-                console.log('WebSocket disconnected. Retrying...');
-                // Retry with exponential backoff
-                setTimeout(() => {
-                    setRetryCount((prev) => prev + 1);
-                    connect();
-                }, Math.min(1000 * 2 ** retryCount, 30000)); // Max delay: 30s
-            };
-        };
-
-        connect();
-
-        return () => {
-            ws?.close();
-        };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [addAnnotation, addAnnotationToTopOfFeed, addComment, addCommentLikes, addLikes, isFeed]);
-
-    const checkServerHealth = async () => {
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_WEB_SOCKET_URL?.replace('wss', 'https').replace('ws', 'http')}/health`);
-            return response.ok;
-        } catch (error) {
-            console.error('Health check failed:', error);
-            return false;
+        if (envelope.channel === 'comments') {
+          const data: { annotationId: string; comment: AnnotationComment } = JSON.parse(envelope.data)
+          queryClient.setQueryData<Annotation>(annotationKey(data.annotationId), current => current && appendComment(current, data.comment))
+          setNotification({ comment: data.comment, userName: data.comment.userName, userId: data.comment.userId, type: 'comment' })
+          return
         }
-    };
+        if (envelope.channel === 'likes') {
+          const data: { likes: boolean; like: AnnotationLike; annotationId: string } = JSON.parse(envelope.data)
+          queryClient.setQueryData<Annotation>(annotationKey(data.annotationId), current => current && ({
+            ...current,
+            likes: data.likes
+              ? [...current.likes.filter(like => like.userId !== data.like.userId), data.like]
+              : current.likes.filter(like => like.userId !== data.like.userId),
+          }))
+          if (data.likes) setNotification({ like: data.like, doesLike: true, userName: data.like.userName, userId: data.like.userId, type: 'like' })
+          return
+        }
+        if (envelope.channel === 'commentLikes') {
+          const data: { likes: boolean; like: AnnotationLike; annotationId: string; commentId: string } = JSON.parse(envelope.data)
+          queryClient.setQueryData<Annotation>(annotationKey(data.annotationId), current => current && ({
+            ...current,
+            comments: current.comments.map(comment => comment._id.toString() !== data.commentId ? comment : ({
+              ...comment,
+              likes: data.likes
+                ? [...(comment.likes ?? []).filter(like => like.userId !== data.like.userId), data.like]
+                : (comment.likes ?? []).filter(like => like.userId !== data.like.userId),
+            })),
+          }))
+          if (data.likes) setNotification({ like: data.like, doesLike: true, userName: data.like.userName, userId: data.like.userId, type: 'like' })
+        }
+      }
+      ws.onerror = error => console.error('WebSocket error:', error)
+      ws.onclose = () => {
+        if (disposed) return
+        retryTimer = setTimeout(() => setRetryCount(count => count + 1), Math.min(1000 * 2 ** retryCount, 30_000))
+      }
+    }
+    void connect()
+    return () => {
+      disposed = true
+      if (retryTimer) clearTimeout(retryTimer)
+      ws?.close()
+    }
+  }, [addAnnotation, queryClient, retryCount])
 
-    return { checkServerHealth, annotations, setAnnotations, addAnnotation, addAnnotationToTopOfFeed, addAnnotationsToBottomOfFeed, notification, setNotification };
-};
+  const checkServerHealth = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_WEB_SOCKET_URL?.replace('wss', 'https').replace('ws', 'http')}/health`)
+      return response.ok
+    } catch (error) {
+      console.error('Health check failed:', error)
+      return false
+    }
+  }
+
+  return { checkServerHealth, addAnnotation, notification, setNotification }
+}

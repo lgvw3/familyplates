@@ -9,11 +9,13 @@ import { HeartIcon, ExternalLinkIcon, Loader2Icon, MessageCircleIcon, ArrowLeftI
 import { Button, buttonVariants } from "../ui/button"
 import { useEffect, useRef, useState } from "react"
 import { AutoResizeTextarea } from "../ui/auto-resize-textarea"
-import { addCommentToAnnotation, markFeedActivitiesSeen, updateAnnotation, updateLikeStatusOfAnnotation } from "@/lib/annotations/actions"
+import { markFeedActivitiesSeen, updateAnnotation } from "@/lib/annotations/actions"
 import { toast } from "sonner"
 import Link from "next/link"
 import { fetchUsersAsMap } from "@/lib/auth/accounts"
 import { useWebSocket } from "@/hooks/use-websockets"
+import { useQueryClient } from "@tanstack/react-query"
+import { annotationKey, useAddComment, useAnnotation, useSetAnnotationLiked } from "@/lib/annotations/query"
 import { motion } from "framer-motion"
 import { getAnnotationQuote, getAnnotationReference, getTargetHref } from "@/lib/annotations/presentation"
 import { AnnotationQuote } from "./annotation-quote"
@@ -27,14 +29,17 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
     userName: string
 }) {
 
-    const { annotations, setAnnotations, notification, setNotification } = useWebSocket([initialAnnotation], false) 
-    const annotation = annotations[0]
+    const annotation = useAnnotation(initialAnnotation)
+    const annotationId = annotation._id?.toString() ?? ''
+    const queryClient = useQueryClient()
+    const { notification, setNotification } = useWebSocket()
+    const addComment = useAddComment(annotationId)
+    const setLiked = useSetAnnotationLiked(annotationId, currentUserId, userName)
     const reference = getAnnotationReference(annotation)
     const userMap = fetchUsersAsMap()
     const [commentContent, setCommentContent] = useState('')
     const [savingComment, setSavingComment] = useState(false)
-    const [userLike, setUserLike] = useState(annotation.likes?.find(val => val.userId == currentUserId))
-    const [likeCount, setLikeCount] = useState(annotation.likes?.length ?? 0)
+    const userLike = annotation.likes.find(val => val.userId === currentUserId)
     const [addCommentOpen, setAddCommentOpen] = useState(false)
     const [editMode, setEditMode] = useState(false)
     const [editedVersion, setEditedVersion] = useState('')
@@ -73,57 +78,28 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
         if (editResults.message == 'Success') {
             toast.success('Annotation updated!')
         }
-        setAnnotations([{
-            ...annotation,
-            text: editedVersion
-        }])
+        queryClient.setQueryData(annotationKey(annotationId), { ...annotation, text: editedVersion })
         setEditMode(false)
         setEditSaving(false)
     }
 
-    const saveComment = async() => {
+    const saveComment = async () => {
         setSavingComment(true)
-        const results = await addCommentToAnnotation(commentContent, annotation._id?.toString() ?? '')
-        if (results.newComment) {
+        try {
+            await addComment.mutateAsync({ content: commentContent })
             toast.success('Comment shared!')
-            const newComment = results.newComment
-            setAnnotations(previous => previous.map(item => item._id?.toString() === annotation._id?.toString()
-                ? { ...item, comments: [...item.comments, newComment] }
-                : item))
             setCommentContent('')
             setAddCommentOpen(false)
+        } catch (error) {
+            toast.warning(error instanceof Error ? error.message : 'Could not share comment')
+        } finally {
+            setSavingComment(false)
         }
-        else {
-            toast.warning(results.message as string)
-        }
-        setSavingComment(false)
     }
 
-    const saveLike = async() => {
-        const temp = userLike ? {...userLike} : userLike
-        setUserLike((prev) => { // optimistic set for perceived speed
-            if (prev) {
-                //likes: unlike
-                return undefined
-            }
-            else {
-                //no like: likes
-                return {
-                    _id: "",
-                    userId: currentUserId,
-                    userName: userName,
-                    timeStamp: new Date()
-                }
-            }
-        })
-        setLikeCount(count => Math.max(0, count + (userLike ? -1 : 1)))
-        const results = await updateLikeStatusOfAnnotation(annotation._id?.toString() ?? '')
-        if (results.message !== 'Success') {
-            toast.warning(results.message as string)
-            setUserLike(temp)
-            setLikeCount(annotation.likes?.length ?? 0)
-        }
-    }
+    const saveLike = () => setLiked.mutate(!userLike, {
+        onError: error => toast.warning(error.message),
+    })
 
     function getHourDifference(date1: Date, date2: Date): number {
         const diffInMs = Math.abs(date1.getTime() - date2.getTime());
@@ -356,7 +332,7 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                                         : 
                                             <HeartIcon className="h-4 w-4" />
                                     }
-                                    { likeCount || null }
+                                    { annotation.likes.length || null }
                                 </Button>
                             </motion.div>
                             {
@@ -399,11 +375,6 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                     currentUserName={userName}
                     userMap={userMap}
                     connectedToAnnotation
-                    onCommentAdded={(newComment) => setAnnotations(previous => previous.map(item =>
-                        item._id?.toString() === annotation._id?.toString()
-                            ? { ...item, comments: [...item.comments, newComment] }
-                            : item
-                    ))}
                 />
             </div>
         </div>

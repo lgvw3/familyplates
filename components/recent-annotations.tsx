@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Virtuoso } from 'react-virtuoso'
 import { motion } from 'framer-motion'
 import { PlusIcon } from 'lucide-react'
@@ -15,6 +15,7 @@ import { FeedActivityCard } from '@/components/feed/feed-activity-card'
 import { AnnotationCreation } from '@/components/feed/annotation-creation'
 import { ContinueReading } from '@/components/continue-reading'
 import { Button } from '@/components/ui/button'
+import { useHydrateAnnotations } from '@/lib/annotations/query'
 
 export function RecentAnnotations({
   currentUserId,
@@ -27,12 +28,18 @@ export function RecentAnnotations({
   initialFeed: FeedPage
   sessionStartedAt: string
 }) {
-  const router = useRouter()
   const userMap = fetchUsersAsMap()
   const currentUserName = userMap.get(currentUserId)?.name ?? ''
-  const [activities, setActivities] = useState(initialFeed.items)
+  const queryClient = useQueryClient()
+  const feedKey = ['feed', sessionStartedAt] as const
+  const activities = useQuery({
+    queryKey: feedKey,
+    queryFn: () => Promise.resolve(initialFeed.items),
+    initialData: initialFeed.items,
+  }).data
+  useHydrateAnnotations(activities.map(activity => activity.annotation))
   const [nextCursor, setNextCursor] = useState<FeedCursor | null>(initialFeed.nextCursor)
-  const { notification, setNotification } = useWebSocket([], false)
+  const { notification, setNotification } = useWebSocket()
   const isLoading = useRef(false)
   const [scroller, setScroller] = useState<HTMLElement | Window | null>(null)
   const [actionsVisible, setActionsVisible] = useState(true)
@@ -44,8 +51,7 @@ export function RecentAnnotations({
       toast(`New ${notification.type} by ${notification.userName}`, { position: 'top-center' })
     }
     setNotification(null)
-    if (notification.type !== 'like') router.refresh()
-  }, [currentUserId, notification, router, setNotification])
+  }, [currentUserId, notification, setNotification])
 
   useEffect(() => {
     if (!scroller) return
@@ -68,7 +74,8 @@ export function RecentAnnotations({
     try {
       const page = await fetchFeedPage({ limit: 15, cursor: nextCursor, sessionStartedAt })
       if (!page) return
-      setActivities(previous => {
+      queryClient.setQueryData<typeof activities>(feedKey, previous => {
+        previous ??= []
         const knownKeys = new Set(previous.map(activity => activity.key))
         return [...previous, ...page.items.filter(activity => !knownKeys.has(activity.key))]
       })
