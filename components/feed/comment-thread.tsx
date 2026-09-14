@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea'
 import { cn, getInitials } from '@/lib/utils'
 import { toast } from 'sonner'
+import Link from 'next/link'
 
 function formatActivityDate(value: Date) {
   const date = new Date(value)
@@ -118,13 +119,15 @@ export function CommentCard({
       )}
     >
       <div className="flex gap-3">
-        <Avatar className={cn('z-10 bg-card ring-4 ring-card', compact ? 'size-8' : 'size-10')}>
-          <AvatarImage src={author?.avatar} alt={author?.name ?? comment.userName} />
-          <AvatarFallback>{getInitials(author?.name ?? comment.userName)}</AvatarFallback>
-        </Avatar>
+        <Link href={`/family/${comment.userId}`} className="z-10" aria-label={`View ${comment.userName}'s profile`}>
+          <Avatar className={cn('bg-card ring-4 ring-card', compact ? 'size-8' : 'size-10')}>
+            <AvatarImage src={author?.avatar} alt={author?.name ?? comment.userName} className="object-cover" />
+            <AvatarFallback>{getInitials(author?.name ?? comment.userName)}</AvatarFallback>
+          </Avatar>
+        </Link>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2">
-            <span className="font-semibold text-sm">{comment.userName}</span>
+            <Link href={`/family/${comment.userId}`} className="font-semibold text-sm hover:underline">{comment.userName}</Link>
             <span className="text-xs text-muted-foreground">{formatActivityDate(comment.timeStamp)}</span>
           </div>
           <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{comment.content}</p>

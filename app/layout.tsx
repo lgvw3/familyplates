@@ -23,7 +23,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#ffffff',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0c0a09' },
+  ],
   viewportFit: 'cover',
 }
 
@@ -39,6 +42,7 @@ export default function RootLayout({
           attribute="class"
           defaultTheme="system"
           enableSystem
+          storageKey="family-plates-system-theme"
           disableTransitionOnChange
         >
           <ThemeChrome />
@@ -56,4 +60,3 @@ export default function RootLayout({
     </html>
   )
 }
-

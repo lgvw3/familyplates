@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import type { FeedActivity } from '@/types/feed'
 import type { UserAccount } from '@/lib/auth/definitions'
 import { markFeedActivitiesSeen } from '@/lib/annotations/actions'
@@ -50,23 +51,35 @@ function AnnotationThreadContext({
   const reference = getAnnotationReference(annotation)
 
   return (
-    <button
-      type="button"
-      className="relative flex w-full gap-3 px-6 py-4 text-left transition-colors hover:bg-accent/40 after:absolute after:bottom-0 after:left-11 after:top-14 after:w-px after:bg-border"
-      onClick={onOpen}
+    <div
+      role="link"
+      tabIndex={0}
+      className="relative flex w-full cursor-pointer gap-3 px-6 py-4 text-left transition-colors hover:bg-accent/40 after:absolute after:bottom-0 after:left-11 after:top-14 after:w-px after:bg-border"
+      onClick={event => {
+        if ((event.target as HTMLElement).closest('a')) return
+        onOpen()
+      }}
+      onKeyDown={event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onOpen()
+        }
+      }}
     >
-      <Avatar className="z-10 size-10 bg-card ring-4 ring-card">
-        <AvatarImage src={author.avatar} alt={author.name} />
-        <AvatarFallback>{getInitials(author.name)}</AvatarFallback>
-      </Avatar>
+      <Link href={`/family/${author.id}`} className="z-10" aria-label={`View ${author.name}'s profile`}>
+        <Avatar className="size-10 bg-card ring-4 ring-card">
+          <AvatarImage src={author.avatar} alt={author.name} className="object-cover" />
+          <AvatarFallback>{getInitials(author.name)}</AvatarFallback>
+        </Avatar>
+      </Link>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-2">
-          <span className="text-sm font-semibold">{annotation.userName}</span>
+          <Link href={`/family/${author.id}`} className="text-sm font-semibold hover:underline">{annotation.userName}</Link>
           {reference && <span className="text-xs text-muted-foreground">on {reference}</span>}
         </div>
         <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-sm text-foreground">{annotation.text}</p>
       </div>
-    </button>
+    </div>
   )
 }
 

@@ -1,13 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { UserAccount } from '@/lib/auth/definitions'
-import { fetchCurrentUserId } from '@/lib/auth/data'
-import { fetchAccountById } from '@/lib/auth/accounts'
 import { getInitials } from '@/lib/utils'
 import { saveAnnotation } from '@/lib/annotations/actions'
 import { toast } from 'sonner'
@@ -22,9 +20,11 @@ import {
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 
-export function AnnotationCreation({ renderTrigger }: { renderTrigger?: (onOpen: () => void) => ReactNode }) {
+export function AnnotationCreation({ renderTrigger, user }: {
+  renderTrigger?: (onOpen: () => void) => ReactNode
+  user?: UserAccount
+}) {
   const [text, setText] = useState('')
-  const [user, setUser] = useState<UserAccount>()
   const [isOpen, setIsOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const router = useRouter()
@@ -61,17 +61,6 @@ export function AnnotationCreation({ renderTrigger }: { renderTrigger?: (onOpen:
       setIsOpen(false)
     }
   }
-
-  useEffect(() => {
-    const getUserData = async () => {
-      const id = await fetchCurrentUserId()
-      if (id) {
-        const user = fetchAccountById(id)
-        setUser(user)
-      }
-    }
-    getUserData()
-  }, [])
 
   return (
     <>

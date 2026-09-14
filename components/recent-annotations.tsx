@@ -8,6 +8,7 @@ import { PlusIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import type { FeedCursor, FeedPage } from '@/types/feed'
 import type { BookmarkedSpot } from '@/lib/reading/definitions'
+import type { UserAccount } from '@/lib/auth/definitions'
 import { fetchUsersAsMap } from '@/lib/auth/accounts'
 import { fetchFeedPage } from '@/lib/annotations/data'
 import { useWebSocket } from '@/hooks/use-websockets'
@@ -21,14 +22,16 @@ export function RecentAnnotations({
   bookmark,
   initialFeed,
   sessionStartedAt,
+  users,
 }: {
   currentUserId: number
   bookmark: BookmarkedSpot | null
   initialFeed: FeedPage
   sessionStartedAt: string
+  users: UserAccount[]
 }) {
   const router = useRouter()
-  const userMap = fetchUsersAsMap()
+  const userMap = fetchUsersAsMap(users)
   const currentUserName = userMap.get(currentUserId)?.name ?? ''
   const [activities, setActivities] = useState(initialFeed.items)
   const [nextCursor, setNextCursor] = useState<FeedCursor | null>(initialFeed.nextCursor)
@@ -104,6 +107,7 @@ export function RecentAnnotations({
         style={{ pointerEvents: actionsVisible ? 'auto' : 'none' }}
       >
         <AnnotationCreation
+          user={userMap.get(currentUserId)}
           renderTrigger={(onOpen) => (
             <Button
               type="button"

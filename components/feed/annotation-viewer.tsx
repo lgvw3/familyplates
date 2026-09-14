@@ -15,6 +15,7 @@ import { motion } from "framer-motion"
 import { getAnnotationReference, getTargetHref } from "@/lib/annotations/presentation"
 import { AnnotationQuote } from "./annotation-quote"
 import { cn } from "@/lib/utils"
+import Link from 'next/link'
 
 
 export default function AnnotationViewer({ index, author, annotation, userMap, currentUserId, annotationHref, flat = false, threaded = false } : {
@@ -111,12 +112,16 @@ export default function AnnotationViewer({ index, author, annotation, userMap, c
             >
                 <CardHeader>
                     <div className="flex items-center gap-4">
-                        <Avatar>
-                            <AvatarImage src={author?.avatar} alt={author?.name} />
-                            <AvatarFallback>{getInitials(author?.name)}</AvatarFallback>
-                        </Avatar>
+                        <Link href={`/family/${author.id}`} aria-label={`View ${author.name}'s profile`}>
+                            <Avatar>
+                                <AvatarImage src={author?.avatar} alt={author?.name} className="object-cover" />
+                                <AvatarFallback>{getInitials(author?.name)}</AvatarFallback>
+                            </Avatar>
+                        </Link>
                         <div className="flex-1">
-                            <CardTitle className="text-base">{annotation.userName}</CardTitle>
+                            <CardTitle className="text-base">
+                                <Link href={`/family/${author.id}`} className="hover:underline">{annotation.userName}</Link>
+                            </CardTitle>
                             <CardDescription>
                                 {
                                     reference ?

@@ -1,7 +1,6 @@
 'use client'
 import Link from "next/link"
 import { BookMarked, MessageCircle } from 'lucide-react'
-import { ThemeToggle } from "./theme-toogle"
 import { CommandMenu } from "./command-menu"
 import { useHeader } from './header-context'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -42,11 +41,6 @@ export function Header() {
                     <Link href="/chat" title="Family Chat" className="hover:text-primary transition-colors">
                         <MessageCircle className="h-5 w-5" />
                     </Link>
-                    {
-                        (!title || title.length === 0) && (
-                            <ThemeToggle />
-                        )
-                    }
                     <CommandMenu />
                 </div>
             </div>

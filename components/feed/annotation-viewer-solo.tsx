@@ -12,7 +12,6 @@ import { AutoResizeTextarea } from "../ui/auto-resize-textarea"
 import { addCommentToAnnotation, markFeedActivitiesSeen, updateAnnotation, updateLikeStatusOfAnnotation } from "@/lib/annotations/actions"
 import { toast } from "sonner"
 import Link from "next/link"
-import { fetchUsersAsMap } from "@/lib/auth/accounts"
 import { useWebSocket } from "@/hooks/use-websockets"
 import { motion } from "framer-motion"
 import { getAnnotationQuote, getAnnotationReference, getTargetHref } from "@/lib/annotations/presentation"
@@ -20,17 +19,18 @@ import { AnnotationQuote } from "./annotation-quote"
 import { CommentTree } from "./comment-thread"
 
 
-export default function AnnotationViewerSolo({author, initialAnnotation, currentUserId, userName } : {
+export default function AnnotationViewerSolo({author, initialAnnotation, currentUserId, userName, users } : {
     author: UserAccount, 
     initialAnnotation: Annotation, 
     currentUserId: number,
-    userName: string
+    userName: string,
+    users: UserAccount[]
 }) {
 
     const { annotations, setAnnotations, notification, setNotification } = useWebSocket([initialAnnotation], false) 
     const annotation = annotations[0]
     const reference = getAnnotationReference(annotation)
-    const userMap = fetchUsersAsMap()
+    const userMap = new Map(users.map(user => [user.id, user]))
     const [commentContent, setCommentContent] = useState('')
     const [savingComment, setSavingComment] = useState(false)
     const [userLike, setUserLike] = useState(annotation.likes?.find(val => val.userId == currentUserId))
@@ -218,12 +218,16 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                         author.id == currentUserId ?
                         <div className="flex flex-row">
                             <div className="flex flex-grow items-center gap-4">
-                                <Avatar>
-                                    <AvatarImage src={author?.avatar} alt={author?.name} />
-                                    <AvatarFallback>{getInitials(author?.name)}</AvatarFallback>
-                                </Avatar>
+                                <Link href={`/family/${author.id}`} aria-label={`View ${author.name}'s profile`}>
+                                    <Avatar>
+                                        <AvatarImage src={author?.avatar} alt={author?.name} className="object-cover" />
+                                        <AvatarFallback>{getInitials(author?.name)}</AvatarFallback>
+                                    </Avatar>
+                                </Link>
                                 <div className="flex-1">
-                                    <CardTitle className="text-base">{annotation.userName}</CardTitle>
+                                    <CardTitle className="text-base">
+                                        <Link href={`/family/${author.id}`} className="hover:underline">{annotation.userName}</Link>
+                                    </CardTitle>
                                     <CardDescription>
                                         {
                                             reference ?
@@ -248,12 +252,16 @@ export default function AnnotationViewerSolo({author, initialAnnotation, current
                         </div>
                         :
                         <div className="flex items-center gap-4">
-                            <Avatar>
-                                <AvatarImage src={author?.avatar} alt={author?.name} />
-                                <AvatarFallback>{getInitials(author?.name)}</AvatarFallback>
-                            </Avatar>
+                            <Link href={`/family/${author.id}`} aria-label={`View ${author.name}'s profile`}>
+                                <Avatar>
+                                    <AvatarImage src={author?.avatar} alt={author?.name} className="object-cover" />
+                                    <AvatarFallback>{getInitials(author?.name)}</AvatarFallback>
+                                </Avatar>
+                            </Link>
                             <div className="flex-1">
-                                <CardTitle className="text-base">{annotation.userName}</CardTitle>
+                                <CardTitle className="text-base">
+                                    <Link href={`/family/${author.id}`} className="hover:underline">{annotation.userName}</Link>
+                                </CardTitle>
                                 <CardDescription>
                                     {
                                         reference ?

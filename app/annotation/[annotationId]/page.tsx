@@ -1,6 +1,7 @@
 import AnnotationViewerSolo from "@/components/feed/annotation-viewer-solo";
 import { fetchAnnotationById } from "@/lib/annotations/data";
 import { fetchUsersAsMap } from "@/lib/auth/accounts";
+import { fetchFamilyAccounts } from '@/lib/auth/profiles'
 import { fetchCurrentUserId } from "@/lib/auth/data";
 import { Metadata } from "next";
 import { headers } from "next/headers";
@@ -105,7 +106,8 @@ export default async function Page({ params }: AnnotationPageProps) {
         return <div>No access</div>
     }
 
-    const userMap = fetchUsersAsMap()
+    const users = await fetchFamilyAccounts()
+    const userMap = fetchUsersAsMap(users)
     const author = userMap.get(annotationData.userId)
     const user = userMap.get(currentUserId)
     if (!author || !user) {
@@ -118,6 +120,7 @@ export default async function Page({ params }: AnnotationPageProps) {
             initialAnnotation={annotationData} 
             currentUserId={currentUserId}
             userName={user?.name}
+            users={users}
         />
     );
 };
