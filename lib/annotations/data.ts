@@ -64,12 +64,12 @@ export async function fetchFeedPage({
 }: {
     limit?: number;
     cursor?: FeedCursor | null;
-    sessionStartedAt: string;
+    sessionStartedAt?: string;
 }): Promise<FeedPage | null> {
     const user = await requireCurrentFamilyMember()
     const userId = user.id
 
-    const sessionStart = new Date(sessionStartedAt)
+    const sessionStart = sessionStartedAt ? new Date(sessionStartedAt) : new Date()
     if (Number.isNaN(sessionStart.getTime())) throw new Error('Invalid feed session time')
 
     try {
@@ -159,7 +159,7 @@ export async function fetchFeedPage({
             key: last.key,
         } : null
 
-        return { items, nextCursor }
+        return { items, nextCursor, sessionStartedAt: sessionStart.toISOString() }
     } catch (error) {
         console.error('Error fetching personalized feed:', error)
         return null

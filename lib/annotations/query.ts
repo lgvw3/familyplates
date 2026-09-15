@@ -15,10 +15,11 @@ import {
 export const annotationRootKey = ['annotation'] as const
 export const annotationCollectionRootKey = ['annotations'] as const
 export const feedRootKey = ['feed'] as const
+export const homeContextKey = ['home', 'context'] as const
 
 export const annotationKey = (id: string) => [...annotationRootKey, id] as const
 export const annotationCollectionKey = (targetKey: string) => [...annotationCollectionRootKey, targetKey] as const
-export const feedKey = (sessionStartedAt: string) => [...feedRootKey, sessionStartedAt] as const
+export const feedKey = [...feedRootKey, 'list'] as const
 
 export function annotationId(annotation: Annotation) {
   return annotation._id?.toString() ?? ''

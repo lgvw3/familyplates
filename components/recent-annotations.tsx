@@ -1,65 +1,63 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { type InfiniteData, useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Virtuoso } from 'react-virtuoso'
 import { motion } from 'framer-motion'
 import { PlusIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import type { FeedCursor, FeedPage } from '@/types/feed'
-import type { BookmarkedSpot } from '@/lib/reading/definitions'
-import type { UserAccount } from '@/lib/auth/definitions'
 import { usersToMap } from '@/lib/auth/account-utils'
 import { fetchFeedPage } from '@/lib/annotations/data'
+import { fetchHomeContext } from '@/lib/home/data'
 import { useWebSocket } from '@/hooks/use-websockets'
 import { FeedActivityCard } from '@/components/feed/feed-activity-card'
 import { AnnotationCreation } from '@/components/feed/annotation-creation'
 import { ContinueReading } from '@/components/continue-reading'
 import { Button } from '@/components/ui/button'
-import { feedKey } from '@/lib/annotations/query'
+import { HomeFeedSkeleton } from '@/components/skeletons/home-feed-skeleton'
+import { feedKey, homeContextKey } from '@/lib/annotations/query'
 
-export function RecentAnnotations({
-  currentUserId,
-  bookmark,
-  initialFeed,
-  sessionStartedAt,
-  users,
-}: {
-  currentUserId: number
-  bookmark: BookmarkedSpot | null
-  initialFeed: FeedPage
-  sessionStartedAt: string
-  users: UserAccount[]
-}) {
-  const userMap = usersToMap(users)
+export function RecentAnnotations() {
+  const queryClient = useQueryClient()
+  const sessionStartedAt = useRef(
+    queryClient.getQueryData<InfiniteData<FeedPage>>(feedKey)?.pages[0]?.sessionStartedAt,
+  )
+  const home = useQuery({ queryKey: homeContextKey, queryFn: fetchHomeContext })
+  const currentUserId = home.data?.currentUserId ?? 0
+  const userMap = usersToMap(home.data?.users ?? [])
   const currentUserName = userMap.get(currentUserId)?.name ?? ''
   const feed = useInfiniteQuery({
-    queryKey: feedKey(sessionStartedAt),
+    queryKey: feedKey,
     queryFn: async ({ pageParam }) => {
-      const page = await fetchFeedPage({ limit: 15, cursor: pageParam, sessionStartedAt })
+      const page = await fetchFeedPage({
+        limit: 15,
+        cursor: pageParam,
+        sessionStartedAt: pageParam ? sessionStartedAt.current : undefined,
+      })
       if (!page) throw new Error('Could not load the feed')
+      sessionStartedAt.current = page.sessionStartedAt
       return page
     },
     initialPageParam: null as FeedCursor | null,
-    initialData: { pages: [initialFeed], pageParams: [null] },
     getNextPageParam: page => page.nextCursor ?? undefined,
   })
   const activities = useMemo(() => {
-    const byKey = new Map(feed.data.pages.flatMap(page => page.items).map(activity => [activity.key, activity]))
+    const byKey = new Map((feed.data?.pages ?? []).flatMap(page => page.items).map(activity => [activity.key, activity]))
     return [...byKey.values()]
-  }, [feed.data.pages])
+  }, [feed.data?.pages])
   const { notification, setNotification } = useWebSocket()
   const [scroller, setScroller] = useState<HTMLElement | Window | null>(null)
   const [actionsVisible, setActionsVisible] = useState(true)
   const lastScrollTop = useRef(0)
 
   useEffect(() => {
-    if (!notification) return
+    if (!notification || !home.data) return
     if (notification.userId !== currentUserId) {
       toast(`New ${notification.type} by ${notification.userName}`, { position: 'top-center' })
     }
     setNotification(null)
-  }, [currentUserId, notification, setNotification])
+  }, [currentUserId, home.data, notification, setNotification])
 
   useEffect(() => {
     if (!scroller) return
@@ -79,6 +77,8 @@ export function RecentAnnotations({
   const loadMore = () => {
     if (feed.hasNextPage && !feed.isFetchingNextPage) void feed.fetchNextPage()
   }
+
+  if (!home.data || !feed.data) return <HomeFeedSkeleton />
 
   return (
     <>
@@ -121,7 +121,7 @@ export function RecentAnnotations({
             </Button>
           )}
         />
-        <ContinueReading bookmark={bookmark} />
+        <ContinueReading bookmark={home.data.bookmark} />
       </motion.div>
       <div aria-hidden="true" className="h-[calc(4.5rem+env(safe-area-inset-bottom))]" />
     </>

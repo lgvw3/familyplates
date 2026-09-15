@@ -1,5 +1,6 @@
 export const notificationsRootKey = ['notifications'] as const
 export const notificationCountKey = [...notificationsRootKey, 'unread-count'] as const
+export const notificationContextKey = [...notificationsRootKey, 'context'] as const
 export const notificationListKey = [...notificationsRootKey, 'list'] as const
 
 export function formatNotificationBadge(count: number) {

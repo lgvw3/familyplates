@@ -34,3 +34,15 @@ export async function recordNotifications(notifications: NewNotification[]) {
     },
   })), { ordered: false })
 }
+
+export async function markNotificationsReadThrough(recipientUserId: number, cutoff: Date) {
+  const collection = await notificationCollection()
+  await collection.updateMany(
+    {
+      recipientUserId,
+      readAt: null,
+      createdAt: { $lte: cutoff },
+    },
+    { $set: { readAt: cutoff } },
+  )
+}

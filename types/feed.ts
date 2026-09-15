@@ -21,4 +21,5 @@ export type FeedCursor = {
 export type FeedPage = {
   items: FeedActivity[];
   nextCursor: FeedCursor | null;
+  sessionStartedAt: string;
 };

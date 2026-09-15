@@ -1,30 +1,29 @@
 'use server'
 
 import { ObjectId } from 'mongodb'
+import { after } from 'next/server'
 import { requireCurrentFamilyMember } from '@/lib/auth/current-user'
-import { notificationCollection } from './store'
+import { fetchFamilyAccounts } from '@/lib/auth/profiles'
+import { markNotificationsReadThrough, notificationCollection } from './store'
 import type { InAppNotification, NotificationCursor, NotificationPage, StoredNotification } from '@/types/notifications'
+import type { UserAccount } from '@/lib/auth/definitions'
 
 function serializeNotification(notification: StoredNotification & { _id: ObjectId }): InAppNotification {
   const { _id, ...rest } = notification
   return { ...rest, id: _id.toString() }
 }
 
-export async function fetchNotificationPage({
+async function fetchNotificationPageForRecipient({
+  recipientUserId,
   limit = 20,
   cursor,
 }: {
+  recipientUserId: number
   limit?: number
   cursor?: NotificationCursor | null
-} = {}): Promise<NotificationPage> {
-  const { id: recipientUserId } = await requireCurrentFamilyMember()
+}): Promise<NotificationPage> {
   const normalizedLimit = Math.max(1, Math.min(Math.floor(limit), 50))
   const collection = await notificationCollection()
-  const readAt = new Date()
-  await collection.updateMany(
-    { recipientUserId, readAt: null },
-    { $set: { readAt } },
-  )
   let cursorFilter = {}
   if (cursor) {
     const createdAt = new Date(cursor.createdAt)
@@ -43,6 +42,38 @@ export async function fetchNotificationPage({
     items: pageRecords.map(serializeNotification),
     nextCursor: hasMore && last ? { createdAt: last.createdAt.toISOString(), id: last._id.toString() } : null,
   }
+}
+
+export async function fetchNotificationPage({
+  limit = 20,
+  cursor,
+}: {
+  limit?: number
+  cursor?: NotificationCursor | null
+} = {}): Promise<NotificationPage> {
+  const { id: recipientUserId } = await requireCurrentFamilyMember()
+  return fetchNotificationPageForRecipient({ recipientUserId, limit, cursor })
+}
+
+export type NotificationCenterContext = {
+  openedAt: string
+  users: UserAccount[]
+}
+
+export async function openNotificationCenter(): Promise<NotificationCenterContext> {
+  const { id: recipientUserId } = await requireCurrentFamilyMember()
+  const openedAt = new Date()
+  const users = await fetchFamilyAccounts()
+
+  after(async () => {
+    try {
+      await markNotificationsReadThrough(recipientUserId, openedAt)
+    } catch (error) {
+      console.error('Could not mark notifications as read:', error)
+    }
+  })
+
+  return { openedAt: openedAt.toISOString(), users }
 }
 
 export async function fetchUnreadNotificationCount() {

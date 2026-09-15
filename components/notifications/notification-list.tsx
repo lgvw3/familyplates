@@ -2,16 +2,16 @@
 
 import Link from 'next/link'
 import { Heart, MessageCircle, Reply } from 'lucide-react'
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Virtuoso } from 'react-virtuoso'
-import type { UserAccount } from '@/lib/auth/definitions'
 import { usersToMap } from '@/lib/auth/account-utils'
-import { fetchNotificationPage } from '@/lib/notifications/data'
-import { formatNotificationExcerpt, notificationCountKey, notificationListKey } from '@/lib/notifications/query'
-import type { InAppNotification, NotificationCursor, NotificationPage } from '@/types/notifications'
+import { fetchNotificationPage, openNotificationCenter } from '@/lib/notifications/data'
+import { formatNotificationExcerpt, notificationContextKey, notificationCountKey, notificationListKey } from '@/lib/notifications/query'
+import type { InAppNotification, NotificationCursor } from '@/types/notifications'
 import { useWebSocket } from '@/hooks/use-websockets'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { NotificationListSkeleton } from '@/components/skeletons/notification-list-skeleton'
 import { getInitials } from '@/lib/utils'
 
 function notificationLabel(notification: InAppNotification) {
@@ -37,47 +37,50 @@ function formatDate(value: Date) {
   }).format(new Date(value))
 }
 
-export function NotificationList({
-  initialPage,
-  sessionStartedAt,
-  users,
-}: {
-  initialPage: NotificationPage
-  sessionStartedAt: string
-  users: UserAccount[]
-}) {
+export function NotificationList() {
   const queryClient = useQueryClient()
-  const userMap = usersToMap(users)
+  const context = useQuery({
+    queryKey: notificationContextKey,
+    queryFn: async () => {
+      const result = await openNotificationCenter()
+      await queryClient.cancelQueries({ queryKey: notificationCountKey })
+      queryClient.setQueryData(notificationCountKey, 0)
+      return result
+    },
+  })
+  const userMap = usersToMap(context.data?.users ?? [])
   useWebSocket()
   const notifications = useInfiniteQuery({
     queryKey: notificationListKey,
     queryFn: async ({ pageParam }) => {
-      const page = await fetchNotificationPage({ limit: 20, cursor: pageParam })
-      await queryClient.invalidateQueries({ queryKey: notificationCountKey })
-      return page
+      return fetchNotificationPage({ limit: 20, cursor: pageParam })
     },
     initialPageParam: null as NotificationCursor | null,
-    initialData: { pages: [initialPage], pageParams: [null] },
     getNextPageParam: page => page.nextCursor ?? undefined,
-    staleTime: 0,
-    refetchOnMount: 'always',
   })
-  const byId = new Map(notifications.data.pages.flatMap(page => page.items).map(item => [item.id, item]))
+  const byId = new Map((notifications.data?.pages ?? []).flatMap(page => page.items).map(item => [item.id, item]))
   const items = [...byId.values()]
   const loadMore = () => {
     if (notifications.hasNextPage && !notifications.isFetchingNextPage) void notifications.fetchNextPage()
   }
 
-  if (notifications.isError && !items.length) {
+  if ((context.isError || notifications.isError) && !items.length) {
     return (
       <div className="rounded-lg border border-destructive/40 p-8 text-center">
         <p className="font-medium text-destructive">Could not load notifications</p>
-        <Button type="button" variant="outline" className="mt-4" onClick={() => void notifications.refetch()}>
+        <Button
+          type="button"
+          variant="outline"
+          className="mt-4"
+          onClick={() => void Promise.all([context.refetch(), notifications.refetch()])}
+        >
           Try again
         </Button>
       </div>
     )
   }
+
+  if (!context.data || !notifications.data) return <NotificationListSkeleton />
 
   if (!items.length) {
     return (
@@ -98,7 +101,7 @@ export function NotificationList({
         className="scrollbar-hide bg-card"
         itemContent={(_, notification) => {
           const actor = userMap.get(notification.actorUserId)
-          const highlighted = !notification.readAt || new Date(notification.readAt).getTime() >= new Date(sessionStartedAt).getTime()
+          const highlighted = !notification.readAt || new Date(notification.readAt).getTime() >= new Date(context.data.openedAt).getTime()
           return (
             <Link
               key={notification.id}
