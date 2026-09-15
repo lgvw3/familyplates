@@ -2,7 +2,7 @@
 
 import { UIMessage } from "ai";
 import { requireCurrentFamilyMember } from "../auth/current-user";
-import clientPromise from "../mongodb";
+import clientPromise, { getMongoDatabase } from "../mongodb";
 
 export async function saveChatMessages(messages: UIMessage[], chatId: string) {
 
@@ -10,7 +10,7 @@ export async function saveChatMessages(messages: UIMessage[], chatId: string) {
     const userId = user.id
 
     const client = await clientPromise;
-    const db = client.db("main");
+    const db = getMongoDatabase(client);
     const collection = db.collection("chats");
 
 

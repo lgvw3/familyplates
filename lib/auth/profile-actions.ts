@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import clientPromise from '@/lib/mongodb'
+import clientPromise, { getMongoDatabase } from '@/lib/mongodb'
 import { fetchFamilyAccount } from './profiles'
 import { getCurrentFamilyMember } from './current-user'
 
@@ -28,7 +28,7 @@ export async function updateProfileAvatar(avatar: string) {
 
   try {
     const client = await clientPromise
-    await client.db('main').collection('userProfiles').updateOne(
+    await getMongoDatabase(client).collection('userProfiles').updateOne(
       { userId },
       { $set: { userId, avatar, updatedAt: new Date() } },
       { upsert: true },

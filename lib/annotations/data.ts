@@ -3,7 +3,7 @@
 import { Annotation } from "@/types/scripture";
 import { requireCurrentFamilyMember } from "../auth/current-user";
 import { ObjectId } from "mongodb";
-import clientPromise from "../mongodb";
+import clientPromise, { getMongoDatabase } from "../mongodb";
 import type { FeedActivity, FeedCursor, FeedPage } from "@/types/feed";
 
 function normalizeAnnotationIds(annotation: Annotation) {
@@ -74,7 +74,7 @@ export async function fetchFeedPage({
 
     try {
         const client = await clientPromise
-        const db = client.db('main')
+        const db = getMongoDatabase(client)
         const annotations = await db.collection('annotations')
             .find<Annotation>({})
             .sort({ createdAt: -1, _id: -1 })
@@ -172,7 +172,7 @@ export async function fetchAllAnnotations(skipAuth: boolean = false) {
     }
 
     const client = await clientPromise;
-    const db = client.db("main");
+    const db = getMongoDatabase(client);
     const collection = db.collection("annotations");
 
     try {
@@ -194,7 +194,7 @@ export async function fetchRecentAnnotations() {
     await requireCurrentFamilyMember()
 
     const client = await clientPromise;
-    const db = client.db("main");
+    const db = getMongoDatabase(client);
     const collection = db.collection("annotations");
 
     try {
@@ -216,7 +216,7 @@ export async function fetchMoreAnnotations(lastAnnotation: Annotation, limit: nu
     await requireCurrentFamilyMember()
 
     const client = await clientPromise;
-    const db = client.db("main");
+    const db = getMongoDatabase(client);
     const collection = db.collection("annotations");
 
     try {
@@ -261,7 +261,7 @@ export async function fetchAnnotationsByChapter(book: string, chapter: number) {
 
     try {
         const client = await clientPromise;
-        const db = client.db("main");
+        const db = getMongoDatabase(client);
         const collection = db.collection("annotations");
 
         const results = await collection.find<Annotation>({
@@ -288,7 +288,7 @@ export async function fetchAnnotationsByIntro(introId: string) {
 
     try {
         const client = await clientPromise;
-        const collection = client.db("main").collection("annotations");
+        const collection = getMongoDatabase(client).collection("annotations");
         const results = await collection.find<Annotation>({
             "target.kind": "intro",
             "target.introId": introId,
@@ -308,7 +308,7 @@ export async function fetchAnnotationById(annotationId: string, skipAuth: boolea
     }
 
     const client = await clientPromise;
-    const db = client.db("main");
+    const db = getMongoDatabase(client);
     const collection = db.collection("annotations");
 
     try {
@@ -344,7 +344,7 @@ export async function fetchAnnotationsByUser(userId: number, skipAuth: boolean =
     }
 
     const client = await clientPromise;
-    const db = client.db("main");
+    const db = getMongoDatabase(client);
     const collection = db.collection("annotations");
 
     try {
@@ -375,7 +375,7 @@ export async function fetchAnnotationsByScripturePerson(profileId: string, limit
     const normalizedLimit = Math.max(1, Math.min(Math.floor(limit), 100))
     try {
         const client = await clientPromise
-        const collection = client.db('main').collection<Annotation>('annotations')
+        const collection = getMongoDatabase(client).collection<Annotation>('annotations')
         const results = await collection.find({
             $or: [
                 { 'scriptureAttribution.primaryProfileId': profileId },

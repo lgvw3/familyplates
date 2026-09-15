@@ -1,11 +1,15 @@
 import { attachDatabasePool } from '@vercel/functions';
-import { MongoClient, MongoClientOptions } from "mongodb";
+import { MongoClient, type MongoClientOptions } from "mongodb";
 
 if (!process.env.MONGODB_URI) {
   throw new Error('Invalid/Missing environment variable: "MONGODB_URI"');
 }
+if (!process.env.MONGODB_DATABASE || !/^[A-Za-z0-9_-]{1,63}$/.test(process.env.MONGODB_DATABASE)) {
+  throw new Error('MONGODB_DATABASE is required and must contain only letters, numbers, underscores, or hyphens');
+}
 
 const uri = process.env.MONGODB_URI;
+export const mongoDatabaseName = process.env.MONGODB_DATABASE;
 const options: MongoClientOptions = {
   maxIdleTimeMS: 5000,
 };
@@ -13,7 +17,7 @@ const options: MongoClientOptions = {
 let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
 
-if (process.env.NODE_ENV === "development") {
+if (process.env.NODE_ENV !== "production") {
   // In development mode, use a global variable so that the value
   // is preserved across module reloads caused by HMR (Hot Module Replacement).
   const globalWithMongo = global as typeof globalThis & {
@@ -47,5 +51,9 @@ if (process.env.NODE_ENV === "development") {
 
 // Export a module-scoped MongoClient promise. By doing this in a
 // separate module, the client can be shared across functions.
+export function getMongoDatabase(databaseClient: MongoClient = client) {
+  return databaseClient.db(mongoDatabaseName)
+}
+
 export { client as mongoClient };
 export default clientPromise;

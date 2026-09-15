@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes'
 
 const themeColors = {
   light: '#ffffff',
-  dark: '#0c0a09',
+  dark: '#000000',
 } as const
 
 /** Keep browser and installed-PWA chrome in sync with the app theme. */

@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useEffect, useRef, useState } from 'react'
+import { type QueryClient, useQueryClient } from '@tanstack/react-query'
 import type { Annotation, AnnotationComment, AnnotationLike } from '@/types/scripture'
 import { fetchRealtimeTicket } from '@/lib/auth/realtime-ticket'
 import { getAnnotationTargetKey } from '@/lib/annotations/presentation'
@@ -17,6 +17,7 @@ import {
   annotationRootKey,
   feedRootKey,
 } from '@/lib/annotations/query'
+import { notificationsRootKey } from '@/lib/notifications/query'
 
 export type NotificationParam = {
   annotation?: Annotation
@@ -28,29 +29,28 @@ export type NotificationParam = {
   type: 'annotation' | 'comment' | 'like'
 }
 
+function invalidateAnnotationQueries(queryClient: QueryClient, id: string, targetKey: string | null) {
+  if (!id) return
+  void Promise.all([
+    queryClient.invalidateQueries({ queryKey: annotationKey(id) }),
+    ...(targetKey ? [queryClient.invalidateQueries({ queryKey: annotationCollectionKey(targetKey) })] : []),
+    queryClient.invalidateQueries({ queryKey: feedRootKey }),
+    queryClient.invalidateQueries({ queryKey: notificationsRootKey }),
+  ])
+}
+
+function invalidateAnnotationForClient(queryClient: QueryClient, annotation: Annotation) {
+  const id = annotation._id?.toString()
+  if (!id) return
+  invalidateAnnotationQueries(queryClient, id, getAnnotationTargetKey(annotation))
+}
+
 export function useWebSocket() {
   const queryClient = useQueryClient()
   const [retryTick, setRetryTick] = useState(0)
   const [notification, setNotification] = useState<NotificationParam | null>(null)
   const reconnectPendingRef = useRef(false)
   const retryAttemptRef = useRef(0)
-
-  const invalidateAnnotationQueries = useCallback((id: string, annotationTargetKey: string | null) => {
-    if (!id) return
-    void Promise.all([
-      queryClient.invalidateQueries({ queryKey: annotationKey(id) }),
-      ...(annotationTargetKey
-        ? [queryClient.invalidateQueries({ queryKey: annotationCollectionKey(annotationTargetKey) })]
-        : []),
-      queryClient.invalidateQueries({ queryKey: feedRootKey }),
-    ])
-  }, [queryClient])
-
-  const invalidateAnnotation = useCallback((annotation: Annotation) => {
-    const id = annotation._id?.toString()
-    if (!id) return
-    invalidateAnnotationQueries(id, getAnnotationTargetKey(annotation))
-  }, [invalidateAnnotationQueries])
 
   useEffect(() => {
     let ws: WebSocket | null = null
@@ -77,6 +77,7 @@ export function useWebSocket() {
             queryClient.invalidateQueries({ queryKey: annotationRootKey }),
             queryClient.invalidateQueries({ queryKey: annotationCollectionRootKey }),
             queryClient.invalidateQueries({ queryKey: feedRootKey }),
+            queryClient.invalidateQueries({ queryKey: notificationsRootKey }),
           ])
         }
       }
@@ -92,7 +93,7 @@ export function useWebSocket() {
         if (envelope.channel === 'annotations') {
           if (!envelope.data) return
           const annotation: Annotation = JSON.parse(envelope.data)
-          invalidateAnnotation(annotation)
+          invalidateAnnotationForClient(queryClient, annotation)
           setNotification({ annotation, userName: annotation.userName, userId: annotation.userId, type: 'annotation' })
           return
         }
@@ -100,7 +101,7 @@ export function useWebSocket() {
           if (!envelope.data) return
           const data = parseAnnotationUpdate(envelope.data)
           if (!data) return
-          invalidateAnnotationQueries(data.annotationId, annotationTargetKey(data.target))
+          invalidateAnnotationQueries(queryClient, data.annotationId, annotationTargetKey(data.target))
           return
         }
         if (envelope.channel === 'comments') {
@@ -110,6 +111,7 @@ export function useWebSocket() {
             queryClient.invalidateQueries({ queryKey: annotationKey(data.annotationId) }),
             queryClient.invalidateQueries({ queryKey: annotationCollectionRootKey }),
             queryClient.invalidateQueries({ queryKey: feedRootKey }),
+            queryClient.invalidateQueries({ queryKey: notificationsRootKey }),
           ])
           setNotification({ comment: data.comment, userName: data.comment.userName, userId: data.comment.userId, type: 'comment' })
           return
@@ -117,14 +119,20 @@ export function useWebSocket() {
         if (envelope.channel === 'likes') {
           if (!envelope.data) return
           const data: { liked: boolean; like: AnnotationLike; annotationId: string } = JSON.parse(envelope.data)
-          void queryClient.invalidateQueries({ queryKey: annotationKey(data.annotationId) })
+          void Promise.all([
+            queryClient.invalidateQueries({ queryKey: annotationKey(data.annotationId) }),
+            queryClient.invalidateQueries({ queryKey: notificationsRootKey }),
+          ])
           if (data.liked) setNotification({ like: data.like, doesLike: true, userName: data.like.userName, userId: data.like.userId, type: 'like' })
           return
         }
         if (envelope.channel === 'commentLikes') {
           if (!envelope.data) return
           const data: { liked: boolean; like: AnnotationLike; annotationId: string; commentId: string } = JSON.parse(envelope.data)
-          void queryClient.invalidateQueries({ queryKey: annotationKey(data.annotationId) })
+          void Promise.all([
+            queryClient.invalidateQueries({ queryKey: annotationKey(data.annotationId) }),
+            queryClient.invalidateQueries({ queryKey: notificationsRootKey }),
+          ])
           if (data.liked) setNotification({ like: data.like, doesLike: true, userName: data.like.userName, userId: data.like.userId, type: 'like' })
         }
       }
@@ -145,7 +153,7 @@ export function useWebSocket() {
       if (retryTimer) clearTimeout(retryTimer)
       ws?.close()
     }
-  }, [invalidateAnnotation, invalidateAnnotationQueries, queryClient, retryTick])
+  }, [queryClient, retryTick])
 
   const checkServerHealth = async () => {
     try {
@@ -157,5 +165,10 @@ export function useWebSocket() {
     }
   }
 
-  return { checkServerHealth, invalidateAnnotation, notification, setNotification }
+  return {
+    checkServerHealth,
+    invalidateAnnotation: (annotation: Annotation) => invalidateAnnotationForClient(queryClient, annotation),
+    notification,
+    setNotification,
+  }
 }

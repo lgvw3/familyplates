@@ -1,19 +1,17 @@
-import { MongoClient } from 'mongodb'
 import { resolveScriptureAttribution } from '../lib/scripture-attribution/resolver.ts'
 import { shouldBackfillScriptureAttribution } from '../lib/scripture-attribution/backfill.ts'
+import clientPromise, { getMongoDatabase, mongoClient } from '../lib/mongodb.ts'
 
 const apply = process.argv.includes('--apply')
 const limitArgument = process.argv.find((argument) => argument.startsWith('--limit='))
 const limit = limitArgument ? Number(limitArgument.slice('--limit='.length)) : undefined
 
-if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is required')
 if (limit !== undefined && (!Number.isInteger(limit) || limit < 1)) throw new Error('--limit must be a positive integer')
 
-const client = new MongoClient(process.env.MONGODB_URI)
-await client.connect()
+const client = await clientPromise
 
 try {
-  const collection = client.db('main').collection('annotations')
+  const collection = getMongoDatabase(client).collection('annotations')
   const cursor = collection.find({ target: { $ne: null } }, { ...(limit ? { limit } : {}) })
   const updates = []
   const failures = []
@@ -55,5 +53,5 @@ try {
     ])
   }
 } finally {
-  await client.close()
+  await mongoClient.close()
 }

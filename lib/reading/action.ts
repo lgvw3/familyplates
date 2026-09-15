@@ -1,10 +1,11 @@
 'use server'
 
-import clientPromise from "../mongodb";
+import clientPromise, { getMongoDatabase } from "../mongodb";
 import z from "zod";
 import redis from "ioredis";
 import { requireCurrentFamilyMember } from "../auth/current-user";
 import { BookmarkedSpot } from "./definitions";
+import { realtimeChannel } from "../realtime/environment";
 
 const zLastRead = z.object({
     verseNumber: z.number(),
@@ -29,7 +30,7 @@ export async function saveBookmark(lastRead: BookmarkedSpot) {
     const {verseNumber, chapterNumber, bookId} = validatedFields.data
 
     const client = await clientPromise;
-    const db = client.db("main");
+    const db = getMongoDatabase(client);
     const collection = db.collection("bookmarks");
 
     const existing = await collection.findOne<BookmarkedSpot>({userId: userId})
@@ -51,7 +52,7 @@ export async function saveBookmark(lastRead: BookmarkedSpot) {
         if (result.upsertedId || result.modifiedCount) {
             try {
                 const redisPub = new redis(process.env.KV_URL ?? '');
-                await redisPub.publish("bookmarks", JSON.stringify({
+                await redisPub.publish(realtimeChannel("bookmarks"), JSON.stringify({
                     ...bookmarkData, 
                     _id: result.upsertedId ? result.upsertedId.toString() : existing?._id?.toString()
                 }

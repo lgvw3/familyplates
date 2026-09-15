@@ -2,7 +2,7 @@ import 'server-only'
 
 import { mongodbAdapter } from '@better-auth/mongo-adapter'
 import { betterAuth } from 'better-auth'
-import { mongoClient } from '@/lib/mongodb'
+import { getMongoDatabase, mongoClient } from '@/lib/mongodb'
 import { findFamilyMemberByEmail, linkAuthUserToFamilyMember } from './members'
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID
@@ -14,7 +14,7 @@ export const auth = betterAuth({
   appName: 'Family Plates',
   baseURL: process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL,
   secret: process.env.BETTER_AUTH_SECRET ?? process.env.SECRET_KEY,
-  database: mongodbAdapter(mongoClient.db('main'), {
+  database: mongodbAdapter(getMongoDatabase(mongoClient), {
     client: mongoClient,
     transaction: false,
   }),

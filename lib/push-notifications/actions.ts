@@ -2,9 +2,10 @@
  
 import webpush from 'web-push'
 import { requireCurrentFamilyMember, getCurrentFamilyMember } from '../auth/current-user'
-import clientPromise from '../mongodb'
+import clientPromise, { getMongoDatabase } from '../mongodb'
 import { NotificationSubscription } from './definitions'
 import { Redis } from "@upstash/redis";
+import { realtimePresenceKey } from '../realtime/environment'
 
  
 webpush.setVapidDetails(
@@ -24,7 +25,7 @@ export async function subscribeUser(sub: PushSubscription) {
     const userId = user.id
 
     const client = await clientPromise;
-    const db = client.db("main");
+    const db = getMongoDatabase(client);
     const collection = db.collection("notificationSubscriptions");
 
     const newSub: NotificationSubscription = {
@@ -59,7 +60,7 @@ export async function unsubscribeUser() {
 
 
     const client = await clientPromise;
-    const db = client.db("main");
+    const db = getMongoDatabase(client);
     const collection = db.collection("notificationSubscriptions");
 
     try {
@@ -106,7 +107,7 @@ export async function sendNotificationToOfflineUsers(message: string, title: str
 
     try {
         const client = await clientPromise;
-        const db = client.db("main");
+        const db = getMongoDatabase(client);
         const collection = db.collection("notificationSubscriptions");
 
         const subs = await collection.find<NotificationSubscription>({}).toArray()
@@ -119,7 +120,7 @@ export async function sendNotificationToOfflineUsers(message: string, title: str
             if (process.env.NODE_ENV != 'production') {
                 //dev
                 if (sub.userId == 8) {// me for now
-                    const isOnline = await redis.exists(`online:${sub.userId}`);
+                    const isOnline = await redis.exists(realtimePresenceKey(sub.userId));
                     if (isOnline) {
                         console.log('Redis says you are online')
                     }

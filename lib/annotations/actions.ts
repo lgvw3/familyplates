@@ -1,7 +1,7 @@
 'use server'
 
 import { Annotation, AnnotationComment, AnnotationLike } from "@/types/scripture";
-import clientPromise from "../mongodb";
+import clientPromise, { getMongoDatabase } from "../mongodb";
 import z from "zod";
 import redis from "ioredis";
 import sendErrorMessageToMe from "../dev/actions";
@@ -10,6 +10,22 @@ import { ObjectId } from "mongodb";
 import { sendNotificationToOfflineUsers } from "../push-notifications/actions";
 import { InvalidAttributionTargetError, resolveScriptureAttribution } from "../scripture-attribution/resolver.ts";
 import { annotationUpdatesChannel, serializeAnnotationUpdate } from './realtime'
+import { realtimeChannel } from '../realtime/environment'
+import {
+    buildAnnotationLikeNotifications,
+    buildCommentLikeNotifications,
+    buildCommentNotifications,
+} from '../notifications/builders'
+import { recordNotifications } from '../notifications/store'
+import type { NewNotification } from '@/types/notifications'
+
+async function persistNotifications(notifications: NewNotification[], context: string) {
+    try {
+        await recordNotifications(notifications)
+    } catch (error) {
+        console.error(`${context} in-app notification failed:`, error)
+    }
+}
 
 const zAnnotation = z.object({
     schemaVersion: z.literal(2),
@@ -89,7 +105,7 @@ export async function saveAnnotation(annotation: Annotation) {
     }
 
     const client = await clientPromise;
-    const db = client.db("main");
+    const db = getMongoDatabase(client);
     const collection = db.collection("annotations");
 
     const newAnnotation: Annotation = {
@@ -120,7 +136,7 @@ export async function saveAnnotation(annotation: Annotation) {
             try {
                 //real time
                 const redisPub = new redis(process.env.KV_URL ?? '');
-                await redisPub.publish("annotations", JSON.stringify({
+                await redisPub.publish(realtimeChannel("annotations"), JSON.stringify({
                     ...annotationData, 
                     _id: result.insertedId.toString()
                 }));
@@ -160,7 +176,7 @@ export async function updateAnnotation(annotationId: string, editedText: string)
     await requireCurrentFamilyMember()
 
     const client = await clientPromise;
-    const db = client.db("main");
+    const db = getMongoDatabase(client);
     const collection = db.collection("annotations");
 
 
@@ -183,7 +199,7 @@ export async function updateAnnotation(annotationId: string, editedText: string)
                 // This event carries invalidation metadata only. MongoDB remains
                 // the source of truth for the edited annotation text.
                 const redisPub = new redis(process.env.KV_URL ?? '')
-                await redisPub.publish(annotationUpdatesChannel, serializeAnnotationUpdate({
+                await redisPub.publish(realtimeChannel(annotationUpdatesChannel), serializeAnnotationUpdate({
                     annotationId,
                     target: existingAnnotation.target,
                 }))
@@ -234,7 +250,7 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
     }
 
     const client = await clientPromise;
-    const db = client.db("main");
+    const db = getMongoDatabase(client);
     const collection = db.collection<Annotation>("annotations");
 
     const newComment: AnnotationComment = {
@@ -248,12 +264,10 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
     }
 
     try {
-        if (parentCommentId) {
-            const parentExists = await collection.findOne({
-                _id: new ObjectId(annotationId),
-                'comments._id': new ObjectId(parentCommentId),
-            }, { projection: { _id: 1 } })
-            if (!parentExists) return { message: 'The comment you are replying to no longer exists' }
+        const annotation = await collection.findOne({ _id: new ObjectId(annotationId) })
+        if (!annotation) return { message: 'Annotation not found' }
+        if (parentCommentId && !(annotation.comments ?? []).some(item => item._id.toString() === parentCommentId)) {
+            return { message: 'The comment you are replying to no longer exists' }
         }
 
         const result = await collection.updateOne(
@@ -268,10 +282,11 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
         );
 
         if (result.modifiedCount) {
+            await persistNotifications(buildCommentNotifications(annotation, newComment), 'Comment')
             try {
                 // real time
                 const redisPub = new redis(process.env.KV_URL ?? '');
-                await redisPub.publish("comments", JSON.stringify({
+                await redisPub.publish(realtimeChannel("comments"), JSON.stringify({
                     comment: newComment, 
                     annotationId: annotationId
                 }));
@@ -313,7 +328,7 @@ export async function setAnnotationLiked(annotationId: string, liked: boolean) {
     const userId = user.id
 
     const client = await clientPromise;
-    const db = client.db("main");
+    const db = getMongoDatabase(client);
     const collection = db.collection<Annotation>("annotations");
 
     const updatedLike: AnnotationLike = {
@@ -341,10 +356,13 @@ export async function setAnnotationLiked(annotationId: string, liked: boolean) {
         // idempotent. Only the request that actually changed the document may
         // announce that transition or notify the annotation author.
         if (updateResult.modifiedCount > 0) {
+            if (liked) {
+                await persistNotifications(buildAnnotationLikeNotifications(existingAnnotation, updatedLike), 'Like')
+            }
             try {
                 // real time
                 const redisPub = new redis(process.env.KV_URL ?? '');
-                await redisPub.publish("likes", JSON.stringify({
+                await redisPub.publish(realtimeChannel("likes"), JSON.stringify({
                     like: updatedLike,
                     liked,
                     annotationId: annotationId
@@ -377,9 +395,10 @@ export async function setCommentLiked(annotationId: string, commentId: string, l
     }
 
     const client = await clientPromise
-    const collection = client.db('main').collection<Annotation>('annotations')
+    const collection = getMongoDatabase(client).collection<Annotation>('annotations')
     const annotation = await collection.findOne({ _id: new ObjectId(annotationId) })
-    const comment = annotation?.comments?.find(item => item._id.toString() === commentId)
+    if (!annotation) return { message: 'Comment not found' }
+    const comment = annotation.comments?.find(item => item._id.toString() === commentId)
     if (!comment) return { message: 'Comment not found' }
 
     const newLike: AnnotationLike = {
@@ -409,9 +428,12 @@ export async function setCommentLiked(annotationId: string, commentId: string, l
     // A no-op means another request already established this desired state.
     // Return the database snapshot, but do not emit duplicate side effects.
     if (updateResult.modifiedCount > 0) {
+        if (liked) {
+            await persistNotifications(buildCommentLikeNotifications(annotation, comment, newLike), 'Comment like')
+        }
         try {
             const redisPub = new redis(process.env.KV_URL ?? '')
-            await redisPub.publish('commentLikes', JSON.stringify({
+            await redisPub.publish(realtimeChannel('commentLikes'), JSON.stringify({
                 annotationId,
                 commentId,
                 like: newLike,
@@ -444,7 +466,7 @@ export async function markFeedActivitiesSeen(activityKeys: string[]) {
     if (!keys.length) return { message: 'Success' }
 
     const client = await clientPromise
-    const collection = client.db('main').collection('activityViews')
+    const collection = getMongoDatabase(client).collection('activityViews')
     await collection.createIndex({ userId: 1, activityKey: 1 }, { unique: true })
     const firstSeenAt = new Date()
     await collection.bulkWrite(keys.map(activityKey => ({

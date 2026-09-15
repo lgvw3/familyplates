@@ -1,6 +1,7 @@
-import { MongoClient, type UpdateFilter } from 'mongodb'
+import type { UpdateFilter } from 'mongodb'
 import { isValidEmail, normalizeEmail } from '../lib/auth/member-values.ts'
 import type { FamilyMemberRecord } from '../lib/auth/definitions.ts'
+import clientPromise, { getMongoDatabase, mongoClient } from '../lib/mongodb.ts'
 
 type Arguments = {
   userId?: number
@@ -81,14 +82,11 @@ function parseArguments(argv: string[]): Arguments {
   return result
 }
 
-if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is required')
-
 const args = parseArguments(process.argv.slice(2))
-const client = new MongoClient(process.env.MONGODB_URI)
+const client = await clientPromise
 
 try {
-  await client.connect()
-  const collection = client.db('main').collection<FamilyMemberRecord>('familyMembers')
+  const collection = getMongoDatabase(client).collection<FamilyMemberRecord>('familyMembers')
   await collection.createIndex({ userId: 1 }, { unique: true })
   await collection.createIndex({ normalizedEmails: 1 }, { unique: true, sparse: true })
   await collection.createIndex(
@@ -132,5 +130,5 @@ try {
   }
   throw error
 } finally {
-  await client.close()
+  await mongoClient.close()
 }

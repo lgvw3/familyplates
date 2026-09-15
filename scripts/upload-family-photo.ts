@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { extname, resolve } from 'node:path'
-import { MongoClient } from 'mongodb'
+import clientPromise, { getMongoDatabase, mongoClient } from '../lib/mongodb.ts'
 
 const MAX_AVATAR_BYTES = 500_000
 const MIME_TYPES: Record<string, string> = {
@@ -60,12 +60,10 @@ if (photo.length > MAX_AVATAR_BYTES) {
   usage(`The photo is ${photo.length} bytes; resize or compress it below ${MAX_AVATAR_BYTES} bytes.`)
 }
 
-if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is required')
-
-const client = new MongoClient(process.env.MONGODB_URI)
+const client = await clientPromise
 try {
-  await client.connect()
-  const members = client.db('main').collection<{ userId: number; name: string }>('familyMembers')
+  const database = getMongoDatabase(client)
+  const members = database.collection<{ userId: number; name: string }>('familyMembers')
   const account = /^\d+$/.test(memberInput)
     ? await members.findOne({ userId: Number(memberInput) })
     : await members.findOne({ name: memberInput }, { collation: { locale: 'en', strength: 2 } })
@@ -76,7 +74,7 @@ try {
     usage(`No family member matched "${memberInput}". Available members:\n${availableMembers.map(member => `${member.userId}: ${member.name}`).join('\n')}`)
   }
 
-  await client.db('main').collection('userProfiles').updateOne(
+  await database.collection('userProfiles').updateOne(
     { userId: account.userId },
     {
       $set: {
@@ -89,5 +87,5 @@ try {
   )
   console.log(`Uploaded ${photoPath} as the profile photo for ${account.name} (user ${account.userId}).`)
 } finally {
-  await client.close()
+  await mongoClient.close()
 }

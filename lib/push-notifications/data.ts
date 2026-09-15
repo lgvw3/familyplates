@@ -2,14 +2,14 @@
 
 import { requireCurrentFamilyMember } from "../auth/current-user";
 import { NotificationSubscription } from "./definitions";
-import clientPromise from "../mongodb";
+import clientPromise, { getMongoDatabase } from "../mongodb";
 
 export async function fetchUserNotificationSubscription() {
     const user = await requireCurrentFamilyMember()
     const userId = user.id
 
     const client = await clientPromise;
-    const db = client.db("main");
+    const db = getMongoDatabase(client);
     const collection = db.collection("notificationSubscriptions");
 
     try {

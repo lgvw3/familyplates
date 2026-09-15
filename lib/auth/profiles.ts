@@ -1,7 +1,7 @@
 import 'server-only'
 
 import type { Annotation } from '@/types/scripture'
-import clientPromise from '@/lib/mongodb'
+import clientPromise, { getMongoDatabase } from '@/lib/mongodb'
 import type { FamilyInteraction, FamilyMemberRecord, UserAccount } from './definitions'
 import { memberToAccount } from './members'
 
@@ -14,11 +14,12 @@ type StoredUserProfile = {
 export async function fetchFamilyAccounts(): Promise<UserAccount[]> {
   try {
     const client = await clientPromise
-    const members = await client.db('main').collection<FamilyMemberRecord>('familyMembers')
+    const database = getMongoDatabase(client)
+    const members = await database.collection<FamilyMemberRecord>('familyMembers')
       .find({})
       .sort({ userId: 1 })
       .toArray()
-    const profiles = await client.db('main').collection<StoredUserProfile>('userProfiles')
+    const profiles = await database.collection<StoredUserProfile>('userProfiles')
       .find({ userId: { $in: members.map(member => member.userId) } })
       .toArray()
     const profileMap = new Map(profiles.map(profile => [profile.userId, profile]))
@@ -36,9 +37,10 @@ export async function fetchFamilyAccounts(): Promise<UserAccount[]> {
 export async function fetchFamilyAccount(userId: number): Promise<UserAccount | undefined> {
   try {
     const client = await clientPromise
-    const member = await client.db('main').collection<FamilyMemberRecord>('familyMembers').findOne({ userId })
+    const database = getMongoDatabase(client)
+    const member = await database.collection<FamilyMemberRecord>('familyMembers').findOne({ userId })
     if (!member) return undefined
-    const profile = await client.db('main').collection<StoredUserProfile>('userProfiles').findOne({ userId })
+    const profile = await database.collection<StoredUserProfile>('userProfiles').findOne({ userId })
     return { ...memberToAccount(member), avatar: profile?.avatar }
   } catch (error) {
     console.error('Error fetching family profile:', error)
@@ -50,7 +52,7 @@ export async function fetchFamilyInteractions(userId: number, limit = 25): Promi
   const normalizedLimit = Math.max(1, Math.min(Math.floor(limit), 100))
   try {
     const client = await clientPromise
-    const annotations = await client.db('main').collection<Annotation>('annotations').find({
+    const annotations = await getMongoDatabase(client).collection<Annotation>('annotations').find({
       $or: [
         { 'comments.userId': userId },
         { 'likes.userId': userId },

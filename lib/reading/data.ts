@@ -2,7 +2,7 @@
 
 import { requireCurrentFamilyMember } from "../auth/current-user";
 import { BookmarkedSpot } from "./definitions";
-import clientPromise from "../mongodb";
+import clientPromise, { getMongoDatabase } from "../mongodb";
 
 export async function fetchBookmarkBySignedInUser() {
 
@@ -11,7 +11,7 @@ export async function fetchBookmarkBySignedInUser() {
 
 
     const client = await clientPromise;
-    const db = client.db("main");
+    const db = getMongoDatabase(client);
     const collection = db.collection("bookmarks");
 
     const existing = await collection.findOne<BookmarkedSpot>({userId: userId})

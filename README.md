@@ -34,7 +34,7 @@ We also have real time likes and comments now!
 
 Family Plates uses Better Auth with Google OAuth and the existing MongoDB database. The `familyMembers` collection is the source of truth for the family roster and allowed login emails. On first sign-in, a member's email links that record to the stable Better Auth user ID. Each member also keeps the same numeric `userId`, so existing annotations, comments, likes, bookmarks, profiles, and push subscriptions continue to belong to the right person.
 
-1. Copy the authentication values from `.env.example` into `.env.local` and the corresponding production environment.
+1. Copy the authentication values from `.env.example` into `.env.local` and the corresponding production environment. Set `MONGODB_DATABASE=dev` and `REALTIME_NAMESPACE=dev` locally; production must explicitly use `MONGODB_DATABASE=main` and `REALTIME_NAMESPACE=main`.
 2. Generate separate long random values for `BETTER_AUTH_SECRET` and `REALTIME_AUTH_SECRET`. Put the same `REALTIME_AUTH_SECRET` in the websocket server environment.
 3. Add or update family members directly in MongoDB with the management command. IDs are permanent legacy ownership IDs, so never reuse an old ID for a different person. Repeat `--email` to add aliases:
    ```sh
@@ -56,3 +56,21 @@ Family Plates uses Better Auth with Google OAuth and the existing MongoDB databa
 6. Store the resulting values as `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Set `BETTER_AUTH_URL` to the matching origin only, with no trailing path (for example `https://YOUR-PRODUCTION-DOMAIN`).
 
 The websocket server must be deployed before the updated client, because the client now sends a short-lived signed `ticket` instead of trusting a plain `userId` query parameter.
+
+## Development database
+
+The application refuses to choose a MongoDB database implicitly. To seed the local `dev` database from `main`, first inspect the copy and then apply it:
+
+```sh
+npm run clone:database
+npm run clone:database -- --apply
+```
+
+The clone copies documents, collection options, and indexes but intentionally excludes `notificationSubscriptions`. A non-empty `dev` database is protected; explicitly add `--replace` to the apply command when you intend to discard and refresh it. The command never writes to `main`.
+
+Notification history can be generated idempotently after a clone or deployment. Supply the release cutoff so older imported activity starts as read:
+
+```sh
+npm run backfill:notifications -- --cutoff=2026-09-15T00:00:00.000Z
+npm run backfill:notifications -- --cutoff=2026-09-15T00:00:00.000Z --apply
+```

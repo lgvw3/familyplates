@@ -1,6 +1,6 @@
 import 'server-only'
 
-import clientPromise from '@/lib/mongodb'
+import clientPromise, { getMongoDatabase } from '@/lib/mongodb'
 import type { FamilyMemberRecord, UserAccount } from './definitions'
 import { normalizeEmail } from './member-values'
 
@@ -8,7 +8,7 @@ const COLLECTION = 'familyMembers'
 
 async function familyMembersCollection() {
   const client = await clientPromise
-  return client.db('main').collection<FamilyMemberRecord>(COLLECTION)
+  return getMongoDatabase(client).collection<FamilyMemberRecord>(COLLECTION)
 }
 
 export async function findFamilyMemberByEmail(email: string): Promise<FamilyMemberRecord | null> {

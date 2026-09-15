@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { MongoClient } from 'mongodb'
+import clientPromise, { getMongoDatabase, mongoClient } from '../lib/mongodb.ts'
 
 const apply = process.argv.includes('--apply')
 const sourceCollectionName = 'annotations_new'
@@ -226,13 +226,10 @@ function validateMigrated(documents, sourceCount) {
   }
 }
 
-if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is required')
-
-const client = new MongoClient(process.env.MONGODB_URI)
-await client.connect()
+const client = await clientPromise
 
 try {
-  const db = client.db('main')
+  const db = getMongoDatabase(client)
   const source = db.collection(sourceCollectionName)
   const sourceDocuments = await source.find({}).toArray()
   const migrated = []
@@ -295,5 +292,5 @@ try {
     })
   }
 } finally {
-  await client.close()
+  await mongoClient.close()
 }

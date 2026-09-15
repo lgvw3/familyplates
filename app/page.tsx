@@ -40,7 +40,7 @@ async function HomeContent() {
 
 export default function HomePage() {
   return (
-    <main>
+    <main className="min-h-screen bg-background">
       <div className="px-4 md:px-8">
         <NotificationManager/>
       </div>

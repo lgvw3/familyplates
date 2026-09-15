@@ -42,7 +42,7 @@ export function HomeFeedSkeleton() {
             </div>
 
             {/* Floating actions remain visible while the feed is loading. */}
-            <div className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-6 z-40 flex items-center gap-3">
+            <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-6 z-40 flex items-center gap-3">
                 <div className="size-14 animate-pulse rounded-full bg-secondary" />
                 <div className="size-14 animate-pulse rounded-full bg-primary" />
             </div>
