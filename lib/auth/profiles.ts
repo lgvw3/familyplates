@@ -2,8 +2,8 @@ import 'server-only'
 
 import type { Annotation } from '@/types/scripture'
 import clientPromise from '@/lib/mongodb'
-import { accounts } from './accounts'
-import type { FamilyInteraction, UserAccount } from './definitions'
+import type { FamilyInteraction, FamilyMemberRecord, UserAccount } from './definitions'
+import { memberToAccount } from './members'
 
 type StoredUserProfile = {
   userId: number
@@ -14,32 +14,35 @@ type StoredUserProfile = {
 export async function fetchFamilyAccounts(): Promise<UserAccount[]> {
   try {
     const client = await clientPromise
+    const members = await client.db('main').collection<FamilyMemberRecord>('familyMembers')
+      .find({})
+      .sort({ userId: 1 })
+      .toArray()
     const profiles = await client.db('main').collection<StoredUserProfile>('userProfiles')
-      .find({ userId: { $in: accounts.map(account => account.id) } })
+      .find({ userId: { $in: members.map(member => member.userId) } })
       .toArray()
     const profileMap = new Map(profiles.map(profile => [profile.userId, profile]))
 
-    return accounts.map(account => ({
-      ...account,
-      avatar: profileMap.get(account.id)?.avatar,
+    return members.map(member => ({
+      ...memberToAccount(member),
+      avatar: profileMap.get(member.userId)?.avatar,
     }))
   } catch (error) {
     console.error('Error fetching family profiles:', error)
-    return accounts
+    return []
   }
 }
 
 export async function fetchFamilyAccount(userId: number): Promise<UserAccount | undefined> {
-  const account = accounts.find(candidate => candidate.id === userId)
-  if (!account) return undefined
-
   try {
     const client = await clientPromise
+    const member = await client.db('main').collection<FamilyMemberRecord>('familyMembers').findOne({ userId })
+    if (!member) return undefined
     const profile = await client.db('main').collection<StoredUserProfile>('userProfiles').findOne({ userId })
-    return { ...account, avatar: profile?.avatar }
+    return { ...memberToAccount(member), avatar: profile?.avatar }
   } catch (error) {
     console.error('Error fetching family profile:', error)
-    return account
+    return undefined
   }
 }
 

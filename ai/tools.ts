@@ -1,5 +1,5 @@
 import { fetchAllAnnotations, fetchAnnotationsByUser } from "@/lib/annotations/data";
-import { accounts } from "@/lib/auth/accounts";
+import { fetchFamilyAccounts } from "@/lib/auth/profiles";
 import { tool } from "ai";
 import { z } from "zod";
 
@@ -29,18 +29,14 @@ export const getAnnotationsByUserTool = tool({
     if (!userName) {
       return 'No user name provided'
     }
-    let userId: number | null = null
-    accounts.map(a => {
-      if (a.name.toLowerCase() === userName.toLowerCase()) {
-        userId = a.id
-      }
-      else if (a.name.toLowerCase().includes(userName.toLowerCase())) {
-        userId = a.id
-      }
-    })
-    if (!userId) {
+    const normalizedName = userName.trim().toLowerCase()
+    const family = await fetchFamilyAccounts()
+    const exactMatch = family.find(account => account.name.toLowerCase() === normalizedName)
+    const partialMatches = family.filter(account => account.name.toLowerCase().includes(normalizedName))
+    const match = exactMatch ?? (partialMatches.length === 1 ? partialMatches[0] : undefined)
+    if (!match) {
       return 'User not found'
     }
-    return await fetchAnnotationsByUser(userId, true)
+    return await fetchAnnotationsByUser(match.id, true)
   }
 });

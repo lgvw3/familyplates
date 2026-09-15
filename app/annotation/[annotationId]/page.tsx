@@ -1,7 +1,7 @@
 import AnnotationViewerSolo from "@/components/feed/annotation-viewer-solo";
 import { fetchAnnotationById } from "@/lib/annotations/data";
-import { fetchUsersAsMap } from "@/lib/auth/accounts";
-import { fetchFamilyAccounts } from '@/lib/auth/profiles'
+import { usersToMap } from "@/lib/auth/account-utils";
+import { fetchFamilyAccount, fetchFamilyAccounts } from '@/lib/auth/profiles'
 import { fetchCurrentUserId } from "@/lib/auth/data";
 import { Metadata } from "next";
 import { headers } from "next/headers";
@@ -26,17 +26,9 @@ export async function generateMetadata({ params }: AnnotationPageProps): Promise
         };
     }
 
-    const userMap = fetchUsersAsMap();
-    const author = userMap.get(annotationData.userId);
-
-    if (!author) {
-        return {
-            title: 'Annotation Not Found',
-            description: 'This annotation could not be found.',
-        };
-    }
-
-    const title = author.name;
+    const author = await fetchFamilyAccount(annotationData.userId);
+    const authorName = author?.name ?? annotationData.userName;
+    const title = authorName;
     
     // Create a rich description
     let description = '';
@@ -57,7 +49,7 @@ export async function generateMetadata({ params }: AnnotationPageProps): Promise
             title,
             description,
             type: 'article',
-            authors: [author.name],
+            authors: [authorName],
             siteName: 'Family Plates',
             url: `${baseUrl}/annotation/${annotationId}`,
             images: [
@@ -65,7 +57,7 @@ export async function generateMetadata({ params }: AnnotationPageProps): Promise
                     url: `${baseUrl}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`,
                     width: 1200,
                     height: 630,
-                    alt: `Annotation by ${author.name}`
+                    alt: `Annotation by ${authorName}`
                 }
             ],
         },
@@ -73,7 +65,7 @@ export async function generateMetadata({ params }: AnnotationPageProps): Promise
             card: 'summary_large_image',
             title,
             description,
-            creator: author.name,
+            creator: authorName,
             site: '@familyplates',
             images: [`${baseUrl}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`],
         },
@@ -107,7 +99,7 @@ export default async function Page({ params }: AnnotationPageProps) {
     }
 
     const users = await fetchFamilyAccounts()
-    const userMap = fetchUsersAsMap(users)
+    const userMap = usersToMap(users)
     const author = userMap.get(annotationData.userId)
     const user = userMap.get(currentUserId)
     if (!author || !user) {

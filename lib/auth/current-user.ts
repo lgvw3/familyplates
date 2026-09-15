@@ -5,13 +5,13 @@ import { redirect } from 'next/navigation'
 import { cache } from 'react'
 import { auth } from './auth'
 import type { UserAccount } from './definitions'
-import { findFamilyMemberByEmail, memberToAccount } from './members'
+import { findFamilyMemberForAuthUser, memberToAccount } from './members'
 
 export async function getFamilyMemberForHeaders(requestHeaders: Headers): Promise<UserAccount | null> {
   const session = await auth.api.getSession({ headers: requestHeaders })
   if (!session?.user.email) return null
 
-  const member = await findFamilyMemberByEmail(session.user.email)
+  const member = await findFamilyMemberForAuthUser(session.user.id, session.user.email)
   if (!member) return null
 
   return {

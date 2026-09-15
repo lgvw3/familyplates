@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import type { FeedCursor, FeedPage } from '@/types/feed'
 import type { BookmarkedSpot } from '@/lib/reading/definitions'
 import type { UserAccount } from '@/lib/auth/definitions'
-import { fetchUsersAsMap } from '@/lib/auth/accounts'
+import { usersToMap } from '@/lib/auth/account-utils'
 import { fetchFeedPage } from '@/lib/annotations/data'
 import { useWebSocket } from '@/hooks/use-websockets'
 import { FeedActivityCard } from '@/components/feed/feed-activity-card'
@@ -31,7 +31,7 @@ export function RecentAnnotations({
   sessionStartedAt: string
   users: UserAccount[]
 }) {
-  const userMap = fetchUsersAsMap(users)
+  const userMap = usersToMap(users)
   const currentUserName = userMap.get(currentUserId)?.name ?? ''
   const feed = useInfiniteQuery({
     queryKey: feedKey(sessionStartedAt),

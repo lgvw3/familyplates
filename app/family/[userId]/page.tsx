@@ -6,7 +6,6 @@ import { ProfileAvatarEditor } from '@/components/family/profile-avatar-editor'
 import { ProfileInteractions } from '@/components/family/profile-interactions'
 import { ProfileAnnotations } from '@/components/scripture-people/profile-annotations'
 import { fetchAnnotationsByUser } from '@/lib/annotations/data'
-import { accounts } from '@/lib/auth/accounts'
 import { fetchCurrentUserId } from '@/lib/auth/data'
 import { fetchFamilyAccount, fetchFamilyAccounts, fetchFamilyInteractions } from '@/lib/auth/profiles'
 
@@ -15,19 +14,21 @@ export const instant = false
 type FamilyProfilePageProps = { params: Promise<{ userId: string }> }
 
 function parseUserId(value: string) {
-  return /^\d+$/.test(value) ? Number(value) : null
+  if (!/^\d+$/.test(value)) return null
+  const userId = Number(value)
+  return Number.isSafeInteger(userId) && userId > 0 ? userId : null
 }
 
 export async function generateMetadata({ params }: FamilyProfilePageProps): Promise<Metadata> {
   const userId = parseUserId(decodeURIComponent((await params).userId))
-  const account = userId === null ? undefined : accounts.find(candidate => candidate.id === userId)
+  const account = userId === null ? undefined : await fetchFamilyAccount(userId)
   if (!account) return { title: 'Family profile not found' }
   return { title: `${account.name} | Family Plates` }
 }
 
 export default async function FamilyProfilePage({ params }: FamilyProfilePageProps) {
   const userId = parseUserId(decodeURIComponent((await params).userId))
-  if (userId === null || !accounts.some(account => account.id === userId)) notFound()
+  if (userId === null) notFound()
   const currentUserId = await fetchCurrentUserId()
   if (!currentUserId) redirect('/sign-in')
 

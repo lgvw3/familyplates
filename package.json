@@ -14,8 +14,9 @@
     "test:annotation-query": "node --experimental-strip-types --test lib/annotations/query-cache.test.ts lib/annotations/realtime.test.ts",
     "test:highlights": "node --experimental-strip-types --test lib/highlights/ranges.test.ts",
     "test:attribution": "node --experimental-strip-types --test lib/scripture-attribution/resolver.test.ts",
-    "test:auth": "node --experimental-strip-types --test lib/auth/email-configuration.test.ts",
-    "seed:family-members": "node --experimental-strip-types --env-file=.env.local scripts/seed-family-members.ts",
+    "test:auth": "node --experimental-strip-types --test lib/auth/member-values.test.ts",
+    "manage:family-member": "node --experimental-strip-types --env-file=.env.local scripts/manage-family-member.ts",
+    "upload:family-photo": "node --experimental-strip-types --env-file=.env.local scripts/upload-family-photo.ts",
     "backfill:annotation-attribution": "node --experimental-strip-types --env-file=.env.local scripts/backfill-annotation-attribution.mjs",
     "migrate:annotations": "node --env-file=.env.local scripts/migrate-annotations-v2.mjs"
   },

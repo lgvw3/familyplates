@@ -9,7 +9,7 @@ export interface FamilyMemberRecord {
     userId: number
     name: string
     normalizedEmails: string[]
-    authUserId?: string
+    authUserId?: string | null
     enabled: boolean
     createdAt: Date
     updatedAt: Date
