@@ -2,6 +2,9 @@
 
 This is a place to share and remember insights and ideas from family members about the Gospel of Jesus Christ. The current goal is to make it so that annotations can really easily be added to Book of Mormon verses.
 
+> [!IMPORTANT]
+> Family Plates is an independent project and is not affiliated with, sponsored by, endorsed by, or an official product of The Church of Jesus Christ of Latter-day Saints. This repository includes third-party scripture text and Church-hosted media that are **not** licensed under the MIT License. See [Third-Party Notices](THIRD_PARTY_NOTICES.md) for sources, credits, and usage restrictions.
+
 Here are some of the ideas for that, thank you Kayla!
 
 ## Ideas for easy Annotation creation:
@@ -74,3 +77,9 @@ Notification history can be generated idempotently after a clone or deployment. 
 npm run backfill:notifications -- --cutoff=2026-09-15T00:00:00.000Z
 npm run backfill:notifications -- --cutoff=2026-09-15T00:00:00.000Z --apply
 ```
+
+## License
+
+Original software code and documentation authored for Family Plates are licensed under the [MIT License](LICENSE).
+
+The MIT License does not cover third-party scripture text, Church-hosted media, trademarks, or other third-party material included in this repository. See [Third-Party Notices](THIRD_PARTY_NOTICES.md) for details.
