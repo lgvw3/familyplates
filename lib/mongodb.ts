@@ -17,11 +17,21 @@ if (process.env.NODE_ENV === "development") {
   // In development mode, use a global variable so that the value
   // is preserved across module reloads caused by HMR (Hot Module Replacement).
   const globalWithMongo = global as typeof globalThis & {
+    _mongoClient?: MongoClient;
     _mongoClientPromise?: Promise<MongoClient>;
   };
 
   if (!globalWithMongo._mongoClientPromise) {
     client = new MongoClient(uri, options);
+    globalWithMongo._mongoClient = client;
+    globalWithMongo._mongoClientPromise = client.connect();
+  } else if (globalWithMongo._mongoClient) {
+    client = globalWithMongo._mongoClient;
+  } else {
+    // Compatibility with a development process started before the client was
+    // cached separately. HMR will replace this branch on the next reload.
+    client = new MongoClient(uri, options);
+    globalWithMongo._mongoClient = client;
     globalWithMongo._mongoClientPromise = client.connect();
   }
   clientPromise = globalWithMongo._mongoClientPromise;
@@ -37,4 +47,5 @@ if (process.env.NODE_ENV === "development") {
 
 // Export a module-scoped MongoClient promise. By doing this in a
 // separate module, the client can be shared across functions.
-export default clientPromise; 
+export { client as mongoClient };
+export default clientPromise;

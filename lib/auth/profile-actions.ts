@@ -1,28 +1,23 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { cookies } from 'next/headers'
 import clientPromise from '@/lib/mongodb'
-import { accounts } from './accounts'
-import { validateToken } from './utils'
 import { fetchFamilyAccount } from './profiles'
+import { getCurrentFamilyMember } from './current-user'
 
 const AVATAR_DATA_URL = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/
 const MAX_AVATAR_BYTES = 500_000
 
 export async function fetchCurrentFamilyAccount() {
-  const authToken = (await cookies()).get('familyPlatesAuthToken')?.value
-  if (!authToken) return null
-  const { userId } = validateToken(authToken)
-  if (!userId) return null
-  return (await fetchFamilyAccount(userId)) ?? null
+  const user = await getCurrentFamilyMember()
+  if (!user) return null
+  return (await fetchFamilyAccount(user.id)) ?? null
 }
 
 export async function updateProfileAvatar(avatar: string) {
-  const authToken = (await cookies()).get('familyPlatesAuthToken')?.value
-  if (!authToken) return { message: 'Unauthorized' }
-  const { userId } = validateToken(authToken)
-  if (!userId || !accounts.some(account => account.id === userId)) return { message: 'Unauthorized' }
+  const user = await getCurrentFamilyMember()
+  if (!user) return { message: 'Unauthorized' }
+  const userId = user.id
 
   if (typeof avatar !== 'string') return { message: 'Please choose a valid image.' }
   const match = AVATAR_DATA_URL.exec(avatar)

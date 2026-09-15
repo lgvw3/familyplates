@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { Annotation, AnnotationComment, AnnotationLike } from '@/types/scripture'
-import { fetchCurrentUserId } from '@/lib/auth/data'
+import { fetchRealtimeTicket } from '@/lib/auth/realtime-ticket'
 import { getAnnotationTargetKey } from '@/lib/annotations/presentation'
 import {
   annotationTargetKey,
@@ -58,9 +58,15 @@ export function useWebSocket() {
     let disposed = false
 
     const connect = async () => {
-      const userId = await fetchCurrentUserId()
+      const ticket = await fetchRealtimeTicket()
       if (disposed) return
-      ws = new WebSocket(`${process.env.NEXT_PUBLIC_WEB_SOCKET_URL}?userId=${userId}`)
+      if (!ticket || !process.env.NEXT_PUBLIC_WEB_SOCKET_URL) {
+        console.warn('Realtime updates are not configured')
+        return
+      }
+      const websocketUrl = new URL(process.env.NEXT_PUBLIC_WEB_SOCKET_URL)
+      websocketUrl.searchParams.set('ticket', ticket)
+      ws = new WebSocket(websocketUrl)
       ws.onopen = () => {
         if (disposed) return
         const reconnecting = reconnectPendingRef.current

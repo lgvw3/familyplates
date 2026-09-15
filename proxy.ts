@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getSessionCookie } from 'better-auth/cookies'
 
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
@@ -10,17 +11,14 @@ export function proxy(request: NextRequest) {
         pathname.startsWith('/api/auth') ||
         pathname.startsWith('/_next') || // Next.js assets
         pathname.startsWith('/favicon') ||
-        pathname.startsWith('/annotation') // <-- Make annotation pages public for OG previews!
+        pathname.startsWith('/annotation') || // Annotation pages stay public for link previews.
+        pathname === '/sign-in' ||
+        /\.[^/]+$/.test(pathname)
     ) {
         return NextResponse.next();
     }
 
-    const authToken = request.cookies.get('familyPlatesAuthToken')?.value;
-
-    if (process.env.NODE_ENV != "production") {
-        console.log('Auth Token from middleware:', authToken) // Debugging log
-    }
-    if (!authToken) {
+    if (!getSessionCookie(request)) {
         // Redirect to the sign-in page if no token is found
         return NextResponse.redirect(new URL('/sign-in', request.url));
     }
@@ -31,5 +29,5 @@ export function proxy(request: NextRequest) {
 
 // Protect the homepage and other routes
 export const config = {
-    matcher: ['/'],
+    matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

@@ -29,3 +29,18 @@ Real time updating happens on the feed and when reading thanks to the websocket 
 ## Couple days later
 
 We also have real time likes and comments now!
+
+## Authentication setup
+
+Family Plates uses Better Auth with Google OAuth and the existing MongoDB database. Google identities are matched by normalized email address to the `familyMembers` collection. Each member keeps the same numeric `userId`, so existing annotations, comments, likes, bookmarks, profiles, and push subscriptions continue to belong to the right person.
+
+1. Copy the authentication values from `.env.example` into `.env.local` and the corresponding production environment.
+2. Generate separate long random values for `BETTER_AUTH_SECRET` and `REALTIME_AUTH_SECRET`. Put the same `REALTIME_AUTH_SECRET` in the websocket server environment.
+3. Set `FAMILY_MEMBER_EMAILS_JSON` to a JSON object whose keys are the IDs in `lib/auth/accounts.ts`. A value can be one email or an array of accepted aliases.
+4. Run `npm run seed:family-members`. This creates or updates the MongoDB member records and unique indexes. The app also upserts a configured email on first sign-in, but running the seed first makes access predictable.
+5. In a personal Google Cloud project, configure the OAuth consent screen and create a **Web application** OAuth client. Add these authorized redirect URIs exactly:
+   - `http://localhost:3000/api/auth/callback/google`
+   - `https://YOUR-PRODUCTION-DOMAIN/api/auth/callback/google`
+6. Store the resulting values as `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Set `BETTER_AUTH_URL` to the matching origin only, with no trailing path (for example `https://YOUR-PRODUCTION-DOMAIN`).
+
+The websocket server must be deployed before the updated client, because the client now sends a short-lived signed `ticket` instead of trusting a plain `userId` query parameter.

@@ -1,9 +1,7 @@
 'use server'
 
 import { Annotation } from "@/types/scripture";
-import { cookies } from "next/headers";
-import { validateToken } from "../auth/utils";
-import { redirect } from "next/navigation";
+import { requireCurrentFamilyMember } from "../auth/current-user";
 import { ObjectId } from "mongodb";
 import clientPromise from "../mongodb";
 import type { FeedActivity, FeedCursor, FeedPage } from "@/types/feed";
@@ -68,10 +66,8 @@ export async function fetchFeedPage({
     cursor?: FeedCursor | null;
     sessionStartedAt: string;
 }): Promise<FeedPage | null> {
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value
-    if (!authToken) redirect('/sign-in')
-    const { userId } = validateToken(authToken)
-    if (!userId) return null
+    const user = await requireCurrentFamilyMember()
+    const userId = user.id
 
     const sessionStart = new Date(sessionStartedAt)
     if (Number.isNaN(sessionStart.getTime())) throw new Error('Invalid feed session time')
@@ -172,15 +168,7 @@ export async function fetchFeedPage({
 
 export async function fetchAllAnnotations(skipAuth: boolean = false) {
     if (!skipAuth) {
-        const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-        if (!authToken) {
-            redirect('/sign-in')
-        }
-        const { userId } = validateToken(authToken);
-
-        if (!userId) {
-            return null
-        }
+        await requireCurrentFamilyMember()
     }
 
     const client = await clientPromise;
@@ -203,15 +191,7 @@ export async function fetchAllAnnotations(skipAuth: boolean = false) {
 }
 
 export async function fetchRecentAnnotations() {
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-    if (!authToken) {
-        redirect('/sign-in')
-    }
-    const { userId } = validateToken(authToken);
-
-    if (!userId) {
-        return null
-    }
+    await requireCurrentFamilyMember()
 
     const client = await clientPromise;
     const db = client.db("main");
@@ -233,15 +213,7 @@ export async function fetchRecentAnnotations() {
 }
 
 export async function fetchMoreAnnotations(lastAnnotation: Annotation, limit: number) {
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-    if (!authToken) {
-        redirect('/sign-in')
-    }
-    const { userId } = validateToken(authToken);
-
-    if (!userId) {
-        return null
-    }
+    await requireCurrentFamilyMember()
 
     const client = await clientPromise;
     const db = client.db("main");
@@ -285,15 +257,7 @@ export async function fetchMoreAnnotations(lastAnnotation: Annotation, limit: nu
 
 export async function fetchAnnotationsByChapter(book: string, chapter: number) {
 
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-    if (!authToken) {
-        redirect('/sign-in')
-    }
-    const { userId } = validateToken(authToken);
-
-    if (!userId) {
-        return null
-    }
+    await requireCurrentFamilyMember()
 
     try {
         const client = await clientPromise;
@@ -320,10 +284,7 @@ export async function fetchAnnotationsByChapter(book: string, chapter: number) {
 }
 
 export async function fetchAnnotationsByIntro(introId: string) {
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-    if (!authToken) redirect('/sign-in')
-    const { userId } = validateToken(authToken);
-    if (!userId) return null
+    await requireCurrentFamilyMember()
 
     try {
         const client = await clientPromise;
@@ -343,15 +304,7 @@ export async function fetchAnnotationsByIntro(introId: string) {
 
 export async function fetchAnnotationById(annotationId: string, skipAuth: boolean = false) {
     if (!skipAuth) {
-        const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-        if (!authToken) {
-            redirect('/sign-in')
-        }
-        const { userId } = validateToken(authToken);
-
-        if (!userId) {
-            return null
-        }
+        await requireCurrentFamilyMember()
     }
 
     const client = await clientPromise;
@@ -387,15 +340,7 @@ export async function fetchAnnotationById(annotationId: string, skipAuth: boolea
 
 export async function fetchAnnotationsByUser(userId: number, skipAuth: boolean = false, limit: number = 25) {
     if (!skipAuth) {
-        const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-        if (!authToken) {
-            redirect('/sign-in')
-        }
-        const { userId } = validateToken(authToken);
-
-        if (!userId) {
-            return null
-        }
+        await requireCurrentFamilyMember()
     }
 
     const client = await clientPromise;
@@ -424,10 +369,8 @@ export async function fetchAnnotationsByUser(userId: number, skipAuth: boolean =
 
 /** Recent annotations where a scripture source is either the primary or secondary identity. */
 export async function fetchAnnotationsByScripturePerson(profileId: string, limit: number = 25) {
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-    if (!authToken) redirect('/sign-in')
-    const { userId } = validateToken(authToken)
-    if (!userId || !profileId) return null
+    await requireCurrentFamilyMember()
+    if (!profileId) return null
 
     const normalizedLimit = Math.max(1, Math.min(Math.floor(limit), 100))
     try {

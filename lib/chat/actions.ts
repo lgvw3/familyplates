@@ -1,32 +1,13 @@
 'use server'
 
 import { UIMessage } from "ai";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { validateToken } from "../auth/utils";
-import { fetchAccountById } from "../auth/accounts";
+import { requireCurrentFamilyMember } from "../auth/current-user";
 import clientPromise from "../mongodb";
 
 export async function saveChatMessages(messages: UIMessage[], chatId: string) {
 
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-    if (!authToken) {
-        redirect('/sign-in')
-    }
-    const { userId } = validateToken(authToken);
-
-    if (!userId) {
-        return {
-            message: "Unauthorized. This app is just for my family for now"
-        }
-    }
-    const user = fetchAccountById(userId)
-
-    if (!user) {
-        return {
-            message: "Unauthorized. This app is just for my family for now"
-        }
-    }
+    const user = await requireCurrentFamilyMember()
+    const userId = user.id
 
     const client = await clientPromise;
     const db = client.db("main");

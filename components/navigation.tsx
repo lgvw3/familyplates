@@ -15,6 +15,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { AccountControls } from '@/components/account-controls'
 
 export const introMaterialOrder = [
     "Title Page",
@@ -73,6 +74,7 @@ export function Navigation() {
                     <nav className="mt-4">
                         <NavigationItems />
                     </nav>
+                    <AccountControls />
                 </SheetContent>
             </Sheet>
         </div>

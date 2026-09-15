@@ -1,9 +1,7 @@
 'use server'
  
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
 import webpush from 'web-push'
-import { validateToken } from '../auth/utils'
+import { requireCurrentFamilyMember, getCurrentFamilyMember } from '../auth/current-user'
 import clientPromise from '../mongodb'
 import { NotificationSubscription } from './definitions'
 import { Redis } from "@upstash/redis";
@@ -22,17 +20,8 @@ const redis = Redis.fromEnv();
 export async function subscribeUser(sub: PushSubscription) {
     subscription = sub;
 
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-    if (!authToken) {
-        redirect('/sign-in')
-    }
-    const { userId } = validateToken(authToken);
-
-    if (!userId) {
-        return {
-            message: "Unauthorized. This app is just for my family for now"
-        }
-    }
+    const user = await requireCurrentFamilyMember()
+    const userId = user.id
 
     const client = await clientPromise;
     const db = client.db("main");
@@ -65,17 +54,8 @@ export async function subscribeUser(sub: PushSubscription) {
 export async function unsubscribeUser() {
     subscription = null
 
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-    if (!authToken) {
-        redirect('/sign-in')
-    }
-    const { userId } = validateToken(authToken);
-
-    if (!userId) {
-        return {
-            message: "Unauthorized. This app is just for my family for now"
-        }
-    }
+    const user = await requireCurrentFamilyMember()
+    const userId = user.id
 
 
     const client = await clientPromise;
@@ -119,15 +99,8 @@ export async function sendNotification(message: string, title: string) {
 }
 
 export async function sendNotificationToOfflineUsers(message: string, title: string, authorId: number, targetPath: string) {
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-    if (!authToken) {
-        return
-    }
-    const { userId } = validateToken(authToken);
-
-    if (!userId) {
-        return
-    }
+    const user = await getCurrentFamilyMember()
+    if (!user) return
 
     // TODO: Make this for people who are not online only
 

@@ -5,10 +5,7 @@ import clientPromise from "../mongodb";
 import z from "zod";
 import redis from "ioredis";
 import sendErrorMessageToMe from "../dev/actions";
-import { cookies } from "next/headers";
-import { validateToken } from "../auth/utils";
-import { redirect } from "next/navigation";
-import { fetchAccountById } from "../auth/accounts";
+import { requireCurrentFamilyMember } from "../auth/current-user";
 import { ObjectId } from "mongodb";
 import { sendNotificationToOfflineUsers } from "../push-notifications/actions";
 import { InvalidAttributionTargetError, resolveScriptureAttribution } from "../scripture-attribution/resolver.ts";
@@ -58,24 +55,8 @@ function serializeAnnotation(annotation: Annotation): Annotation {
 
 export async function saveAnnotation(annotation: Annotation) {
 
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-    if (!authToken) {
-        redirect('/sign-in')
-    }
-    const { userId } = validateToken(authToken);
-
-    if (!userId) {
-        return {
-            message: "Unauthorized. This app is just for my family for now"
-        }
-    }
-    const user = fetchAccountById(userId)
-
-    if (!user) {
-        return {
-            message: "Unauthorized. This app is just for my family for now"
-        }
-    }
+    const user = await requireCurrentFamilyMember()
+    const userId = user.id
 
     // Extract first name
     const firstName = user.name.split(' ')[0]
@@ -176,24 +157,7 @@ export async function saveAnnotation(annotation: Annotation) {
 
 export async function updateAnnotation(annotationId: string, editedText: string) {
 
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-    if (!authToken) {
-        redirect('/sign-in')
-    }
-    const { userId } = validateToken(authToken);
-
-    if (!userId) {
-        return {
-            message: "Unauthorized. This app is just for my family for now"
-        }
-    }
-    const user = fetchAccountById(userId)
-
-    if (!user) {
-        return {
-            message: "Unauthorized. This app is just for my family for now"
-        }
-    }
+    await requireCurrentFamilyMember()
 
     const client = await clientPromise;
     const db = client.db("main");
@@ -251,24 +215,8 @@ const zComment = z.object({
 
 export async function addCommentToAnnotation(comment: string, annotationId: string, parentCommentId?: string) {
 
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-    if (!authToken) {
-        redirect('/sign-in')
-    }
-    const { userId } = validateToken(authToken);
-
-    if (!userId) {
-        return {
-            message: "Unauthorized. This app is just for my family for now"
-        }
-    }
-    const user = fetchAccountById(userId)
-
-    if (!user) {
-        return {
-            message: "Unauthorized. This app is just for my family for now"
-        }
-    }
+    const user = await requireCurrentFamilyMember()
+    const userId = user.id
 
     const validatedFields = zComment.safeParse({content: comment, parentCommentId})
 
@@ -361,24 +309,8 @@ export async function addCommentToAnnotation(comment: string, annotationId: stri
 }
 
 export async function setAnnotationLiked(annotationId: string, liked: boolean) {
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-    if (!authToken) {
-        redirect('/sign-in')
-    }
-    const { userId } = validateToken(authToken);
-
-    if (!userId) {
-        return {
-            message: "Unauthorized. This app is just for my family for now"
-        }
-    }
-    const user = fetchAccountById(userId)
-
-    if (!user) {
-        return {
-            message: "Unauthorized. This app is just for my family for now"
-        }
-    }
+    const user = await requireCurrentFamilyMember()
+    const userId = user.id
 
     const client = await clientPromise;
     const db = client.db("main");
@@ -438,12 +370,8 @@ export async function setAnnotationLiked(annotationId: string, liked: boolean) {
 }
 
 export async function setCommentLiked(annotationId: string, commentId: string, liked: boolean) {
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value
-    if (!authToken) redirect('/sign-in')
-    const { userId } = validateToken(authToken)
-    if (!userId) return { message: 'Unauthorized. This app is just for my family for now' }
-    const user = fetchAccountById(userId)
-    if (!user) return { message: 'Unauthorized. This app is just for my family for now' }
+    const user = await requireCurrentFamilyMember()
+    const userId = user.id
     if (!ObjectId.isValid(annotationId) || !ObjectId.isValid(commentId)) {
         return { message: 'Invalid comment' }
     }
@@ -509,10 +437,8 @@ export async function setCommentLiked(annotationId: string, commentId: string, l
 }
 
 export async function markFeedActivitiesSeen(activityKeys: string[]) {
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value
-    if (!authToken) redirect('/sign-in')
-    const { userId } = validateToken(authToken)
-    if (!userId) return { message: 'Unauthorized' }
+    const user = await requireCurrentFamilyMember()
+    const userId = user.id
 
     const keys = [...new Set(activityKeys)].filter(key => /^(annotation|comment):[a-f\d]{24}$/i.test(key))
     if (!keys.length) return { message: 'Success' }

@@ -1,4 +1,4 @@
-import { UserAccount } from "./definitions";
+import type { UserAccount } from "./definitions";
 
 export const accounts: UserAccount[] = [
   { id: 1, name: "Myrna Van Wagoner" },

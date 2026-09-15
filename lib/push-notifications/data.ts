@@ -1,21 +1,12 @@
 'use server'
 
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { validateToken } from "../auth/utils";
+import { requireCurrentFamilyMember } from "../auth/current-user";
 import { NotificationSubscription } from "./definitions";
 import clientPromise from "../mongodb";
 
 export async function fetchUserNotificationSubscription() {
-    const authToken = (await cookies()).get('familyPlatesAuthToken')?.value;
-    if (!authToken) {
-        redirect('/sign-in')
-    }
-    const { userId } = validateToken(authToken);
-
-    if (!userId) {
-        return null
-    }
+    const user = await requireCurrentFamilyMember()
+    const userId = user.id
 
     const client = await clientPromise;
     const db = client.db("main");

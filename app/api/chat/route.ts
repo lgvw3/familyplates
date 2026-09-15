@@ -7,11 +7,16 @@ import {
   streamText,
   type UIMessage,
 } from "ai";
+import { getFamilyMemberForHeaders } from '@/lib/auth/current-user'
 
 // Allow streaming responses up to 60 seconds
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
+  if (!(await getFamilyMemberForHeaders(req.headers))) {
+    return new Response('Unauthorized', { status: 401 })
+  }
+
   const {
     messages,
     selectedModel,
