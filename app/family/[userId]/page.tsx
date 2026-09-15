@@ -54,12 +54,6 @@ export default async function FamilyProfilePage({ params }: FamilyProfilePagePro
           />
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tight">{profile.name}</h1>
-            <p className="text-sm text-muted-foreground">
-              {profile.id === currentUserId ? 'Your Family Plates profile' : 'Family Plates member'}
-            </p>
-            {profile.id === currentUserId && (
-              <p className="text-xs text-muted-foreground">Tap the camera to update your photo.</p>
-            )}
           </div>
         </header>
         <section className="mt-8 border-t pt-5" aria-label="Family profile activity">

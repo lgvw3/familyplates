@@ -61,9 +61,6 @@ export default function LoginFlow({
             </div>
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">Welcome to Family Plates</h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Sign in with the Google account your family has on file.
-              </p>
             </div>
           </div>
 
@@ -88,9 +85,6 @@ export default function LoginFlow({
               Google sign-in is waiting for the site administrator to add OAuth credentials.
             </p>
           )}
-          <p className="text-center text-xs text-muted-foreground">
-            Access is limited to invited family email addresses.
-          </p>
         </CardContent>
       </Card>
     </div>
