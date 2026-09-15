@@ -1,8 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, Menu, Users } from 'lucide-react'
+import { ChevronRight, Users } from 'lucide-react'
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import type { UserAccount } from "@/lib/auth/definitions"
+import { fetchCurrentFamilyAccount } from "@/lib/auth/profile-actions"
 import {
     Sheet,
     SheetContent,
@@ -46,12 +50,33 @@ const books = {
 }
 
 export function Navigation() {
+    const [user, setUser] = useState<UserAccount | null>(null)
+
+    useEffect(() => {
+        void fetchCurrentFamilyAccount().then(setUser)
+    }, [])
+
+    const initials = user?.name
+        .split(/\s+/)
+        .map(part => part[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase() || '?'
+
     return (
-        <div>
+        <div className="flex items-center justify-start">
             <Sheet>
                 <SheetTrigger asChild>
-                    <Button variant="outline" size="icon" className="fixed left-4 top-[calc(0.75rem+env(safe-area-inset-top))] z-50 h-8 w-8">
-                        <Menu className="h-4 w-4" />
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-10 rounded-full p-0"
+                        title={user ? `Open ${user.name}'s menu` : 'Open navigation menu'}
+                    >
+                        <Avatar className="size-8 border bg-background shadow-sm">
+                            <AvatarImage src={user?.avatar} alt={user ? `${user.name}'s profile photo` : 'Profile'} className="object-cover" />
+                            <AvatarFallback className="text-xs font-semibold">{initials}</AvatarFallback>
+                        </Avatar>
                         <span className="sr-only">Toggle navigation menu</span>
                     </Button>
                 </SheetTrigger>

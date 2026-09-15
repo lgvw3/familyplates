@@ -4,9 +4,7 @@ import { DataProvider, ThemeProvider } from "@/components/providers"
 import "@/app/globals.css"
 import { Metadata, Viewport } from 'next';
 import { cn } from '@/lib/utils';
-import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
-import { Navigation } from '@/components/navigation';
 import { Toaster } from '@/components/ui/sonner';
 import { HeaderProvider } from '@/components/header-context';
 import { ThemeChrome } from '@/components/theme-chrome';
@@ -49,12 +47,10 @@ export default function RootLayout({
             <ThemeChrome />
             <HeaderProvider>
               <Header />
-              <Navigation />
               <main>
                 {children}
               </main>
               <Toaster richColors />
-              <Footer />
             </HeaderProvider>
           </DataProvider>
         </ThemeProvider>

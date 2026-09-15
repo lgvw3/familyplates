@@ -102,7 +102,7 @@ export function RecentAnnotations({
       <motion.div
         animate={{ opacity: actionsVisible ? 1 : 0, y: actionsVisible ? 0 : 24 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-3"
+        className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-6 z-40 flex items-center gap-3"
         style={{ pointerEvents: actionsVisible ? 'auto' : 'none' }}
       >
         <AnnotationCreation
@@ -123,6 +123,7 @@ export function RecentAnnotations({
         />
         <ContinueReading bookmark={bookmark} />
       </motion.div>
+      <div aria-hidden="true" className="h-[calc(5rem+env(safe-area-inset-bottom))]" />
     </>
   )
 }

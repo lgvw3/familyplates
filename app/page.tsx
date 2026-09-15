@@ -1,5 +1,6 @@
 import NotificationManager from "@/components/push-notifications/notification-manager"
 import { RecentAnnotations } from "@/components/recent-annotations"
+import { Footer } from "@/components/footer"
 import { HomeFeedSkeleton } from "@/components/skeletons/home-feed-skeleton"
 import { fetchFeedPage } from "@/lib/annotations/data"
 import { fetchCurrentUserId } from "@/lib/auth/data"
@@ -46,6 +47,7 @@ export default function HomePage() {
       <Suspense fallback={<HomeFeedSkeleton />}>
         <HomeContent />
       </Suspense>
+      <Footer />
     </main>
   )
 }

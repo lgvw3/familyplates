@@ -1,18 +1,23 @@
 'use client'
-import Link from "next/link"
-import { BookMarked, MessageCircle } from 'lucide-react'
-import { CommandMenu } from "./command-menu"
+import { BookMarked } from 'lucide-react'
 import { useHeader } from './header-context'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Navigation } from './navigation'
+import { useScrollVisibility } from '@/hooks/use-scroll-visibility'
 
 export function Header() {
     const { title, subtitle } = useHeader();
+    const isVisible = useScrollVisibility()
 
     return (
-        <header className="sticky top-0 z-40 flex w-full items-center justify-center border-b bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container grid grid-cols-3 h-14 relative">
-                <div></div>
-                <Link href="/" className="flex items-center justify-center gap-2 font-bold relative h-14">
+        <motion.header
+            animate={{ y: isVisible ? 0 : '-100%' }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="sticky top-0 z-40 flex w-full items-center justify-center border-b bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        >
+            <div className="container grid h-14 grid-cols-[3rem_1fr_3rem] px-2 sm:px-4">
+                <Navigation />
+                <div className="relative flex h-14 items-center justify-center gap-2 font-bold">
                     <AnimatePresence mode="wait">
                         <motion.span
                             key={title ? "dynamic-title" : "default-title"}
@@ -36,14 +41,9 @@ export function Header() {
                             )}
                         </motion.span>
                     </AnimatePresence>
-                </Link>
-                <div className="flex items-center justify-end mr-2 gap-2">
-                    <Link href="/chat" title="Family Chat" className="hover:text-primary transition-colors">
-                        <MessageCircle className="h-5 w-5" />
-                    </Link>
-                    <CommandMenu />
                 </div>
+                <div aria-hidden="true" />
             </div>
-        </header>
+        </motion.header>
     )
   }

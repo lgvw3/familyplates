@@ -12,7 +12,7 @@ import {
 import { Search } from 'lucide-react'
 import Link from "next/link"
 import Fuse, { FuseResult } from "fuse.js";
-import { useEffect, useState } from "react"
+import { type ReactNode, useEffect, useState } from "react"
 import { ScriptureItem, SearchResult } from "@/types/scripture"
 import { Badge } from "./ui/badge"
 
@@ -54,7 +54,11 @@ const fuseOptions = {
     includeMatches: true, // Include match metadata in results
 };
 
-export function CommandMenu() {
+export function CommandMenu({
+    renderTrigger,
+}: {
+    renderTrigger?: (openMenu: () => void) => ReactNode
+} = {}) {
     const [open, setOpen] = useState(false)
     const [results, setResults] = useState<SearchResult[] | null>(null)
     const [query, setQuery] = useState<string | null>(null)
@@ -83,14 +87,16 @@ export function CommandMenu() {
 
     return (
         <>
-        <Button
-            variant="outline"
-            className="right-4 top-4 h-8 w-8 rounded-full p-0 sm:right-6 sm:top-6"
-            onClick={() => setOpen(true)}
-        >
-            <Search className="h-4 w-4" />
-            <span className="sr-only">Search scriptures</span>
-        </Button>
+        {renderTrigger ? renderTrigger(() => setOpen(true)) : (
+            <Button
+                variant="outline"
+                className="right-4 top-4 h-8 w-8 rounded-full p-0 sm:right-6 sm:top-6"
+                onClick={() => setOpen(true)}
+            >
+                <Search className="h-4 w-4" />
+                <span className="sr-only">Search scriptures</span>
+            </Button>
+        )}
 
         <CommandDialog 
             open={open} 
@@ -201,4 +207,3 @@ export function CommandMenu() {
         </>
     )
 }
-

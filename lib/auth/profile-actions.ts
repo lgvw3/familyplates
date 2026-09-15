@@ -11,7 +11,8 @@ const MAX_AVATAR_BYTES = 500_000
 export async function fetchCurrentFamilyAccount() {
   const user = await getCurrentFamilyMember()
   if (!user) return null
-  return (await fetchFamilyAccount(user.id)) ?? null
+  const profile = await fetchFamilyAccount(user.id)
+  return profile ? { ...profile, avatar: profile.avatar ?? user.avatar } : user
 }
 
 export async function updateProfileAvatar(avatar: string) {
