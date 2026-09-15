@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, Users } from 'lucide-react'
+import { ChevronRight, UserRound, Users } from 'lucide-react'
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -51,9 +51,25 @@ const books = {
 
 export function Navigation() {
     const [user, setUser] = useState<UserAccount | null>(null)
+    const [isUserLoading, setIsUserLoading] = useState(true)
 
     useEffect(() => {
-        void fetchCurrentFamilyAccount().then(setUser)
+        let isActive = true
+
+        void fetchCurrentFamilyAccount()
+            .then((account) => {
+                if (isActive) setUser(account)
+            })
+            .catch((error) => {
+                console.error('Failed to load the current family account:', error)
+            })
+            .finally(() => {
+                if (isActive) setIsUserLoading(false)
+            })
+
+        return () => {
+            isActive = false
+        }
     }, [])
 
     const initials = user?.name
@@ -61,7 +77,7 @@ export function Navigation() {
         .map(part => part[0])
         .join('')
         .slice(0, 2)
-        .toUpperCase() || '?'
+        .toUpperCase()
 
     return (
         <div className="flex items-center justify-start">
@@ -74,8 +90,16 @@ export function Navigation() {
                         title={user ? `Open ${user.name}'s menu` : 'Open navigation menu'}
                     >
                         <Avatar className="size-8 border bg-background shadow-sm">
-                            <AvatarImage src={user?.avatar} alt={user ? `${user.name}'s profile photo` : 'Profile'} className="object-cover" />
-                            <AvatarFallback className="text-xs font-semibold">{initials}</AvatarFallback>
+                            {isUserLoading ? (
+                                <span className="size-full animate-pulse rounded-full bg-muted" aria-hidden="true" />
+                            ) : (
+                                <>
+                                    <AvatarImage src={user?.avatar} alt={user ? `${user.name}'s profile photo` : 'Profile'} className="object-cover" />
+                                    <AvatarFallback className="text-xs font-semibold">
+                                        {initials || <UserRound className="size-4" aria-hidden="true" />}
+                                    </AvatarFallback>
+                                </>
+                            )}
                         </Avatar>
                         <span className="sr-only">Toggle navigation menu</span>
                     </Button>

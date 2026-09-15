@@ -20,6 +20,7 @@ import { useHeader } from './header-context'
 import { AnchoredSelection, AnnotatedText } from './annotated-text'
 import { sortAnnotationsByTarget, TextUnit } from '@/lib/highlights/ranges'
 import { AnnotationQuote } from './feed/annotation-quote'
+import { Footer } from './footer'
 
 interface ScriptureReaderProps {
   chapter: Chapter
@@ -256,7 +257,7 @@ export default function ScriptureReader({
   }, [book.title, chapter.chapter_title, setHeader, showStickyHeader])
 
   return (
-    <div>
+    <div className="pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
       <div className="relative flex items-center mx-4 mt-4">
         <Breadcrumb className="flex-grow">
           <BreadcrumbList>
@@ -331,6 +332,7 @@ export default function ScriptureReader({
           onClose={handleCloseMenu}
         />
       </div>
+      <Footer />
     </div>
   )
 }

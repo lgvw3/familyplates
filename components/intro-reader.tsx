@@ -17,6 +17,7 @@ import { useAnnotationCollection } from '@/lib/annotations/query'
 import { AnchoredSelection, AnnotatedText } from './annotated-text'
 import { sortAnnotationsByTarget, TextUnit } from '@/lib/highlights/ranges'
 import { AnnotationQuote } from './feed/annotation-quote'
+import { Footer } from './footer'
 
 interface AnnotationMenuValue {
   text: string
@@ -138,7 +139,7 @@ export default function IntroReader({
   ) : <p className="text-muted-foreground text-sm">Select text to add annotations.</p>
 
   return (
-    <div className="container mx-auto p-4 space-y-6 bg-background text-foreground">
+    <div className="container mx-auto px-4 pt-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] space-y-6 bg-background text-foreground">
       <div className="grid md:grid-cols-[1fr,300px] gap-6">
         <div className="space-y-6">
           <div className="space-y-4 text-center">
@@ -187,6 +188,7 @@ export default function IntroReader({
           onClose={closeMenu}
         />
       </div>
+      <Footer />
     </div>
   )
 }
